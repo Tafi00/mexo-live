@@ -5,7 +5,7 @@ import { useClickOutside } from '@/lib/hooks';
 
 // ───────────── Card ─────────────
 export function Card({ className, children, padded = false }: { className?: string; children: ReactNode; padded?: boolean }) {
-  return <div className={cn('rounded-xl border border-line bg-surface shadow-card', padded && 'p-5', className)}>{children}</div>;
+  return <div className={cn('rounded-xl border border-line bg-surface shadow-card', padded && 'p-4', className)}>{children}</div>;
 }
 
 export function CardHeader({ title, description, actions, className, icon }: { title: ReactNode; description?: ReactNode; actions?: ReactNode; className?: string; icon?: ReactNode }) {
@@ -135,7 +135,7 @@ export function Callout({ tone = 'info', title, children, className, icon, actio
 // ───────────── Tiêu đề trang ─────────────
 export function PageHeader({ title, description, actions, breadcrumb, className }: { title: ReactNode; description?: ReactNode; actions?: ReactNode; breadcrumb?: ReactNode; className?: string }) {
   return (
-    <div className={cn('mb-4 flex flex-wrap items-end justify-between gap-x-4 gap-y-2', className)}>
+    <div className={cn('mb-4 flex flex-wrap items-start justify-between gap-x-4 gap-y-3 sm:items-center', className)}>
       <div className="min-w-0">
         {breadcrumb && <div className="mb-1.5 text-xs text-muted">{breadcrumb}</div>}
         <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
@@ -147,7 +147,7 @@ export function PageHeader({ title, description, actions, breadcrumb, className 
 }
 
 // ───────────── Ô số liệu ─────────────
-export function StatCard({ label, value, hint, icon, tone = 'neutral', onClick, active, trend }: { label: ReactNode; value: ReactNode; hint?: ReactNode; icon?: ReactNode; tone?: Tone; onClick?: () => void; active?: boolean; trend?: ReactNode }) {
+export function StatCard({ label, value, hint, icon, tone = 'neutral', onClick, active, trend, footer }: { label: ReactNode; value: ReactNode; hint?: ReactNode; icon?: ReactNode; tone?: Tone; onClick?: () => void; active?: boolean; trend?: ReactNode; footer?: ReactNode }) {
   const iconTone: Record<Tone, string> = {
     neutral: 'bg-surface-2 text-muted',
     muted: 'bg-surface-2 text-muted',
@@ -174,6 +174,7 @@ export function StatCard({ label, value, hint, icon, tone = 'neutral', onClick, 
             {hint}
           </p>
         )}
+        {footer && <div className="mt-1.5">{footer}</div>}
       </div>
     </Comp>
   );

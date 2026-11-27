@@ -160,7 +160,6 @@ export default function Reports() {
   return (
     <div className="space-y-4">
       <PageHeader
-        className="mb-0"
         title="Lịch sử & báo cáo"
         description="Thống kê phiên livestream theo ngày tạo phiên, giờ Việt Nam"
         actions={

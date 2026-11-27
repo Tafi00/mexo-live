@@ -33,7 +33,7 @@ export function RunSheet({ state, onChange, canManage }: { state: SheetState; on
             const c = runColor(r.status);
             return (
               <li key={r.id}>
-                <button type="button" onClick={() => onChange({ kind: 'run', run: r, back: { title: state.title, runs: state.runs } })} className="flex w-full items-center gap-3 px-5 py-2.5 text-left hover:bg-surface-2/60">
+                <button type="button" onClick={() => onChange({ kind: 'run', run: r, back: { title: state.title, runs: state.runs } })} className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-surface-2/60">
                   <span className={cn('grid size-7 shrink-0 place-items-center rounded-md border', c.block, c.text)}>
                     <RunStatusIcon status={r.status} className="size-3.5 animate-none" />
                   </span>

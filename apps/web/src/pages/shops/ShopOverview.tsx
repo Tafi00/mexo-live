@@ -12,7 +12,7 @@ import { useShop } from './ShopLayout';
 
 function CheckRow({ ok, warn, label, detail, to }: { ok: boolean; warn?: boolean; label: string; detail?: string; to?: string }) {
   const body = (
-    <div className="flex items-center gap-3 px-5 py-3">
+    <div className="flex items-center gap-3 px-4 py-3">
       {ok ? <CheckCircle2 className="size-[18px] shrink-0 text-emerald-500" /> : warn ? <AlertTriangle className="size-[18px] shrink-0 text-amber-500" /> : <Circle className="size-[18px] shrink-0 text-subtle" />}
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium">{label}</p>
@@ -58,7 +58,7 @@ export default function ShopOverview() {
             actions={s && <ButtonLink to={`/sessions/${s.id}`} size="sm" variant="primary">Mở điều khiển</ButtonLink>}
           />
           {s ? (
-            <div className="p-5">
+            <div className="p-4">
               <div className="flex flex-wrap items-center gap-2">
                 <SessionStateBadge state={s.state} stuck={s.stuck} />
                 {s.origin !== 'legacy' && <StreamStateBadge state={s.streamState} />}
@@ -102,7 +102,7 @@ export default function ShopOverview() {
           {runs.length ? (
             <div className="divide-y divide-line">
               {runs.slice(0, 6).map((r) => (
-                <div key={r.id} className="flex items-center gap-4 px-5 py-3">
+                <div key={r.id} className="flex items-center gap-4 px-4 py-3">
                   <div className="w-24 shrink-0">
                     <p className="text-sm font-semibold tabular">{fmtTime(r.startAt)}–{fmtTime(r.endAt)}</p>
                     <p className="text-xs text-muted">{r.runDate === today ? 'Hôm nay' : fmtDate(r.runDate)}</p>
@@ -144,7 +144,7 @@ export default function ShopOverview() {
             <CardHeader title="Việc cần xử lý" icon={<AlertTriangle className="size-4 text-amber-500" />} />
             <ul className="divide-y divide-line">
               {shop.issues.map((i) => (
-                <li key={i.code} className={cn('px-5 py-2.5 text-sm', i.level === 'critical' ? 'text-rose-700 dark:text-rose-400' : i.level === 'warning' ? 'text-amber-700 dark:text-amber-400' : 'text-muted')}>
+                <li key={i.code} className={cn('px-4 py-2.5 text-sm', i.level === 'critical' ? 'text-rose-700 dark:text-rose-400' : i.level === 'warning' ? 'text-amber-700 dark:text-amber-400' : 'text-muted')}>
                   {i.text}
                 </li>
               ))}

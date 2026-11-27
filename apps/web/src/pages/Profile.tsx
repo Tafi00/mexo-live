@@ -28,7 +28,7 @@ export default function Profile() {
       <PageHeader title="Thông tin cá nhân" actions={<ButtonLink to="/change-password" icon={<KeyRound className="size-4" />}>Đổi mật khẩu</ButtonLink>} />
       <div className="space-y-4">
         <Card>
-          <div className="flex items-center gap-4 p-5">
+          <div className="flex items-center gap-4 p-4">
             <Avatar name={u.name} className="size-14 text-base" />
             <div className="min-w-0">
               <p className="text-lg font-semibold">{u.name}</p>
@@ -38,7 +38,7 @@ export default function Profile() {
               </div>
             </div>
           </div>
-          <div className="border-t border-line p-5">
+          <div className="border-t border-line p-4">
             <p className="text-sm text-muted">{ROLE_DESCRIPTIONS[u.role]}</p>
             {u.owner && (
               <KV
@@ -53,7 +53,7 @@ export default function Profile() {
         </Card>
         <Card>
           <CardHeader title="Chỉnh sửa" />
-          <div className="grid gap-4 p-5 sm:grid-cols-2">
+          <div className="grid gap-4 p-4 sm:grid-cols-2">
             <Field label="Tên hiển thị">
               <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} />
             </Field>
@@ -70,7 +70,7 @@ export default function Profile() {
         {u.role === 'member' && (
           <Card>
             <CardHeader title="Quyền được cấp" description="Do chủ shop của bạn phân quyền" />
-            <div className="flex flex-wrap gap-2 p-5">
+            <div className="flex flex-wrap gap-2 p-4">
               {u.permissions.map((p) => (
                 <Badge key={p} tone="success">
                   {PERMISSION_LABELS[p]}

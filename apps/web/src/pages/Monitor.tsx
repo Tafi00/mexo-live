@@ -127,7 +127,6 @@ export default function Monitor() {
   return (
     <div className="space-y-4">
       <PageHeader
-        className="mb-0"
         title="Giám sát API Shopee"
         description="Tỷ lệ gọi Shopee Open API thành công, lỗi theo API/shop và đối chiếu với Console Shopee"
         actions={

@@ -60,7 +60,7 @@ export function ActivityList({ items, showShop }: { items: ActivityRow[]; showSh
       {items.map((a) => {
         const detail = describeActivity(a);
         return (
-          <li key={a.id} className="flex items-start gap-3 px-5 py-3">
+          <li key={a.id} className="flex items-start gap-3 px-4 py-3">
             <Avatar name={a.actorName} className="mt-0.5 size-7 text-2xs" />
             <div className="min-w-0 flex-1">
               <p className="text-sm">

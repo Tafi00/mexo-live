@@ -40,7 +40,7 @@ function DailyChart({ data, metric }: { data: { day: string; sessions: number; h
     days.push({ day: d, label: `${d.slice(8, 10)}/${d.slice(5, 7)}`, value: Number(map.get(d)?.[metric] ?? 0) });
   }
   return (
-    <ResponsiveContainer width="100%" height={220}>
+    <ResponsiveContainer width="100%" height="100%">
       <BarChart data={days} margin={{ top: 8, right: 8, left: -12, bottom: 0 }} barCategoryGap="28%">
         <CartesianGrid vertical={false} stroke="var(--line)" strokeDasharray="0" />
         <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: 'var(--muted)', fontSize: 11 }} interval="preserveStartEnd" />
@@ -117,7 +117,7 @@ export default function Dashboard() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-            <Card className="xl:col-span-2">
+            <Card className="flex flex-col xl:col-span-2">
               <CardHeader
                 title={`${METRIC_LABEL[metric]} 14 ngày qua`}
                 description="Tính theo ngày tạo phiên, giờ Việt Nam"
@@ -134,8 +134,11 @@ export default function Dashboard() {
                   />
                 }
               />
-              <div className="px-3 pb-3 pt-4">
-                <DailyChart data={d.daily} metric={metric} />
+              {/* Biểu đồ cao theo thẻ bên cạnh (danh sách việc cần xử lý), tối thiểu 240px */}
+              <div className="relative min-h-[240px] flex-1">
+                <div className="absolute inset-x-3 bottom-3 top-4">
+                  <DailyChart data={d.daily} metric={metric} />
+                </div>
               </div>
             </Card>
 
@@ -145,7 +148,7 @@ export default function Dashboard() {
                 <ul className="divide-y divide-line">
                   {d.needsAttention.slice(0, 7).map((s: any) => (
                     <li key={s.id}>
-                      <Link to={`/shops/${s.id}`} className="flex items-start gap-3 px-5 py-2.5 hover:bg-surface-2/60">
+                      <Link to={`/shops/${s.id}`} className="flex items-start gap-3 px-4 py-2.5 hover:bg-surface-2/60">
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium">{s.name}</p>
                           <p className={cn('truncate text-xs', s.issues[0]?.level === 'critical' ? 'text-rose-600 dark:text-rose-400' : 'text-amber-700 dark:text-amber-400')}>
@@ -164,12 +167,12 @@ export default function Dashboard() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-            <Card className="xl:col-span-2">
+            <Card className="flex flex-col xl:col-span-2">
               <CardHeader title="Đang livestream" description="Nhiều người xem nhất" icon={<Radio className="size-4 text-brand-500" />} actions={<ButtonLink to="/live" size="sm">Phòng điều khiển</ButtonLink>} />
               {d.topLive.length ? (
                 <div className="divide-y divide-line">
                   {d.topLive.map((s: any) => (
-                    <Link key={s.id} to={`/sessions/${s.session.id}`} className="flex items-center gap-4 px-5 py-3 hover:bg-surface-2/60">
+                    <Link key={s.id} to={`/sessions/${s.session.id}`} className="flex items-center gap-4 px-4 py-3 hover:bg-surface-2/60">
                       <span className="relative flex size-2.5 shrink-0">
                         <span className="absolute inline-flex size-full animate-ping rounded-full bg-brand-400 opacity-50" />
                         <span className="relative inline-flex size-2.5 rounded-full bg-brand-500" />
@@ -191,7 +194,7 @@ export default function Dashboard() {
                   ))}
                 </div>
               ) : (
-                <EmptyState compact icon={Radio} title="Chưa có shop nào đang live" />
+                <EmptyState compact className="flex-1" icon={Radio} title="Chưa có shop nào đang live" description="Phiên đang phát sẽ hiện ở đây, xếp theo số người xem." />
               )}
             </Card>
 
@@ -201,7 +204,7 @@ export default function Dashboard() {
                 {d.upcoming.length ? (
                   <ul className="divide-y divide-line">
                     {d.upcoming.map((r: any) => (
-                      <li key={r.id} className="flex items-center gap-3 px-5 py-2.5">
+                      <li key={r.id} className="flex items-center gap-3 px-4 py-2.5">
                         <div className="w-14 shrink-0 text-center">
                           <p className="text-sm font-semibold tabular">{fmtTime(r.startAt)}</p>
                           <p className="text-2xs text-muted">{r.runDate === todayVn() ? 'Hôm nay' : fmtDate(r.runDate).slice(0, 5)}</p>
@@ -247,7 +250,7 @@ export default function Dashboard() {
             {d.alerts.length ? (
               <ul className="divide-y divide-line">
                 {d.alerts.map((a: any) => (
-                  <li key={a.id} className="flex items-start gap-3 px-5 py-2.5">
+                  <li key={a.id} className="flex items-start gap-3 px-4 py-2.5">
                     <Badge tone={a.severity === 'critical' ? 'danger' : a.severity === 'warning' ? 'warning' : 'info'} size="sm" icon={a.severity === 'critical' ? <XCircle className="size-3" /> : <AlertTriangle className="size-3" />}>
                       {ALERT_SEVERITY_LABELS[a.severity as 'critical']}
                     </Badge>

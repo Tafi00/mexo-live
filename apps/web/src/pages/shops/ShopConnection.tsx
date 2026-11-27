@@ -95,7 +95,7 @@ export default function ShopConnection() {
   const saveCart = useAction(() => api.patch(`/api/shops/${shop.id}`, { cartLimit: Number(cartLimit) }), { success: 'Đã lưu giới hạn giỏ live', onSuccess: refetch });
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+    <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
       <Card>
         <CardHeader
           title="Kết nối Shopee"
@@ -114,7 +114,7 @@ export default function ShopConnection() {
             </>
           }
         />
-        <div className="space-y-4 p-5">
+        <div className="space-y-4 p-4">
           <KV
             items={[
               { label: 'Trạng thái', value: <ConnectionBadge state={shop.connection} /> },
@@ -151,7 +151,7 @@ export default function ShopConnection() {
 
       <Card>
         <CardHeader title="Hạn dùng dịch vụ" icon={<CalendarPlus className="size-4" />} description="Do MEXO đặt theo hợp đồng, tính theo giờ Việt Nam" />
-        <div className="space-y-4 p-5">
+        <div className="space-y-4 p-4">
           <div className="flex items-center gap-3">
             <ServiceBadge state={shop.service.state} daysLeft={shop.service.daysLeft} expiresOn={shop.service.expiresOn} />
             <span className="text-sm text-muted">{shop.service.expiresOn ? `Hết hạn ngày ${fmtDate(shop.service.expiresOn)}` : shop.service.state !== 'suspended' ? 'Không thời hạn' : ''}</span>
@@ -186,7 +186,7 @@ export default function ShopConnection() {
       {isStaff && (
         <Card>
           <CardHeader title="Chủ shop & giới hạn" icon={<UserRoundCog className="size-4" />} />
-          <div className="grid gap-4 p-5 sm:grid-cols-2">
+          <div className="grid gap-4 p-4 sm:grid-cols-2">
             <Field label="Chủ shop" hint="Gắn thủ công bắt buộc ghi cách xác minh">
               <Select value={shop.owner?.id ?? ''} onChange={(e) => void changeOwner(e.target.value)}>
                 <option value="">— MEXO vận hành —</option>
@@ -214,7 +214,7 @@ export default function ShopConnection() {
           <CardHeader title="Lịch sử tên shop" icon={<History className="size-4" />} description="Tìm theo tên cũ vẫn ra đúng shop" />
           <ul className="max-h-72 divide-y divide-line overflow-y-auto">
             {(names.data?.items ?? []).map((n: any) => (
-              <li key={n.id} className="flex items-center gap-3 px-5 py-2.5 text-sm">
+              <li key={n.id} className="flex items-center gap-3 px-4 py-2.5 text-sm">
                 <Badge tone={n.kind === 'alias' ? 'info' : 'neutral'} size="sm">
                   {n.kind === 'alias' ? 'Tên gợi nhớ' : 'Tên Shopee'}
                 </Badge>
@@ -222,7 +222,7 @@ export default function ShopConnection() {
                 <span className="text-xs text-muted">{fmtDate(n.at)}</span>
               </li>
             ))}
-            {!names.data?.items?.length && <li className="px-5 py-4 text-center text-xs text-muted">Chưa có lịch sử</li>}
+            {!names.data?.items?.length && <li className="px-4 py-4 text-center text-xs text-muted">Chưa có lịch sử</li>}
           </ul>
         </Card>
       )}

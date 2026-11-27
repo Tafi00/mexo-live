@@ -175,7 +175,7 @@ export function IntegrationsTab() {
       </Callout>
       {!canEdit && <Callout tone="info">Chỉ quản trị hệ thống được sửa cấu hình này.</Callout>}
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <Card>
           <CardHeader title="Shopee Open Platform" icon={<Plug className="size-4" />} description={`Đang gọi: ${d.shopee.host}`} />
           <div className="space-y-4 p-4">

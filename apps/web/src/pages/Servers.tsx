@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, CheckCircle2, Cpu, HardDrive, HelpCircle, KeyRound, ListVideo, MemoryStick, MoreHorizontal, Network, PauseCircle, PencilLine, PlayCircle, Plus, RotateCcw, Server, ShieldOff, Trash2, Wifi, WifiOff } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Cpu, Gauge, HardDrive, HelpCircle, KeyRound, ListVideo, MemoryStick, MoreHorizontal, Network, PauseCircle, PencilLine, PlayCircle, Plus, RotateCcw, Server, ShieldOff, Trash2, Wifi, WifiOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { api, errorMessage } from '@/lib/api';
 import { cn } from '@/lib/cn';
@@ -213,7 +213,6 @@ export default function Servers() {
       <PageHeader
         title="Máy chủ phát"
         description="Các máy chạy MexoStreamer đẩy video lên Shopee Live · tự cập nhật mỗi 5 giây"
-        className="mb-0"
         actions={
           <>
             <Button icon={<HelpCircle className="size-4" />} variant={showHelp ? 'secondary' : 'outline'} onClick={() => setShowHelp(!showHelp)}>
@@ -247,15 +246,19 @@ export default function Servers() {
             <StatCard label="Đang kết nối" value={`${d.counts.online}/${d.counts.all}`} hint="đang nhận việc" icon={<Wifi className="size-4" />} tone={d.counts.online ? 'success' : 'warning'} />
             <StatCard label="Cần chú ý" value={d.counts.attention} hint="mất kết nối · từ chối · hết khóa" icon={<AlertTriangle className="size-4" />} tone={d.counts.attention ? 'danger' : 'neutral'} />
             <StatCard label="Không hoạt động" value={d.counts.inactive} hint="chưa chạy · tạm ngưng · thu hồi" icon={<PauseCircle className="size-4" />} tone="muted" />
-            <div className="min-w-0 rounded-xl border border-line bg-surface px-3.5 py-3 shadow-card">
-              <p className="text-xs font-medium text-muted">Công suất đang dùng</p>
-              <p className="mt-0.5 text-xl font-semibold leading-tight tracking-tight tabular">
-                {d.capacity.used}
-                <span className="text-sm font-normal text-muted"> / {d.capacity.total} luồng</span>
-              </p>
-              <Progress className="mt-1.5" size="sm" value={d.capacity.used} max={Math.max(1, d.capacity.total)} tone={capPct >= 90 ? 'danger' : capPct >= 75 ? 'warning' : 'brand'} />
-              <p className="mt-1 truncate text-xs text-muted">{capPct >= 90 ? 'Sắp hết chỗ — cân nhắc thêm máy' : `trên ${d.capacity.online} máy đang kết nối`}</p>
-            </div>
+            <StatCard
+              label="Công suất đang dùng"
+              value={
+                <>
+                  {d.capacity.used}
+                  <span className="text-sm font-normal text-muted"> / {d.capacity.total} luồng</span>
+                </>
+              }
+              hint={capPct >= 90 ? 'Sắp hết chỗ — cân nhắc thêm máy' : `trên ${d.capacity.online} máy đang kết nối`}
+              icon={<Gauge className="size-4" />}
+              tone={capPct >= 90 ? 'danger' : capPct >= 75 ? 'warning' : 'brand'}
+              footer={<Progress size="sm" value={d.capacity.used} max={Math.max(1, d.capacity.total)} tone={capPct >= 90 ? 'danger' : capPct >= 75 ? 'warning' : 'brand'} />}
+            />
           </div>
 
           {!d.canEdit && <Callout tone="neutral">Bạn đang ở chế độ chỉ xem. Thêm, sửa, cấp khóa hay xóa máy chủ do Quản trị hệ thống thực hiện.</Callout>}
