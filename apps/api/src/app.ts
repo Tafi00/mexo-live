@@ -31,6 +31,15 @@ declare module 'fastify' {
 
 const hits = new Map<string, { n: number; reset: number }>();
 
+/** Request cùng địa chỉ với chính trang web (vd. truy cập qua domain gắn sau, khác PUBLIC_URL) là hợp lệ */
+function sameHost(origin: string, host: string): boolean {
+  try {
+    return !!host && new URL(origin).host === host;
+  } catch {
+    return false;
+  }
+}
+
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({
     logger: { level: env.isProd ? 'info' : 'warn' },
@@ -48,7 +57,7 @@ export async function buildApp(): Promise<FastifyInstance> {
     if (url.startsWith('/api/streamer/') || url.startsWith('/api/mock-shopee/')) return;
     if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) && req.headers.cookie) {
       const origin = req.headers.origin;
-      if (origin && !allowedOrigins.has(origin)) {
+      if (origin && !allowedOrigins.has(origin) && !sameHost(origin, req.host)) {
         return reply.code(403).send({ error: { code: 'bad_origin', message: 'Yêu cầu từ địa chỉ không hợp lệ' } });
       }
     }
@@ -97,7 +106,8 @@ export async function buildApp(): Promise<FastifyInstance> {
     return reply.code(500).send({ error: { code: 'internal', message: `Lỗi hệ thống, mã tham chiếu ${ref}`, ref } });
   });
 
-  app.get('/api/health', async () => ({ ok: true, time: new Date().toISOString() }));
+  // Healthcheck của Hub gọi liên tục → không ghi log mỗi lần
+  app.get('/api/health', { logLevel: 'warn' }, async () => ({ ok: true, time: new Date().toISOString() }));
 
   await app.register(authRoutes);
   await app.register(shopRoutes);

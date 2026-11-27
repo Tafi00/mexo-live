@@ -1,0 +1,28 @@
+.git
+.gitignore
+.hub
+.claude
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+**/*.log
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Dữ liệu chạy local (database nhúng, video/ảnh bìa, báo cáo migrate có mật khẩu tạm)
+data
+storage
+apps/*/data
+apps/*/storage
+apps/*/cache
+
+# Tài liệu, backup hệ thống cũ, kiểm thử — không cần trong image
+*.pdf
+*.rar
+mexo-live-backup*.json
+docs
+tests
+docker-compose.yml
+README.md

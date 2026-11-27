@@ -21,3 +21,5 @@ cache/
 # Giữ file ở máy và chạy `pnpm migrate:legacy <đường-dẫn>` khi cần.
 mexo-live-backup*.json
 MEXO-Live-Backup-*.rar
+
+.hub/

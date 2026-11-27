@@ -1,0 +1,12 @@
+# Cấu hình deploy trên Hub (https://hub.tafidev.online) — xem DEPLOY.md
+port: 4000
+healthcheck:
+  path: /api/health
+  timeout: 90
+env:
+  # Khóa mã hóa token Shopee / khóa AI / URL đẩy luồng. Hub sinh 1 lần và giữ nguyên — đổi khóa sẽ mất mọi token đã lưu.
+  generate: { APP_SECRET: "random:64" }
+# Video, ảnh bìa và dữ liệu phụ phải giữ qua các lần deploy
+volumes: ["mexo-storage:/app/storage", "mexo-data:/app/data"]
+# Hub tạo PostgreSQL riêng và ghi DATABASE_URL vào env
+databases: [{ postgres: main }]

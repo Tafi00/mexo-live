@@ -46,7 +46,8 @@ export async function createLogin(reply: FastifyReply, req: FastifyRequest, acco
     path: '/',
     httpOnly: true,
     sameSite: 'lax',
-    secure: env.cookieSecure,
+    // Sau proxy HTTPS (Traefik) req.protocol lấy từ X-Forwarded-Proto; truy cập http thì không gắn Secure để vẫn đăng nhập được
+    secure: env.cookieSecure && req.protocol === 'https',
     expires: expiresAt,
   });
 }
