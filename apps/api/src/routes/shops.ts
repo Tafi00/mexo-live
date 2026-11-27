@@ -3,7 +3,7 @@ import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { foldVi, vnDate } from '@mexo/shared';
 import { db } from '../db/client.js';
 import { accounts, activityLogs, memberShops, oauthStates, shopNameHistory, shops } from '../db/schema.js';
-import { shopeeRedirectUrl } from '../env.js';
+import { shopeeRedirectUrl } from '../services/runtimeConfig.js';
 import { actorRef, isStaff, requireActor, requireRole, requireShop, visibleShopIds, type Actor } from '../auth/auth.js';
 import { randomToken } from '../lib/crypto.js';
 import { AppError, err } from '../lib/errors.js';

@@ -9,6 +9,7 @@ import { db } from '../db/client.js';
 import { liveSessions, products, shops } from '../db/schema.js';
 import { env } from '../env.js';
 import { hmacSha256Hex, randomToken } from '../lib/crypto.js';
+import { rc } from '../services/runtimeConfig.js';
 
 const ERROR_RATE = Number(process.env.MOCK_SHOPEE_ERROR_RATE ?? '0.01');
 
@@ -154,7 +155,10 @@ function tick(s: MockSession) {
 }
 
 export async function mockShopeeRoutes(app: FastifyInstance) {
-  if (env.shopee.mode !== 'mock') return;
+  // Luôn đăng ký route; chỉ phục vụ khi đang ở chế độ giả lập (đổi được trên web)
+  app.addHook('onRequest', async (req, reply) => {
+    if (req.url.startsWith('/api/mock-shopee/') && rc().shopeeMode !== 'mock') return reply.code(404).send({ error: 'not_found', message: 'Shopee giả lập đang tắt' });
+  });
 
   // Trang cấp quyền giả lập
   app.get('/api/mock-shopee/api/v2/shop/auth_partner', async (req, reply) => {
@@ -194,7 +198,7 @@ export async function mockShopeeRoutes(app: FastifyInstance) {
     if (Math.abs(Date.now() / 1000 - ts) > 300) return reply.send(fail('error_sign', 'timestamp expired'));
     const isPublic = api.startsWith('auth/');
     const base = isPublic ? `${q.partner_id}${path}${q.timestamp}` : `${q.partner_id}${path}${q.timestamp}${q.access_token}${q.shop_id}`;
-    if (hmacSha256Hex(env.shopee.partnerKey, base) !== q.sign) return reply.send(fail('error_sign', 'Wrong sign'));
+    if (hmacSha256Hex(rc().partnerKey, base) !== q.sign) return reply.send(fail('error_sign', 'Wrong sign'));
 
     if (!isPublic) {
       const t = tokens.get(q.access_token ?? '');

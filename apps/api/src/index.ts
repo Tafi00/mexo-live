@@ -3,15 +3,17 @@ import { closeDb, dbKind, initDb } from './db/client.js';
 import { buildApp } from './app.js';
 import { startJobs, stopJobs } from './jobs.js';
 import { ensureBootstrapAdmin } from './cli/bootstrap.js';
+import { loadRuntimeConfig, rc } from './services/runtimeConfig.js';
 
 async function main() {
   await initDb();
+  await loadRuntimeConfig();
   await ensureBootstrapAdmin();
   const app = await buildApp();
   await app.listen({ port: env.port, host: env.host });
   console.log(`\n  MEXO Live API  →  http://localhost:${env.port}`);
   console.log(`  Database       →  ${dbKind === 'pglite' ? `PGlite (nhúng) tại ${env.dataDir}` : 'PostgreSQL'}`);
-  console.log(`  Shopee         →  ${env.shopee.mode === 'mock' ? 'GIẢ LẬP (SHOPEE_MODE=mock)' : env.shopee.mode}\n`);
+  console.log(`  Shopee         →  ${rc().shopeeMode === 'mock' ? 'GIẢ LẬP (đổi tại Cấu hình hệ thống)' : rc().shopeeMode}\n`);
   await startJobs();
 
   const shutdown = async (sig: string) => {

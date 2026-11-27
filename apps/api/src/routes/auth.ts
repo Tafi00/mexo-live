@@ -9,6 +9,7 @@ import { err } from '../lib/errors.js';
 import { parse, z } from '../lib/http.js';
 import { audit } from '../services/audit.js';
 import { getSetting } from '../services/settings.js';
+import { rc } from '../services/runtimeConfig.js';
 
 const PASSWORD_MESSAGES: Record<string, string> = {
   password_too_short: 'Mật khẩu cần ít nhất 8 ký tự',
@@ -76,7 +77,7 @@ export async function authRoutes(app: FastifyInstance) {
         parentId: a.parentId,
         owner,
       },
-      system: { frozen: freeze.frozen, freezeReason: freeze.reason, shopeeMode: env.shopee.mode },
+      system: { frozen: freeze.frozen, freezeReason: freeze.reason, shopeeMode: rc().shopeeMode },
     };
   });
 

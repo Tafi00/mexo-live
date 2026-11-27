@@ -12,6 +12,7 @@ import { flushApiLogs, refreshAccessToken } from './services/shopee/index.js';
 import { schedulerTick, recoverRuns } from './services/scheduler.js';
 import { serverState } from './services/streamers.js';
 import { removeFile, dirUsage } from './services/storage.js';
+import { rc } from './services/runtimeConfig.js';
 
 interface Job {
   name: string;
@@ -118,14 +119,14 @@ async function serversTick() {
     const prev = serverStates.get(s.id);
     serverStates.set(s.id, st);
     if (st === 'lost') {
-      await raiseAlert({ key: `server_lost:${s.id}`, type: 'server_lost', severity: 'critical', serverId: s.id, message: `Máy ${s.name} không báo về quá ${env.streamerLostAfterSec} giây` });
+      await raiseAlert({ key: `server_lost:${s.id}`, type: 'server_lost', severity: 'critical', serverId: s.id, message: `Máy ${s.name} không báo về quá ${rc().streamerLostAfterSec} giây` });
       // Đánh dấu luồng của máy mất kết nối
       await db
         .update(streamJobs)
         .set({ state: 'lost' })
         .where(and(eq(streamJobs.serverId, s.id), eq(streamJobs.desired, 'run'), inArray(streamJobs.state, ['preparing', 'pushing', 'error'])));
     } else if (st === 'rejected') {
-      await raiseAlert({ key: `server_rejected:${s.id}`, type: 'server_rejected', severity: 'warning', serverId: s.id, message: `Máy ${s.name} chạy phiên bản ${s.version}, thấp hơn mức tối thiểu ${env.streamerMinVersion}` });
+      await raiseAlert({ key: `server_rejected:${s.id}`, type: 'server_rejected', severity: 'warning', serverId: s.id, message: `Máy ${s.name} chạy phiên bản ${s.version}, thấp hơn mức tối thiểu ${rc().streamerMinVersion}` });
     } else if (st === 'online') {
       await resolveAlert(`server_lost:${s.id}`);
       await resolveAlert(`server_rejected:${s.id}`);
@@ -168,10 +169,11 @@ async function apiHealthTick() {
 
 /** Kiểm tra IP ra Internet (Shopee chỉ nhận lệnh từ IP đã khai báo) */
 async function egressTick() {
-  if (!env.expectedEgressIp) return;
+  const expected = rc().expectedEgressIp;
+  if (!expected) return;
   try {
     const ip = (await (await fetch('https://api.ipify.org', { signal: AbortSignal.timeout(8000) })).text()).trim();
-    if (ip !== env.expectedEgressIp) await raiseAlert({ key: 'egress_ip', type: 'egress_ip', severity: 'critical', message: `IP ra thực tế ${ip} khác IP đã khai với Shopee (${env.expectedEgressIp})` });
+    if (ip !== expected) await raiseAlert({ key: 'egress_ip', type: 'egress_ip', severity: 'critical', message: `IP ra thực tế ${ip} khác IP đã khai với Shopee (${expected})` });
     else await resolveAlert('egress_ip');
   } catch {
     /* mạng chập chờn: bỏ qua lần này */

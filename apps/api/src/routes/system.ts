@@ -6,7 +6,7 @@ import { db } from '../db/client.js';
 import { alerts, apiCalls, files, liveSessions, scheduleRuns, schedules, servers, shops } from '../db/schema.js';
 import { env } from '../env.js';
 import { actorRef, isStaff, requireActor, requireRole, visibleShopIds } from '../auth/auth.js';
-import { decrypt, encrypt } from '../lib/crypto.js';
+import { decrypt, encrypt, hmacSha256Hex } from '../lib/crypto.js';
 import { err } from '../lib/errors.js';
 import { idOf, parse, z } from '../lib/http.js';
 import { chat, listModels, validateAiBaseUrl } from '../services/ai.js';
@@ -18,6 +18,7 @@ import { dirUsage, readFile, writeFile } from '../services/storage.js';
 import { capacity, serverState } from '../services/streamers.js';
 import { jobStatus } from '../jobs.js';
 import { breakerStates } from '../services/shopee/index.js';
+import { describeRuntimeConfig, rc, resetRuntimeFields, saveRuntimeConfig, shopeeRedirectUrl } from '../services/runtimeConfig.js';
 
 export async function systemRoutes(app: FastifyInstance) {
   // ───────────── Thanh trên cùng ─────────────
@@ -28,7 +29,7 @@ export async function systemRoutes(app: FastifyInstance) {
     const conds: SQL[] = [isNull(alerts.resolvedAt), isNull(alerts.acknowledgedAt)];
     if (ids !== null) conds.push(ids.length ? inArray(alerts.shopId, ids) : sql`false`);
     const [al] = await db.select({ n: sql<number>`count(*)`, critical: sql<number>`count(*) filter (where ${alerts.severity} = 'critical')` }).from(alerts).where(and(...conds));
-    return { capacity: isStaff(a) ? await capacity() : null, unacknowledgedAlerts: Number(al?.n ?? 0), criticalAlerts: Number(al?.critical ?? 0), freeze: { frozen: freeze.frozen, reason: freeze.reason, at: freeze.at }, shopeeMode: env.shopee.mode, updatedAt: new Date() };
+    return { capacity: isStaff(a) ? await capacity() : null, unacknowledgedAlerts: Number(al?.n ?? 0), criticalAlerts: Number(al?.critical ?? 0), freeze: { frozen: freeze.frozen, reason: freeze.reason, at: freeze.at }, shopeeMode: rc().shopeeMode, updatedAt: new Date() };
   });
 
   // ───────────── Dashboard tổng quan ─────────────
@@ -241,8 +242,8 @@ export async function systemRoutes(app: FastifyInstance) {
       limits,
       freeze,
       canEdit: a.role === 'sysadmin',
-      shopee: { mode: env.shopee.mode, partnerId: env.shopee.partnerId || null, redirectUrl: env.shopee.redirectUrl || `${env.publicUrl}/connect/callback`, hasKey: Boolean(env.shopee.partnerKey), expectedEgressIp: env.expectedEgressIp || null },
-      streamer: { minVersion: env.streamerMinVersion, lostAfterSec: env.streamerLostAfterSec, apiUrl: env.apiPublicUrl },
+      shopee: { mode: rc().shopeeMode, partnerId: rc().partnerId || null, redirectUrl: shopeeRedirectUrl(), hasKey: Boolean(rc().partnerKey), expectedEgressIp: rc().expectedEgressIp || null },
+      streamer: { minVersion: rc().streamerMinVersion, lostAfterSec: rc().streamerLostAfterSec, apiUrl: rc().apiPublicUrl },
       storage: usage,
       jobs: jobStatus(),
       breakers: breakerStates(),
@@ -275,6 +276,81 @@ export async function systemRoutes(app: FastifyInstance) {
     await setSetting('limits', body);
     await audit(actorRef(a), 'settings_updated', { params: { section: 'limits', ...body } });
     return { ok: true };
+  });
+
+  // ───────────── Kết nối & tích hợp (nhập trực tiếp trên web) ─────────────
+  app.get('/api/settings/integrations', async (req) => {
+    const a = requireRole(req, 'sysadmin', 'admin');
+    return { ...describeRuntimeConfig(), canEdit: a.role === 'sysadmin' };
+  });
+
+  const integrationSchema = z
+    .object({
+      shopeeMode: z.enum(['mock', 'sandbox', 'live']),
+      partnerId: z.number().int().min(0).max(9_999_999_999),
+      partnerKey: z.string().trim().min(8, 'Partner Key quá ngắn').max(200).nullable(),
+      redirectUrl: z.union([z.string().url('Redirect URL không hợp lệ').max(500), z.literal('')]),
+      timeoutMs: z.number().int().min(2000).max(120000),
+      apiPublicUrl: z.union([z.string().url('Địa chỉ API không hợp lệ').max(300), z.literal('')]),
+      expectedEgressIp: z.union([z.string().ip({ message: 'IP không hợp lệ' }), z.literal('')]),
+      streamerMinVersion: z.string().regex(/^\d+\.\d+\.\d+$/, 'Phiên bản dạng 1.0.0'),
+      streamerLostAfterSec: z.number().int().min(10).max(600),
+      aiAllowPrivateHosts: z.boolean(),
+    })
+    .partial();
+
+  app.put('/api/settings/integrations', async (req) => {
+    const a = requireRole(req, 'sysadmin');
+    const body = parse(integrationSchema, req.body);
+    const next = { ...rc(), ...body };
+    if (next.shopeeMode !== 'mock' && body.shopeeMode && (!next.partnerId || !(body.partnerKey ?? rc().partnerKey)))
+      throw err.badRequest('shopee_not_configured', 'Cần nhập Partner ID và Partner Key trước khi chuyển sang chế độ sandbox / live');
+    await saveRuntimeConfig(body, a.name);
+    const changed = Object.keys(body).map((k) => (k === 'partnerKey' ? (body.partnerKey === null ? 'partnerKey:xóa' : 'partnerKey:đổi') : k));
+    await audit(actorRef(a), 'settings_updated', { params: { section: 'integrations', fields: changed, shopeeMode: body.shopeeMode } });
+    return { ok: true, ...describeRuntimeConfig() };
+  });
+
+  app.post('/api/settings/integrations/reset', async (req) => {
+    const a = requireRole(req, 'sysadmin');
+    const body = parse(z.object({ fields: z.array(z.enum(['shopeeMode', 'partnerId', 'partnerKeyEnc', 'redirectUrl', 'timeoutMs', 'apiPublicUrl', 'expectedEgressIp', 'streamerMinVersion', 'streamerLostAfterSec', 'aiAllowPrivateHosts'])).min(1) }), req.body);
+    await resetRuntimeFields(body.fields, a.name);
+    await audit(actorRef(a), 'settings_updated', { params: { section: 'integrations', reset: body.fields } });
+    return { ok: true, ...describeRuntimeConfig() };
+  });
+
+  // Kiểm tra Partner ID / Key (dùng khóa đang nhập, chưa cần lưu): gọi thử auth/access_token/get với refresh token giả.
+  // Shopee trả lỗi chữ ký → sai khóa; trả lỗi refresh token → Partner ID/Key hợp lệ. Lệnh này không tính vào tỷ lệ gọi API của shop.
+  app.post('/api/settings/shopee/test', async (req) => {
+    requireRole(req, 'sysadmin');
+    const body = parse(z.object({ shopeeMode: z.enum(['mock', 'sandbox', 'live']).optional(), partnerId: z.number().int().optional(), partnerKey: z.string().trim().optional() }), req.body);
+    const mode = body.shopeeMode ?? rc().shopeeMode;
+    const partnerId = body.partnerId ?? rc().partnerId;
+    const partnerKey = body.partnerKey || rc().partnerKey;
+    if (mode === 'mock') return { ok: true, mode, message: 'Chế độ giả lập không cần Partner ID / Key.' };
+    if (!partnerId || !partnerKey) return { ok: false, mode, message: 'Thiếu Partner ID hoặc Partner Key.' };
+    const host = mode === 'live' ? 'https://partner.shopeemobile.com' : 'https://partner.test-stable.shopeemobile.com';
+    const path = '/api/v2/auth/access_token/get';
+    const ts = Math.floor(Date.now() / 1000);
+    const sign = hmacSha256Hex(partnerKey, `${partnerId}${path}${ts}`);
+    const t0 = Date.now();
+    try {
+      const res = await fetch(`${host}${path}?partner_id=${partnerId}&timestamp=${ts}&sign=${sign}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ refresh_token: 'mexo-connection-test', shop_id: 1, partner_id: partnerId }),
+        signal: AbortSignal.timeout(15000),
+      });
+      const data: any = await res.json().catch(() => ({}));
+      const msg = `${data?.error ?? ''} ${data?.message ?? ''}`.toLowerCase();
+      const latencyMs = Date.now() - t0;
+      if (msg.includes('sign')) return { ok: false, mode, latencyMs, message: 'Shopee báo sai chữ ký — Partner Key không khớp với Partner ID.', shopee: { error: data?.error, message: data?.message, requestId: data?.request_id } };
+      if (msg.includes('partner') && (msg.includes('invalid') || msg.includes('not exist') || msg.includes('not found')))
+        return { ok: false, mode, latencyMs, message: 'Shopee không nhận Partner ID này (sai ID hoặc sai môi trường sandbox/live).', shopee: { error: data?.error, message: data?.message, requestId: data?.request_id } };
+      return { ok: true, mode, latencyMs, message: 'Partner ID / Key hợp lệ — Shopee đã xác thực chữ ký.', shopee: { error: data?.error, message: data?.message, requestId: data?.request_id } };
+    } catch (e) {
+      return { ok: false, mode, message: `Không kết nối được tới Shopee (${host}): ${e instanceof Error ? e.message : e}` };
+    }
   });
 
   // ───────────── Đóng băng hệ thống ─────────────

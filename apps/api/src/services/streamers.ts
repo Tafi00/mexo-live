@@ -3,6 +3,7 @@ import { db } from '../db/client.js';
 import { servers, streamJobs } from '../db/schema.js';
 import { env } from '../env.js';
 import { randomToken, sha256 } from '../lib/crypto.js';
+import { rc } from './runtimeConfig.js';
 
 export type ServerRow = typeof servers.$inferSelect;
 
@@ -21,8 +22,8 @@ export function serverState(s: ServerRow, now = Date.now()): 'online' | 'lost' |
   if (s.keyState === 'revoked') return 'revoked';
   if (s.keyExpiresAt && s.keyExpiresAt.getTime() < now) return 'key_expired';
   if (!s.lastHeartbeatAt) return 'pending';
-  if (s.version && cmpVersion(s.version, env.streamerMinVersion) < 0) return 'rejected';
-  if (now - s.lastHeartbeatAt.getTime() > env.streamerLostAfterSec * 1000) return 'lost';
+  if (s.version && cmpVersion(s.version, rc().streamerMinVersion) < 0) return 'rejected';
+  if (now - s.lastHeartbeatAt.getTime() > rc().streamerLostAfterSec * 1000) return 'lost';
   return 'online';
 }
 

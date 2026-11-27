@@ -5,6 +5,7 @@ import { env } from '../../env.js';
 import { decrypt, encrypt } from '../../lib/crypto.js';
 import { raiseAlert, resolveAlert } from '../alerts.js';
 import { shopeeCall, ShopeeError, type ApiName, type CallOptions } from './client.js';
+import { rc } from '../runtimeConfig.js';
 
 export { ShopeeError, buildAuthUrl, API_NAMES, API_SPECS, flushApiLogs, breakerStates } from './client.js';
 
@@ -24,7 +25,7 @@ function toTokenSet(r: any): TokenSet {
 
 /** Đổi mã cấp quyền (code) lấy access token + refresh token */
 export async function exchangeCode(code: string, shopeeShopId: number): Promise<TokenSet> {
-  const r = await shopeeCall('auth/token/get', { shopeeShopId }, { body: { code, shop_id: shopeeShopId, partner_id: env.shopee.partnerId } });
+  const r = await shopeeCall('auth/token/get', { shopeeShopId }, { body: { code, shop_id: shopeeShopId, partner_id: rc().partnerId } });
   if (!r?.access_token) throw new ShopeeError('bad_request', 'Shopee không trả về access token', 'auth/token/get');
   return toTokenSet(r);
 }
@@ -60,7 +61,7 @@ export function refreshAccessToken(shopId: number): Promise<string> {
       const r = await shopeeCall(
         'auth/access_token/get',
         { shopId: shop.id, shopeeShopId: shop.shopeeShopId },
-        { body: { refresh_token: refreshToken, shop_id: shop.shopeeShopId, partner_id: env.shopee.partnerId } },
+        { body: { refresh_token: refreshToken, shop_id: shop.shopeeShopId, partner_id: rc().partnerId } },
       );
       const t = toTokenSet(r);
       await saveTokens(shop.id, t);

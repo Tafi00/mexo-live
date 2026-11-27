@@ -80,7 +80,7 @@ Không cần Partner ID: mặc định `SHOPEE_MODE=mock` — API tự dựng **
 ## Triển khai production
 
 1. **Đăng ký app trên Shopee Open Platform** (rủi ro lớn nhất — làm trước): xin quyền **Livestream API**, khai báo Redirect URL `https://<tên-miền>/connect/callback` và IP tĩnh của máy chạy API.
-2. `cp .env.example .env` → điền `APP_SECRET` (≥ 32 ký tự, **không đổi sau khi chạy**), `PUBLIC_URL`, `API_PUBLIC_URL`, `SHOPEE_MODE=live`, `SHOPEE_PARTNER_ID`, `SHOPEE_PARTNER_KEY`, `EXPECTED_EGRESS_IP`, `BOOTSTRAP_ADMIN_PASSWORD`.
+2. `cp .env.example .env` → chỉ cần điền `APP_SECRET` (≥ 32 ký tự, **không đổi sau khi chạy**), `PUBLIC_URL`, `BOOTSTRAP_ADMIN_PASSWORD` (và `DATABASE_URL` nếu không dùng docker-compose). **Partner ID / Partner Key, môi trường Shopee (giả lập / sandbox / live), Redirect URL, IP tĩnh, địa chỉ API cho máy phát, khóa AI** đều nhập trực tiếp trên web: *Cấu hình hệ thống → Kết nối & khóa API* (có nút kiểm tra khóa với Shopee trước khi lưu; khóa được mã hóa trong database).
 3. `docker compose up -d --build` (PostgreSQL 17 + API phục vụ cả giao diện web). Đặt HTTPS phía trước (Nginx/Caddy/Cloudflare). SSE cần tắt buffer proxy cho `/api/events`.
 4. Nhập dữ liệu cũ: `docker compose exec app node dist/cli/migrate-legacy.js /data/mexo-live-backup.json`.
 5. **Máy phát**: vào *Máy chủ phát → Thêm máy* để lấy khóa (hiện 1 lần), rồi trên từng máy phát:

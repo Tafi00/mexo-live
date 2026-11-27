@@ -12,6 +12,7 @@ import { publish } from '../services/events.js';
 import { onStreamReport, type StreamReport } from '../services/sessions.js';
 import { sendFile } from '../services/storage.js';
 import { authServer, capacity, cmpVersion, newServerKey, runningByServer, serverState } from '../services/streamers.js';
+import { rc } from '../services/runtimeConfig.js';
 
 export async function serverRoutes(app: FastifyInstance) {
   app.get('/api/servers', async (req) => {
@@ -46,9 +47,9 @@ export async function serverRoutes(app: FastifyInstance) {
       },
       capacity: await capacity(),
       canEdit: a.role === 'sysadmin',
-      minVersion: env.streamerMinVersion,
-      lostAfterSeconds: env.streamerLostAfterSec,
-      apiUrl: env.apiPublicUrl,
+      minVersion: rc().streamerMinVersion,
+      lostAfterSeconds: rc().streamerLostAfterSec,
+      apiUrl: rc().apiPublicUrl,
     };
   });
 
@@ -151,8 +152,8 @@ export async function serverRoutes(app: FastifyInstance) {
       .set({ version: body.version, maxStreams: body.maxStreams, host: body.host ?? server.host, ip: req.ip, metrics: body.metrics ?? null, lastHeartbeatAt: new Date() })
       .where(eq(servers.id, server.id));
     if (!wasOnline) publish({ type: 'server' });
-    if (cmpVersion(body.version, env.streamerMinVersion) < 0) {
-      return { accepted: false, reason: `Phiên bản ${body.version} thấp hơn mức tối thiểu ${env.streamerMinVersion}`, jobs: [], stop: body.streams.map((s) => s.jobId), intervalSec: 10 };
+    if (cmpVersion(body.version, rc().streamerMinVersion) < 0) {
+      return { accepted: false, reason: `Phiên bản ${body.version} thấp hơn mức tối thiểu ${rc().streamerMinVersion}`, jobs: [], stop: body.streams.map((s) => s.jobId), intervalSec: 10 };
     }
     // Xử lý báo cáo luồng
     const reportedIds = body.streams.map((s) => s.jobId);
@@ -196,7 +197,7 @@ export async function serverRoutes(app: FastifyInstance) {
           durationSec: p.durationSec,
           sizeBytes: vmap.get(p.videoId)?.sizeBytes ?? 0,
           version: vmap.get(p.videoId)?.updatedAt?.getTime() ?? 0,
-          url: `${env.apiPublicUrl}/api/streamer/videos/${p.videoId}`,
+          url: `${rc().apiPublicUrl}/api/streamer/videos/${p.videoId}`,
         })),
       }));
     // Việc mới chưa được máy nhận

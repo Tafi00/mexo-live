@@ -2,6 +2,7 @@ import { env } from '../env.js';
 import { decrypt } from '../lib/crypto.js';
 import { err } from '../lib/errors.js';
 import { getSetting } from './settings.js';
+import { rc } from './runtimeConfig.js';
 
 const PRIVATE_HOST = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|0\.0\.0\.0|\[?::1\]?|.*\.local$|.*\.internal$)/i;
 
@@ -12,7 +13,7 @@ export function validateAiBaseUrl(url: string): void {
   } catch {
     throw err.badRequest('ai_bad_url', 'Base URL không hợp lệ');
   }
-  if (!env.aiAllowPrivateHosts) {
+  if (!rc().aiAllowPrivateHosts) {
     if (u.protocol !== 'https:') throw err.badRequest('ai_insecure_url', 'Base URL phải dùng HTTPS');
     if (PRIVATE_HOST.test(u.hostname)) throw err.badRequest('ai_private_host', 'Không cho phép địa chỉ nội bộ (bật API_AI_ALLOW_PRIVATE_HOSTS nếu cần)');
   }

@@ -14,16 +14,18 @@ import { products, replyRules, servers, shops, templateItems, templates, videos 
 import { encrypt } from '../lib/crypto.js';
 import { newServerKey } from '../services/streamers.js';
 import { ensureBootstrapAdmin } from './bootstrap.js';
+import { loadRuntimeConfig, rc } from '../services/runtimeConfig.js';
 
 const DEMO_SHOP_ID = 990000001;
 const NAMES = ['Áo thun cotton basic', 'Quần jean ống suông', 'Váy hoa nhí vintage', 'Áo sơ mi linen', 'Túi tote canvas', 'Giày sneaker trắng', 'Mũ bucket', 'Kính mát thời trang', 'Đồng hồ dây da', 'Son kem lì', 'Kem chống nắng SPF50', 'Serum vitamin C', 'Bình giữ nhiệt 500ml', 'Tai nghe bluetooth', 'Sạc dự phòng 10000mAh', 'Ốp lưng điện thoại', 'Bàn phím cơ mini', 'Chuột không dây', 'Đèn ngủ cảm ứng', 'Gối tựa lưng'];
 
 async function main() {
-  if (env.shopee.mode !== 'mock') {
-    console.error('seed:demo chỉ dùng cho SHOPEE_MODE=mock');
+  await initDb();
+  await loadRuntimeConfig();
+  if (rc().shopeeMode !== 'mock') {
+    console.error('seed:demo chỉ dùng cho chế độ Shopee giả lập (mock)');
     process.exit(1);
   }
-  await initDb();
   await ensureBootstrapAdmin();
   const [exists] = await db.select().from(shops).where(eq(shops.shopeeShopId, DEMO_SHOP_ID));
   if (exists) {
@@ -118,7 +120,7 @@ async function main() {
   console.log(`  Shop: DEMO — Shop giả lập (id nội bộ ${shopId})`);
   console.log(`  Máy chủ phát: DEMO-STREAMER`);
   console.log(`\n  Chạy máy phát mô phỏng (terminal khác):`);
-  console.log(`    MEXO_API_URL=${env.apiPublicUrl} MEXO_SERVER_KEY=${k.key} STREAMER_MODE=simulate pnpm dev:streamer\n`);
+  console.log(`    MEXO_API_URL=${rc().apiPublicUrl} MEXO_SERVER_KEY=${k.key} STREAMER_MODE=simulate pnpm dev:streamer\n`);
   await closeDb();
 }
 

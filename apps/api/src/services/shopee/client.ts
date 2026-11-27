@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import { vnDate } from '@mexo/shared';
 import { db } from '../../db/client.js';
 import { apiCalls, apiDaily } from '../../db/schema.js';
-import { env, shopeeHost } from '../../env.js';
+import { rc, shopeeHost } from '../runtimeConfig.js';
 import { hmacSha256Hex, refCode } from '../../lib/crypto.js';
 
 /**
@@ -88,11 +88,11 @@ export interface CallOptions {
 // ───────────── Ký request ─────────────
 
 export function signPublic(path: string, ts: number): string {
-  return hmacSha256Hex(env.shopee.partnerKey, `${env.shopee.partnerId}${path}${ts}`);
+  return hmacSha256Hex(rc().partnerKey, `${rc().partnerId}${path}${ts}`);
 }
 
 export function signShop(path: string, ts: number, accessToken: string, shopId: number): string {
-  return hmacSha256Hex(env.shopee.partnerKey, `${env.shopee.partnerId}${path}${ts}${accessToken}${shopId}`);
+  return hmacSha256Hex(rc().partnerKey, `${rc().partnerId}${path}${ts}${accessToken}${shopId}`);
 }
 
 export function apiPath(api: string): string {
@@ -103,8 +103,8 @@ export function apiPath(api: string): string {
 export function buildAuthUrl(redirect: string): string {
   const path = apiPath('shop/auth_partner');
   const ts = Math.floor(Date.now() / 1000);
-  const u = new URL(shopeeHost + path);
-  u.searchParams.set('partner_id', String(env.shopee.partnerId));
+  const u = new URL(shopeeHost() + path);
+  u.searchParams.set('partner_id', String(rc().partnerId));
   u.searchParams.set('timestamp', String(ts));
   u.searchParams.set('sign', signPublic(path, ts));
   u.searchParams.set('redirect', redirect);
@@ -241,8 +241,8 @@ function classify(api: string, httpStatus: number | null, code: string | null, m
 
 export async function shopeeCall<T = any>(api: ApiName, ctx: CallContext, opts: CallOptions = {}): Promise<T> {
   const spec = API_SPECS[api];
-  if (env.shopee.mode !== 'mock' && (!env.shopee.partnerId || !env.shopee.partnerKey)) {
-    throw new ShopeeError('not_configured', 'Chưa cấu hình SHOPEE_PARTNER_ID / SHOPEE_PARTNER_KEY', api);
+  if (rc().shopeeMode !== 'mock' && (!rc().partnerId || !rc().partnerKey)) {
+    throw new ShopeeError('not_configured', 'Chưa cấu hình Partner ID / Partner Key — nhập tại Cấu hình hệ thống → Kết nối & tích hợp', api);
   }
   const b = breakerFor(api);
   if (b.openUntil > Date.now()) {
@@ -261,8 +261,8 @@ export async function shopeeCall<T = any>(api: ApiName, ctx: CallContext, opts: 
   while (attempt < maxAttempts) {
     attempt++;
     const ts = Math.floor(Date.now() / 1000);
-    const u = new URL(shopeeHost + path);
-    u.searchParams.set('partner_id', String(env.shopee.partnerId));
+    const u = new URL(shopeeHost() + path);
+    u.searchParams.set('partner_id', String(rc().partnerId));
     u.searchParams.set('timestamp', String(ts));
     if (spec.auth === 'public') {
       u.searchParams.set('sign', signPublic(path, ts));
@@ -275,7 +275,7 @@ export async function shopeeCall<T = any>(api: ApiName, ctx: CallContext, opts: 
     for (const [k, v] of Object.entries(opts.query ?? {})) if (v !== undefined && v !== null) u.searchParams.set(k, String(v));
 
     const ac = new AbortController();
-    const timer = setTimeout(() => ac.abort(), opts.timeoutMs ?? env.shopee.timeoutMs);
+    const timer = setTimeout(() => ac.abort(), opts.timeoutMs ?? rc().timeoutMs);
     let httpStatus: number | null = null;
     let requestId: string | null = null;
     let payload: any = null;

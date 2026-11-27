@@ -425,77 +425,39 @@ export function InfraTab() {
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader title="Kết nối Shopee Open Platform" icon={<Plug className="size-4" />} actions={<Badge tone={mode.tone} dot>{mode.label}</Badge>} />
-          <div className="space-y-4 p-4">
+          <CardHeader
+            title="Kết nối hiện tại"
+            icon={<Plug className="size-4" />}
+            actions={<Badge tone={mode.tone} dot>{mode.label}</Badge>}
+          />
+          <div className="space-y-3 p-4">
             {mode.hint && <Callout tone={d.shopee.mode === 'mock' ? 'warning' : 'neutral'}>{mode.hint}</Callout>}
             <KV
               items={[
                 { label: 'Partner ID', value: d.shopee.partnerId ? <span className="font-mono">{d.shopee.partnerId}</span> : <span className="text-muted">Chưa cấu hình</span> },
-                {
-                  label: 'Partner key',
-                  value: d.shopee.hasKey ? (
-                    <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400">
-                      <CheckCircle2 className="size-3.5" />
-                      Đã cấu hình (ẩn)
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400">
-                      <AlertTriangle className="size-3.5" />
-                      Chưa cấu hình
-                    </span>
-                  ),
-                },
+                { label: 'Partner Key', value: d.shopee.hasKey ? <span className="text-emerald-700 dark:text-emerald-400">Đã cấu hình (ẩn)</span> : <span className="text-amber-700 dark:text-amber-400">Chưa cấu hình</span> },
+                { label: 'IP tĩnh khai với Shopee', value: d.shopee.expectedEgressIp ? <span className="font-mono">{d.shopee.expectedEgressIp}</span> : <span className="text-muted">Không kiểm tra</span> },
+                { label: 'Máy phát tối thiểu', value: <span className="font-mono">{d.streamer.minVersion}</span> },
               ]}
             />
-            <div className="space-y-1.5">
-              <p className="text-xs text-muted">Redirect URL (đăng ký trong Shopee Open Platform Console)</p>
-              <div className="flex gap-2">
-                <code className="block h-8 min-w-0 flex-1 truncate rounded-lg border border-line bg-surface-2 px-2.5 font-mono text-xs leading-[30px]">{d.shopee.redirectUrl}</code>
-                <Button size="md" icon={<Copy className="size-4" />} onClick={() => void copy(d.shopee.redirectUrl, 'Đã sao chép Redirect URL')}>
-                  Sao chép
-                </Button>
+            <div className="space-y-1">
+              <p className="text-xs text-muted">Redirect URL · Địa chỉ API cho máy phát</p>
+              <div className="flex items-center gap-2">
+                <code className="min-w-0 flex-1 truncate rounded-md bg-surface-2 px-2 py-1 font-mono text-xs">{d.shopee.redirectUrl}</code>
+                <Button size="xs" variant="ghost" icon={<Copy className="size-3.5" />} onClick={() => void copy(d.shopee.redirectUrl, 'Đã sao chép Redirect URL')} aria-label="Sao chép Redirect URL" iconOnly />
               </div>
-              <p className="text-xs text-muted">Shopee chỉ chuyển chủ shop về đúng địa chỉ đã đăng ký sau khi cấp quyền. Sai địa chỉ → kết nối shop sẽ thất bại.</p>
+              <div className="flex items-center gap-2">
+                <code className="min-w-0 flex-1 truncate rounded-md bg-surface-2 px-2 py-1 font-mono text-xs">{d.streamer.apiUrl}</code>
+                <Button size="xs" variant="ghost" icon={<Copy className="size-3.5" />} onClick={() => void copy(d.streamer.apiUrl, 'Đã sao chép địa chỉ')} aria-label="Sao chép địa chỉ API" iconOnly />
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <p className="text-xs text-muted">IP ra Internet dự kiến</p>
-              {d.shopee.expectedEgressIp ? (
-                <div className="flex gap-2">
-                  <code className="flex h-8 min-w-0 flex-1 items-center rounded-lg border border-line bg-surface-2 px-2.5 font-mono text-xs">{d.shopee.expectedEgressIp}</code>
-                  <Button icon={<Copy className="size-4" />} onClick={() => void copy(d.shopee.expectedEgressIp!, 'Đã sao chép IP')}>
-                    Sao chép
-                  </Button>
-                </div>
-              ) : (
-                <p className="text-sm text-muted">Chưa khai báo — hệ thống không kiểm tra IP ra.</p>
-              )}
-              <p className="text-xs text-muted">Khai báo IP này trong danh sách IP được phép của App trên Console (nếu bật). Hệ thống kiểm tra mỗi 10 phút và cảnh báo nếu IP ra thực tế khác.</p>
-            </div>
+            <Link to="/settings?tab=integrations" className="inline-flex text-xs font-medium text-brand-600 hover:underline dark:text-brand-400">
+              Sửa kết nối & khóa API →
+            </Link>
           </div>
         </Card>
 
         <div className="space-y-4">
-          <Card>
-            <CardHeader title="Máy chủ phát (MexoStreamer)" icon={<Server className="size-4" />} actions={<Link to="/servers" className="text-xs font-medium text-brand-600 hover:underline dark:text-brand-400">Quản lý máy chủ</Link>} />
-            <div className="space-y-3 p-4">
-              <KV
-                cols={2}
-                items={[
-                  { label: 'Phiên bản tối thiểu', value: <span className="font-mono">{d.streamer.minVersion}</span> },
-                  { label: 'Coi là mất kết nối sau', value: `${d.streamer.lostAfterSec} giây không có tín hiệu` },
-                ]}
-              />
-              <div className="space-y-1.5">
-                <p className="text-xs text-muted">MEXO_API_URL (địa chỉ máy phát kết nối tới)</p>
-                <div className="flex gap-2">
-                  <code className="block h-8 min-w-0 flex-1 truncate rounded-lg border border-line bg-surface-2 px-2.5 font-mono text-xs leading-[30px]">{d.streamer.apiUrl}</code>
-                  <Button icon={<Copy className="size-4" />} onClick={() => void copy(d.streamer.apiUrl, 'Đã sao chép địa chỉ')}>
-                    Sao chép
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </Card>
           <Card>
             <CardHeader title="Kho lưu trữ" icon={<HardDrive className="size-4" />} description="Video, ảnh bìa và tệp tải lên — trên ổ đĩa của máy chủ API" />
             <div className="space-y-3 p-4">
