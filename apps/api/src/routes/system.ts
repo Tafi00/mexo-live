@@ -1,3 +1,4 @@
+import type { ServerResponse } from 'node:http';
 import type { FastifyInstance } from 'fastify';
 import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
 import { addDays, vnDate } from '@mexo/shared';
@@ -19,6 +20,13 @@ import { capacity, serverState } from '../services/streamers.js';
 import { jobStatus } from '../jobs.js';
 import { breakerStates } from '../services/shopee/index.js';
 import { describeRuntimeConfig, rc, resetRuntimeFields, saveRuntimeConfig, shopeeRedirectUrl } from '../services/runtimeConfig.js';
+
+/** Các luồng SSE đang mở — đóng chủ động khi dừng server để không giữ tiến trình cũ lúc deploy (trình duyệt tự nối lại sau 3 giây) */
+const eventStreams = new Set<ServerResponse>();
+export function endEventStreams(): void {
+  for (const res of eventStreams) res.end();
+  eventStreams.clear();
+}
 
 export async function systemRoutes(app: FastifyInstance) {
   // ───────────── Thanh trên cùng ─────────────
@@ -424,10 +432,12 @@ export async function systemRoutes(app: FastifyInstance) {
       if (pending.length < 200) pending.push(ev);
     };
     events.on('live', onEvent);
+    eventStreams.add(reply.raw);
     req.raw.on('close', () => {
       clearInterval(flush);
       clearInterval(ping);
       events.off('live', onEvent);
+      eventStreams.delete(reply.raw);
     });
     return reply;
   });

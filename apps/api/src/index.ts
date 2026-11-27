@@ -4,6 +4,7 @@ import { buildApp } from './app.js';
 import { startJobs, stopJobs } from './jobs.js';
 import { ensureBootstrapAdmin } from './cli/bootstrap.js';
 import { loadRuntimeConfig, rc } from './services/runtimeConfig.js';
+import { endEventStreams } from './routes/system.js';
 
 async function main() {
   await initDb();
@@ -19,6 +20,7 @@ async function main() {
   const shutdown = async (sig: string) => {
     console.log(`\n[${sig}] đang dừng an toàn...`);
     await stopJobs();
+    endEventStreams();
     await app.close();
     await closeDb();
     process.exit(0);
