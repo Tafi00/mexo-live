@@ -92,9 +92,15 @@ export function rc(): IntegrationConfig {
   return current;
 }
 
+/** Địa chỉ server gọi Shopee. Giả lập chạy ngay trong tiến trình API → gọi loopback, không vòng qua domain / proxy HTTPS */
 export function shopeeHost(): string {
   const m = current.shopeeMode;
-  return m === 'live' ? 'https://partner.shopeemobile.com' : m === 'sandbox' ? 'https://partner.test-stable.shopeemobile.com' : current.apiPublicUrl + '/api/mock-shopee';
+  return m === 'live' ? 'https://partner.shopeemobile.com' : m === 'sandbox' ? 'https://partner.test-stable.shopeemobile.com' : `http://127.0.0.1:${env.port}/api/mock-shopee`;
+}
+
+/** Địa chỉ trang cấp quyền mở trên trình duyệt người dùng (giả lập: qua địa chỉ công khai của API) */
+export function shopeeBrowserHost(): string {
+  return current.shopeeMode === 'mock' ? current.apiPublicUrl + '/api/mock-shopee' : shopeeHost();
 }
 
 export function shopeeRedirectUrl(): string {

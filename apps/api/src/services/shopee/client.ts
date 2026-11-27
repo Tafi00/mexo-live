@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import { vnDate } from '@mexo/shared';
 import { db } from '../../db/client.js';
 import { apiCalls, apiDaily } from '../../db/schema.js';
-import { rc, shopeeHost } from '../runtimeConfig.js';
+import { rc, shopeeBrowserHost, shopeeHost } from '../runtimeConfig.js';
 import { hmacSha256Hex, refCode } from '../../lib/crypto.js';
 
 /**
@@ -103,7 +103,7 @@ export function apiPath(api: string): string {
 export function buildAuthUrl(redirect: string): string {
   const path = apiPath('shop/auth_partner');
   const ts = Math.floor(Date.now() / 1000);
-  const u = new URL(shopeeHost() + path);
+  const u = new URL(shopeeBrowserHost() + path);
   u.searchParams.set('partner_id', String(rc().partnerId));
   u.searchParams.set('timestamp', String(ts));
   u.searchParams.set('sign', signPublic(path, ts));
