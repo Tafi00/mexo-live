@@ -46,9 +46,9 @@ const dotTones: Record<Tone, string> = {
   violet: 'bg-violet-500',
 };
 
-export function Badge({ tone = 'neutral', children, dot, pulse, className, size = 'md', icon }: { tone?: Tone; children: ReactNode; dot?: boolean; pulse?: boolean; className?: string; size?: 'sm' | 'md'; icon?: ReactNode }) {
+export function Badge({ tone = 'neutral', children, dot, pulse, className, size = 'md', icon, title }: { tone?: Tone; children: ReactNode; dot?: boolean; pulse?: boolean; className?: string; size?: 'sm' | 'md'; icon?: ReactNode; title?: string }) {
   return (
-    <span className={cn('inline-flex max-w-full items-center gap-1.5 whitespace-nowrap rounded-full font-medium ring-1 ring-inset', size === 'sm' ? 'px-1.5 py-px text-2xs' : 'px-2 py-0.5 text-xs', tones[tone], className)}>
+    <span title={title} className={cn('inline-flex max-w-full items-center gap-1.5 whitespace-nowrap rounded-full font-medium ring-1 ring-inset', size === 'sm' ? 'px-1.5 py-px text-2xs' : 'px-2 py-0.5 text-xs', tones[tone], className)}>
       {dot && <span className={cn('size-1.5 shrink-0 rounded-full', dotTones[tone], pulse && 'animate-pulse-dot')} />}
       {icon}
       <span className="truncate">{children}</span>

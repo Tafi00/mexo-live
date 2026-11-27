@@ -24,6 +24,9 @@ import {
   PencilLine,
   PackageSearch,
   Zap,
+  Link2,
+  ArrowRightLeft,
+  History,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api, errorMessage } from '@/lib/api';
@@ -33,6 +36,7 @@ import { fmtDate, fmtRelative, fmtTime, todayVn, addDaysStr } from '@/lib/format
 import { useCopy, useDebounced, useLocalState, useNow } from '@/lib/hooks';
 import type { ShopView } from '@/lib/types';
 import { BulkStartDialog } from '@/components/domain/BulkStartDialog';
+import { ConnectInvitesDialog } from '@/components/domain/ConnectInvitesDialog';
 import { ConnectShopDialog } from '@/components/domain/ConnectShopDialog';
 import { GoLiveDialog } from '@/components/live/GoLiveDialog';
 import { ShopStatusBadge, ServiceBadge, Signals, ConnectionBadge, RoleBadge } from '@/components/domain/status';
@@ -89,6 +93,7 @@ export default function ShopList() {
   const [goLiveShop, setGoLiveShop] = useState<ShopView | null>(null);
   const [bulkStart, setBulkStart] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
+  const [invitesFor, setInvitesFor] = useState<number[] | null>(null);
   const pageSize = 50;
 
   useEffect(() => setPage(1), [tab, dq, assignee, owner, tag, sort]);
@@ -110,6 +115,35 @@ export default function ShopList() {
     setParams(p, { replace: true });
     setSelected(new Set());
   };
+
+  async function setHold(shopIds: number[], hold: boolean) {
+    try {
+      const r = await api.post<{ changed: number }>('/api/shops/legacy-hold', { shopIds, hold });
+      toast.success(hold ? `Đã đánh dấu ${r.changed} shop đang chạy ở hệ thống cũ` : `Đã chuyển hẳn ${r.changed} shop sang hệ thống mới`);
+      setSelected(new Set());
+      void list.refetch();
+    } catch (e) {
+      toast.error(errorMessage(e));
+    }
+  }
+
+  async function cutover(shopIds: number[], shopsSel: ShopView[]) {
+    const notConnected = shopsSel.filter((s) => s.connection !== 'ok' && s.connection !== 'expiring').length;
+    const r = await confirm({
+      title: `Chuyển hẳn ${shopIds.length} shop sang hệ thống mới?`,
+      description: (
+        <div className="space-y-2">
+          <p>Từ lúc này hệ thống mới được phép tạo / kết thúc phiên, ghim sản phẩm, chạy lịch phát và trả lời bình luận cho các shop này.</p>
+          <p className="font-medium text-fg">Trước khi bấm, ở hệ thống cũ hãy tắt lịch phát, trả lời tự động và máy phát của các shop này — nếu không hai bên sẽ tranh phiên và trả lời trùng.</p>
+          {notConnected > 0 && <p className="text-amber-700 dark:text-amber-400">{notConnected} shop chưa cấp quyền cho hệ thống mới.</p>}
+        </div>
+      ),
+      danger: true,
+      confirmText: 'Chuyển hẳn',
+      requireText: 'CHUYEN',
+    });
+    if (r.ok) await setHold(shopIds, false);
+  }
 
   async function bulk(action: string, value?: unknown, label = 'Đã thực hiện') {
     try {
@@ -258,6 +292,11 @@ export default function ShopList() {
                   Bắt đầu phát
                 </Button>
               )}
+              {can('shop.connect') && (
+                <Button size="sm" icon={<Link2 className="size-3.5" />} onClick={() => setInvitesFor([...selected])}>
+                  Link cấp quyền
+                </Button>
+              )}
               {role !== 'member' && (
                 <Button
                   size="sm"
@@ -309,6 +348,19 @@ export default function ShopList() {
                       const r = await confirm({ title: 'Gỡ khỏi nhóm', input: { label: 'Tên nhóm', required: true } });
                       if (r.ok) void bulk('tags_remove', r.value.trim(), 'Đã gỡ nhóm');
                     },
+                  },
+                  { divider: true, label: '', hidden: !isStaff },
+                  {
+                    label: 'Chuyển hẳn sang hệ thống mới',
+                    icon: <ArrowRightLeft />,
+                    hidden: !isStaff,
+                    onClick: () => void cutover([...selected], items.filter((s) => selected.has(s.id))),
+                  },
+                  {
+                    label: 'Đánh dấu đang chạy ở hệ thống cũ',
+                    icon: <History />,
+                    hidden: !isStaff,
+                    onClick: () => void setHold([...selected], true),
                   },
                   { divider: true, label: '' },
                   {
@@ -388,6 +440,11 @@ export default function ShopList() {
                       <Link to={`/shops/${s.id}`} onClick={(e) => e.stopPropagation()} className="truncate font-medium hover:text-brand-600">
                         {s.name}
                       </Link>
+                      {s.legacyHold && (
+                        <Badge tone="warning" size="sm" className="shrink-0" title="Đang chạy ở hệ thống cũ — hệ thống mới chỉ theo dõi">
+                          Hệ thống cũ
+                        </Badge>
+                      )}
                       {s.tags.slice(0, 2).map((t) => (
                         <Badge key={t} tone="muted" size="sm" className="shrink-0">
                           {t}
@@ -517,6 +574,7 @@ export default function ShopList() {
           void bulk('assign', id, id ? 'Đã giao phụ trách' : 'Đã bỏ giao phụ trách');
         }}
       />
+      <ConnectInvitesDialog open={invitesFor !== null} onClose={() => { setInvitesFor(null); setSelected(new Set()); void list.refetch(); }} shopIds={invitesFor ?? []} />
       <BulkStartDialog
         open={bulkStart}
         onClose={() => {

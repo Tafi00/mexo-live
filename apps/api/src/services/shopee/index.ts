@@ -6,10 +6,22 @@ import { decrypt, encrypt } from '../../lib/crypto.js';
 import { raiseAlert, resolveAlert } from '../alerts.js';
 import { shopeeCall, ShopeeError, type ApiName, type CallOptions } from './client.js';
 import { rc } from '../runtimeConfig.js';
+import { AppError } from '../../lib/errors.js';
 
 export { ShopeeError, buildAuthUrl, API_NAMES, API_SPECS, flushApiLogs, breakerStates } from './client.js';
 
 type ShopRow = typeof shops.$inferSelect;
+
+/**
+ * Shop còn chạy ở hệ thống cũ (legacy_hold): chặn mọi lệnh GHI lên Shopee ở một chỗ duy nhất —
+ * kể cả tác vụ nền, lịch phát, trả lời tự động — để không tranh phiên / trả lời trùng với hệ thống cũ.
+ * Lệnh đọc (theo dõi phiên, sản phẩm, bình luận) và làm mới token vẫn chạy bình thường.
+ */
+export function assertWritable(shop: ShopRow): void {
+  if (shop.legacyHold) {
+    throw new AppError('legacy_hold', 'Shop đang chạy ở hệ thống cũ — hệ thống mới chỉ theo dõi. Bấm "Chuyển hẳn sang hệ thống mới" ở trang shop trước khi thao tác.', 409);
+  }
+}
 
 // ───────────── Token ─────────────
 
@@ -230,6 +242,7 @@ export async function uploadImage(shop: ShopRow, data: Buffer, fileName: string,
 }
 
 export async function createSession(shop: ShopRow, p: { title: string; description: string; coverUrl: string }) {
+  assertWritable(shop);
   const r = await shopApi(shop, 'livestream/create_session', {
     body: { title: p.title, description: p.description, cover_image_url: p.coverUrl, is_test: false },
   });
@@ -239,6 +252,7 @@ export async function createSession(shop: ShopRow, p: { title: string; descripti
 }
 
 export async function updateSession(shop: ShopRow, sessionId: number, p: { title: string; description: string; coverUrl: string }) {
+  assertWritable(shop);
   await shopApi(shop, 'livestream/update_session', {
     sessionId,
     body: { session_id: sessionId, title: p.title, description: p.description, cover_image_url: p.coverUrl },
@@ -260,10 +274,12 @@ export async function getSessionDetail(shop: ShopRow, sessionId: number) {
 }
 
 export async function startSession(shop: ShopRow, sessionId: number, domainId: number | null) {
+  assertWritable(shop);
   await shopApi(shop, 'livestream/start_session', { sessionId, body: { session_id: sessionId, domain_id: domainId ?? undefined } });
 }
 
 export async function endSession(shop: ShopRow, sessionId: number) {
+  assertWritable(shop);
   await shopApi(shop, 'livestream/end_session', { sessionId, body: { session_id: sessionId } });
 }
 
@@ -283,6 +299,7 @@ export async function getSessionMetric(shop: ShopRow, sessionId: number) {
 }
 
 export async function addItems(shop: ShopRow, sessionId: number, itemIds: number[]) {
+  assertWritable(shop);
   await shopApi(shop, 'livestream/add_item_list', {
     sessionId,
     body: { session_id: sessionId, item_list: itemIds.map((id) => ({ item_id: id, shop_id: shop.shopeeShopId })) },
@@ -290,6 +307,7 @@ export async function addItems(shop: ShopRow, sessionId: number, itemIds: number
 }
 
 export async function deleteItems(shop: ShopRow, sessionId: number, itemIds: number[]) {
+  assertWritable(shop);
   await shopApi(shop, 'livestream/delete_item_list', {
     sessionId,
     body: { session_id: sessionId, item_list: itemIds.map((id) => ({ item_id: id, shop_id: shop.shopeeShopId })) },
@@ -320,6 +338,7 @@ export async function getRecentItems(shop: ShopRow, sessionId: number): Promise<
 }
 
 export async function updateShowItem(shop: ShopRow, sessionId: number, itemId: number) {
+  assertWritable(shop);
   await shopApi(shop, 'livestream/update_show_item', {
     sessionId,
     body: { session_id: sessionId, item: { item_id: itemId, shop_id: shop.shopeeShopId } },
@@ -333,6 +352,7 @@ export async function getShowItem(shop: ShopRow, sessionId: number): Promise<num
 }
 
 export async function postComment(shop: ShopRow, sessionId: number, comment: string) {
+  assertWritable(shop);
   await shopApi(shop, 'livestream/post_comment', { sessionId, body: { session_id: sessionId, comment } });
 }
 

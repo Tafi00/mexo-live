@@ -85,6 +85,7 @@ export async function buildShopViews(ids: number[] | null) {
     if (svc.state === 'expired') issues.push({ code: 'expired', level: 'critical', text: 'Đã hết hạn dịch vụ' });
     if (svc.state === 'expiring') issues.push({ code: 'expiring', level: 'warning', text: `Còn ${svc.daysLeft} ngày sử dụng` });
     if (shop.replyDisabledReason) issues.push({ code: 'reply_off', level: 'warning', text: 'Trả lời tự động bị tắt do lỗi gửi' });
+    if (shop.legacyHold) issues.push({ code: 'legacy_hold', level: 'info', text: 'Đang chạy ở hệ thống cũ — hệ thống mới chỉ theo dõi' });
     if (s) {
       if (s.feedLostAt) issues.push({ code: 'feed_lost', level: 'critical', text: `Mất hình ${Math.round((now - s.feedLostAt.getTime()) / 1000)} giây` });
       if (s.streamState === 'error') issues.push({ code: 'feed_error', level: 'warning', text: 'Máy lỗi đẩy hình (đang tự chạy lại)' });
@@ -120,6 +121,7 @@ export async function buildShopViews(ids: number[] | null) {
       service: { state: svc.state, daysLeft: svc.daysLeft, expiresOn: shop.serviceExpiresOn, suspendedAt: shop.suspendedAt, suspendReason: shop.suspendReason },
       connection: shop.connection,
       connectionError: shop.connectionError,
+      legacyHold: shop.legacyHold,
       authExpiresAt: shop.authExpiresAt,
       livestreamCheck: shop.livestreamCheck,
       replyEnabled: shop.replyEnabled,

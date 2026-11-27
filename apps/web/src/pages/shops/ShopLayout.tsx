@@ -3,12 +3,14 @@ import { Link, NavLink, Outlet, useOutletContext, useParams } from 'react-router
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
+  ArrowRightLeft,
   BarChart3,
   CalendarClock,
   Clapperboard,
   Copy,
   History,
   LayoutGrid,
+  Link2,
   ListVideo,
   MessagesSquare,
   Package,
@@ -17,13 +19,16 @@ import {
   ScrollText,
   Zap,
 } from 'lucide-react';
-import { api } from '@/lib/api';
+import { toast } from 'sonner';
+import { api, errorMessage } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/cn';
 import { fmtDate } from '@/lib/format';
 import { useCopy } from '@/lib/hooks';
 import type { ShopDetail } from '@/lib/types';
 import { ConnectShopDialog } from '@/components/domain/ConnectShopDialog';
+import { ConnectInvitesDialog } from '@/components/domain/ConnectInvitesDialog';
+import { useConfirm } from '@/components/ui/dialog';
 import { GoLiveDialog } from '@/components/live/GoLiveDialog';
 import { ConnectionBadge, ShopStatusBadge } from '@/components/domain/status';
 import { Button, ButtonLink } from '@/components/ui/button';
@@ -42,15 +47,42 @@ export function useShop(): ShopCtx {
 export default function ShopLayout() {
   const { shopId } = useParams();
   const id = Number(shopId);
-  const { can, role } = useAuth();
+  const { can, role, isStaff } = useAuth();
   const copy = useCopy();
+  const confirm = useConfirm();
   const [reauth, setReauth] = useState(false);
   const [goLive, setGoLive] = useState(false);
+  const [invite, setInvite] = useState(false);
   const q = useQuery({ queryKey: ['shop', id], queryFn: () => api.get<ShopDetail>(`/api/shops/${id}`), refetchInterval: 20_000 });
 
   if (q.isLoading) return <PageLoading />;
   if (q.isError || !q.data) return <ErrorState error={q.error} onRetry={() => q.refetch()} />;
   const shop = q.data;
+
+  async function cutover() {
+    const connected = shop.connection === 'ok' || shop.connection === 'expiring';
+    const r = await confirm({
+      title: `Chuyển hẳn “${shop.name}” sang hệ thống mới?`,
+      description: (
+        <div className="space-y-2">
+          <p>Từ lúc này hệ thống mới được tạo / kết thúc phiên, ghim sản phẩm, chạy lịch phát và trả lời bình luận cho shop này.</p>
+          <p className="font-medium text-fg">Trước khi bấm, ở hệ thống cũ hãy tắt lịch phát, trả lời tự động và máy phát của shop — nếu không hai bên sẽ tranh phiên và trả lời trùng.</p>
+          {shop.session?.origin === 'legacy' && <p>Phiên đang chạy từ hệ thống cũ: sau khi chuyển, mở phiên và bấm “Bắt đầu phát tự động” để máy phát mới tiếp quản (giữ nguyên phiên).</p>}
+          {!connected && <p className="text-amber-700 dark:text-amber-400">Shop chưa cấp quyền cho hệ thống mới — cần cấp quyền trước khi phát.</p>}
+        </div>
+      ),
+      danger: true,
+      confirmText: 'Chuyển hẳn',
+    });
+    if (!r.ok) return;
+    try {
+      await api.post('/api/shops/legacy-hold', { shopIds: [shop.id], hold: false });
+      toast.success('Đã chuyển hẳn shop sang hệ thống mới');
+      void q.refetch();
+    } catch (e) {
+      toast.error(errorMessage(e));
+    }
+  }
 
   const tabs = [
     { to: '', label: 'Hôm nay', icon: LayoutGrid, end: true, show: true },
@@ -79,6 +111,7 @@ export default function ShopLayout() {
               <h1 className="truncate text-2xl font-semibold tracking-tight">{shop.name}</h1>
               <ShopStatusBadge status={shop.status} />
               {shop.connection !== 'ok' && <ConnectionBadge state={shop.connection} />}
+              {shop.legacyHold && <Badge tone="warning">Hệ thống cũ</Badge>}
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
               {shop.alias && <span>{shop.shopeeName}</span>}
@@ -108,6 +141,7 @@ export default function ShopLayout() {
               can('session.create') &&
               can('session.control') &&
               !needsReauth &&
+              !shop.legacyHold &&
               shop.status !== 'expired' &&
               shop.status !== 'suspended' && (
                 <Button variant="primary" icon={<Zap className="size-4" />} onClick={() => setGoLive(true)}>
@@ -134,7 +168,32 @@ export default function ShopLayout() {
           Vẫn xem được dữ liệu và kết thúc phiên đang live, nhưng không tạo hoặc bắt đầu phiên mới. Liên hệ quản trị viên để gia hạn.
         </Callout>
       )}
-      {needsReauth && shop.status !== 'suspended' && (
+      {shop.legacyHold && shop.status !== 'suspended' && (
+        <Callout
+          tone="info"
+          className="mb-4"
+          icon={<ArrowRightLeft className="size-4" />}
+          title="Đang chạy ở hệ thống cũ — hệ thống mới chỉ theo dõi"
+          action={
+            <div className="flex flex-wrap gap-2">
+              {needsReauth && can('shop.connect') && (
+                <Button size="sm" icon={<Link2 className="size-3.5" />} onClick={() => setInvite(true)}>
+                  Link gửi chủ shop
+                </Button>
+              )}
+              {isStaff && (
+                <Button size="sm" variant={needsReauth ? 'outline' : 'primary'} icon={<ArrowRightLeft className="size-3.5" />} onClick={() => void cutover()}>
+                  Chuyển hẳn sang hệ thống mới
+                </Button>
+              )}
+            </div>
+          }
+        >
+          {needsReauth ? 'Bước 1: gửi link cho chủ shop cấp quyền cho hệ thống mới — phiên đang chạy ở hệ thống cũ không bị ảnh hưởng. ' : 'Đã có quyền Shopee cho hệ thống mới. '}
+          Hệ thống mới chỉ đọc phiên, sản phẩm, bình luận và tự làm mới token; không tạo / kết thúc phiên, không ghim, không chạy lịch, không trả lời bình luận cho tới khi bạn chuyển hẳn shop này.
+        </Callout>
+      )}
+      {needsReauth && !shop.legacyHold && shop.status !== 'suspended' && (
         <Callout tone="warning" className="mb-4" title="Cần cấp quyền Shopee cho ứng dụng" action={can('shop.connect') && <Button size="sm" onClick={() => setReauth(true)}>Cấp quyền lại</Button>}>
           {shop.connectionError ?? 'Token Shopee không còn hiệu lực.'} Chủ shop cần đăng nhập Shopee bằng tài khoản shop và đồng ý cấp quyền.
         </Callout>
@@ -166,6 +225,7 @@ export default function ShopLayout() {
       </Suspense>
       <ConnectShopDialog open={reauth} onClose={() => setReauth(false)} reauthShopId={shop.id} reauthName={shop.name} />
       <GoLiveDialog open={goLive} onClose={() => setGoLive(false)} shopId={shop.id} shopName={shop.name} />
+      <ConnectInvitesDialog open={invite} onClose={() => setInvite(false)} shopIds={[shop.id]} />
     </div>
   );
 }

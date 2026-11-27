@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { CalendarPlus, CheckCircle2, History, PauseCircle, PlayCircle, Plug, ShieldCheck, Stethoscope, UserRoundCog, XCircle } from 'lucide-react';
+import { CalendarPlus, CheckCircle2, History, Link2, PauseCircle, PlayCircle, Plug, ShieldCheck, Stethoscope, UserRoundCog, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { CONNECTION_LABELS } from '@mexo/shared';
 import { api, errorMessage } from '@/lib/api';
@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth';
 import { addDaysStr, fmtDate, fmtDateTime, fmtRelative, todayVn } from '@/lib/format';
 import { useAction } from '@/lib/hooks';
 import { ConnectShopDialog } from '@/components/domain/ConnectShopDialog';
+import { ConnectInvitesDialog } from '@/components/domain/ConnectInvitesDialog';
 import { ConnectionBadge, ServiceBadge } from '@/components/domain/status';
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/dialog';
@@ -20,6 +21,7 @@ export default function ShopConnection() {
   const { isStaff, isSysadmin, can, role } = useAuth();
   const confirm = useConfirm();
   const [reauth, setReauth] = useState(false);
+  const [invite, setInvite] = useState(false);
   const [checkResult, setCheckResult] = useState<any>(null);
   const [cartLimit, setCartLimit] = useState(String(shop.cartLimit));
   const names = useQuery({ queryKey: ['shop', shop.id, 'names'], queryFn: () => api.get(`/api/shops/${shop.id}/names`) });
@@ -106,6 +108,11 @@ export default function ShopConnection() {
               <Button size="sm" icon={<Stethoscope className="size-3.5" />} loading={check.isPending} onClick={() => check.mutate()}>
                 Kiểm tra kết nối
               </Button>
+              {can('shop.connect') && shop.status !== 'suspended' && (
+                <Button size="sm" icon={<Link2 className="size-3.5" />} onClick={() => setInvite(true)} title="Link dùng được 14 ngày — chủ shop tự mở, không cần tài khoản MEXO">
+                  Link gửi chủ shop
+                </Button>
+              )}
               {can('shop.connect') && shop.status !== 'suspended' && (
                 <Button size="sm" variant="primary" icon={<Plug className="size-3.5" />} onClick={() => setReauth(true)}>
                   Cấp quyền lại
@@ -227,6 +234,7 @@ export default function ShopConnection() {
         </Card>
       )}
       <ConnectShopDialog open={reauth} onClose={() => setReauth(false)} reauthShopId={shop.id} reauthName={shop.name} />
+      <ConnectInvitesDialog open={invite} onClose={() => { setInvite(false); refetch(); }} shopIds={[shop.id]} />
     </div>
   );
 }

@@ -151,6 +151,8 @@ async function main() {
           ? { status: prod.sync.status === 'done' ? 'done' : 'never', loaded: prod.sync.loaded ?? 0, total: prod.sync.total ?? 0, syncedAt: prod.sync.syncedAt ?? null, errorCode: null }
           : { status: 'never', loaded: 0, total: 0, syncedAt: null, errorCode: null },
         legacyId: String(s.id),
+        // Hệ thống cũ còn đang vận hành shop: bên mới chỉ theo dõi cho tới khi chuyển hẳn từng shop
+        legacyHold: true,
         tags: replies?.enabled ? ['v1-tra-loi-tu-dong'] : [],
       })
       .returning();

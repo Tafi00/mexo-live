@@ -128,6 +128,8 @@ async function drainQueue(shopId: number, sessionId: number): Promise<void> {
 
 async function autoReplyEnabled(shop: ShopRow, s: SessionRow): Promise<boolean> {
   if (await isFrozen()) return false;
+  // Shop còn chạy ở hệ thống cũ: bên cũ đang trả lời, bên mới chỉ đọc bình luận
+  if (shop.legacyHold) return false;
   // Ưu tiên: cài đặt riêng của phiên → của mẫu phát → của shop
   if (s.replyMode === 'off') return false;
   if (s.replyMode === 'on') return !shop.replyDisabledReason;

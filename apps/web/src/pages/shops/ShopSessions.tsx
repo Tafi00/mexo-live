@@ -24,6 +24,12 @@ function createBlock(shop: ShopDetail, open: LiveSession | null, canCreate: bool
     return { title: 'Shop đã ngưng dịch vụ', text: `Không thể tạo phiên mới cho shop đã ngưng dịch vụ${shop.service.suspendReason ? ` (${shop.service.suspendReason})` : ''}. Liên hệ quản trị viên để mở lại.` };
   if (shop.service.state === 'expired')
     return { title: 'Shop đã hết hạn dùng', text: 'Shop hết hạn dịch vụ nên không tạo được phiên mới. Bạn vẫn xem được lịch sử và dữ liệu cũ. Liên hệ quản trị viên để gia hạn.' };
+  if (shop.legacyHold)
+    return {
+      title: 'Shop đang chạy ở hệ thống cũ',
+      text: 'Hệ thống mới chỉ theo dõi shop này. Tắt lịch phát, trả lời tự động và máy phát của shop ở hệ thống cũ, rồi bấm "Chuyển hẳn sang hệ thống mới" ở đầu trang.',
+      action: { to: `/shops/${shop.id}/connection`, label: 'Xem kết nối', icon: Plug },
+    };
   if (shop.connection !== 'ok' && shop.connection !== 'expiring')
     return {
       title: 'Shop chưa kết nối Shopee hoặc cần cấp quyền lại',

@@ -113,6 +113,8 @@ async function executeStart(runId: number): Promise<void> {
   const svc = shopServiceState(shop);
   if (svc.state === 'expired') return failRun(runId, 'missed', 'shop_expired');
   if (svc.state === 'suspended') return failRun(runId, 'missed', 'shop_suspended');
+  // Shop còn chạy ở hệ thống cũ: lịch bên cũ đang phụ trách, không tạo phiên tranh với bên đó
+  if (shop.legacyHold) return failRun(runId, 'missed', 'legacy_hold', 'Shop đang chạy ở hệ thống cũ');
   if (shop.connection !== 'ok' && shop.connection !== 'expiring') return failRun(runId, 'missed', 'shop_disconnected');
   const open = await getOpenSession(shop.id);
   if (open) return failRun(runId, 'missed', 'shop_busy', `Phiên "${open.title}" đang mở`);

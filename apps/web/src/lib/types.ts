@@ -47,6 +47,8 @@ export interface ShopView {
   service: { state: 'active' | 'expiring' | 'expired' | 'suspended'; daysLeft: number | null; expiresOn: string | null; suspendedAt: string | null; suspendReason: string | null };
   connection: string;
   connectionError: string | null;
+  /** Shop còn chạy ở hệ thống cũ — hệ thống mới chỉ theo dõi, không gửi lệnh ghi lên Shopee */
+  legacyHold: boolean;
   authExpiresAt: string | null;
   livestreamCheck: string;
   replyEnabled: boolean;

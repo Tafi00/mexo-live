@@ -1,8 +1,9 @@
 import type { FastifyInstance } from 'fastify';
-import { and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, inArray, isNull, sql } from 'drizzle-orm';
 import { foldVi, vnDate } from '@mexo/shared';
 import { db } from '../db/client.js';
-import { accounts, activityLogs, memberShops, oauthStates, shopNameHistory, shops } from '../db/schema.js';
+import { accounts, activityLogs, connectInvites, memberShops, oauthStates, shopNameHistory, shops } from '../db/schema.js';
+import { env } from '../env.js';
 import { shopeeRedirectUrl } from '../services/runtimeConfig.js';
 import { actorRef, isStaff, requireActor, requireRole, requireShop, visibleShopIds, type Actor } from '../auth/auth.js';
 import { randomToken } from '../lib/crypto.js';
@@ -132,11 +133,13 @@ async function completeConnect(input: { code?: string; shopId?: string | number;
   const [fresh] = await db.select().from(shops).where(eq(shops.id, shopRow.id));
   void startProductSync(fresh!, actor);
   await db.update(oauthStates).set({ result: { shopId: shopRow.id, created: !existing } }).where(eq(oauthStates.state, st.state));
+  // Link cấp quyền gửi chủ shop đã hoàn thành nhiệm vụ
+  await db.update(connectInvites).set({ usedAt: new Date() }).where(and(eq(connectInvites.shopId, shopRow.id), isNull(connectInvites.usedAt)));
   publish({ type: 'shop', shopId: shopRow.id });
   return { shopId: shopRow.id, created: !existing, shopName: fresh?.shopeeName || String(shopeeShopId) };
 }
 
-async function makeLink(actor: Actor, mode: 'admin' | 'owner' | 'reauth', extra: { shopId?: number; serviceExpiresOn?: string | null; ownerId?: number | null }) {
+async function makeLink(actor: { id: number }, mode: 'admin' | 'owner' | 'reauth', extra: { shopId?: number; serviceExpiresOn?: string | null; ownerId?: number | null }) {
   const state = randomToken(18);
   const expiresAt = new Date(Date.now() + 15 * 60000);
   await db.insert(oauthStates).values({ state, accountId: actor.id, mode, shopId: extra.shopId ?? null, serviceExpiresOn: extra.serviceExpiresOn ?? null, ownerId: extra.ownerId ?? null, expiresAt });
@@ -446,6 +449,73 @@ export async function shopRoutes(app: FastifyInstance) {
     const [cnt] = await db.select({ n: sql<number>`count(*)` }).from(shops).where(eq(shops.ownerId, ownerId));
     if (owner?.shopLimit !== null && owner?.shopLimit !== undefined && Number(cnt?.n ?? 0) >= owner.shopLimit) throw connectError('shop_limit');
     return makeLink(a, 'owner', { ownerId, serviceExpiresOn: owner?.serviceExpiresOn ?? null });
+  });
+
+  // ───── Chuyển đổi từ hệ thống cũ ─────
+
+  // Bật / tắt chế độ "đang chạy ở hệ thống cũ" (một hoặc nhiều shop). Tắt = chuyển hẳn shop sang hệ thống mới.
+  app.post('/api/shops/legacy-hold', async (req) => {
+    const a = requireRole(req, 'sysadmin', 'admin');
+    const body = parse(z.object({ shopIds: z.array(z.number().int()).min(1).max(500), hold: z.boolean() }), req.body);
+    const rows = await db.select().from(shops).where(inArray(shops.id, body.shopIds));
+    const changed = rows.filter((s) => s.legacyHold !== body.hold);
+    if (changed.length) {
+      await db.update(shops).set({ legacyHold: body.hold, updatedAt: new Date() }).where(inArray(shops.id, changed.map((s) => s.id)));
+      for (const s of changed) {
+        await audit(actorRef(a), body.hold ? 'legacy_hold_on' : 'legacy_cutover', { shopId: s.id });
+        publish({ type: 'shop', shopId: s.id });
+      }
+    }
+    return { ok: true, changed: changed.length, unchanged: rows.length - changed.length };
+  });
+
+  // Tạo link cấp quyền dài hạn gửi chủ shop (mở link → tạo link Shopee mới ngay lúc đó)
+  app.post('/api/shops/connect-invites', async (req) => {
+    const a = requireActor(req);
+    const body = parse(z.object({ shopIds: z.array(z.number().int()).min(1).max(500), days: z.number().int().min(1).max(30).default(14) }), req.body);
+    const items: { shopId: number; shopName: string; url: string | null; expiresAt: string | null; connected: boolean; error?: string }[] = [];
+    const minLeft = Date.now() + 24 * 3600_000;
+    for (const shopId of body.shopIds) {
+      let shop: ShopRow;
+      try {
+        ({ shop } = await requireShop(req, shopId, 'shop.connect', 'read'));
+      } catch {
+        items.push({ shopId, shopName: `#${shopId}`, url: null, expiresAt: null, connected: false, error: 'Không có quyền với shop này' });
+        continue;
+      }
+      const shopName = shop.alias || shop.shopeeName || String(shop.shopeeShopId);
+      const connected = shop.connection === 'ok' || shop.connection === 'expiring';
+      if (shop.suspendedAt) {
+        items.push({ shopId, shopName, url: null, expiresAt: null, connected, error: CONNECT_ERRORS.shop_suspended });
+        continue;
+      }
+      // Còn link chưa dùng và còn hạn > 1 ngày → dùng lại để link đã gửi vẫn đúng
+      let [inv] = await db
+        .select()
+        .from(connectInvites)
+        .where(and(eq(connectInvites.shopId, shop.id), isNull(connectInvites.usedAt), gt(connectInvites.expiresAt, new Date(minLeft))))
+        .orderBy(desc(connectInvites.expiresAt))
+        .limit(1);
+      if (!inv) {
+        [inv] = await db.insert(connectInvites).values({ token: randomToken(12), shopId: shop.id, createdBy: a.id, expiresAt: new Date(Date.now() + body.days * 86400_000) }).returning();
+        await audit(actorRef(a), 'connect_invite_created', { shopId: shop.id, params: { days: body.days } });
+      }
+      items.push({ shopId, shopName, url: `${env.publicUrl}/api/connect/i/${inv!.token}`, expiresAt: inv!.expiresAt.toISOString(), connected });
+    }
+    return { items };
+  });
+
+  // Chủ shop mở link → kiểm tra link → tạo link cấp quyền Shopee mới và chuyển sang (không cần đăng nhập MEXO)
+  app.get('/api/connect/i/:token', { config: { rateLimit: true } }, async (req, reply) => {
+    const { token } = parse(z.object({ token: z.string().min(8).max(64) }), req.params);
+    const [inv] = await db.select().from(connectInvites).where(eq(connectInvites.token, token));
+    const [shop] = inv ? await db.select().from(shops).where(eq(shops.id, inv.shopId)) : [];
+    const [creator] = inv ? await db.select().from(accounts).where(eq(accounts.id, inv.createdBy)) : [];
+    // Link hỏng / hết hạn → trang kết quả hiện "Liên kết cấp quyền đã hết hạn…"
+    if (!inv || !shop || !creator || creator.status !== 'active' || inv.expiresAt.getTime() < Date.now() || shop.suspendedAt) return reply.redirect('/connect/callback?state=invite_invalid');
+    if (!inv.openedAt) await db.update(connectInvites).set({ openedAt: new Date() }).where(eq(connectInvites.id, inv.id));
+    const link = await makeLink({ id: creator.id }, 'reauth', { shopId: shop.id, ownerId: shop.ownerId, serviceExpiresOn: shop.serviceExpiresOn });
+    return reply.redirect(link.url);
   });
 
   app.post('/api/connect/reauth', async (req) => {

@@ -125,6 +125,11 @@ export const shops = pgTable(
       .notNull()
       .default(sql`'{"state":"normal","reason":null,"until":null,"failures":0}'::jsonb`),
     legacyId: text('legacy_id'),
+    /**
+     * Shop vẫn đang chạy ở hệ thống cũ: hệ thống mới chỉ đọc từ Shopee (theo dõi phiên, sản phẩm, làm mới token),
+     * không gửi lệnh ghi nào (tạo/kết thúc phiên, ghim, giỏ live, trả lời bình luận). Tắt khi chuyển hẳn shop sang.
+     */
+    legacyHold: boolean('legacy_hold').notNull().default(false),
     createdAt: ts('created_at').notNull().defaultNow(),
     updatedAt: ts('updated_at').notNull().defaultNow(),
   },
@@ -636,3 +641,22 @@ export const oauthStates = pgTable('oauth_states', {
   usedAt: ts('used_at'),
   result: jsonb('result'),
 });
+
+/**
+ * Link cấp quyền gửi chủ shop (dài hạn): link Shopee chỉ sống vài phút nên không gửi trước được —
+ * link này là địa chỉ MEXO cố định, mỗi lần mở mới tạo link Shopee và chuyển chủ shop sang đó.
+ */
+export const connectInvites = pgTable(
+  'connect_invites',
+  {
+    id: serial('id').primaryKey(),
+    token: text('token').notNull(),
+    shopId: integer('shop_id').notNull(),
+    createdBy: integer('created_by').notNull(),
+    expiresAt: ts('expires_at').notNull(),
+    openedAt: ts('opened_at'),
+    usedAt: ts('used_at'),
+    createdAt: ts('created_at').notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex('connect_invites_token_idx').on(t.token), index('connect_invites_shop_idx').on(t.shopId)],
+);

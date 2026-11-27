@@ -106,6 +106,7 @@ async function ownerConcurrentCheck(shop: ShopRow): Promise<void> {
 }
 
 export async function createLiveSession(actor: ActorRef, shop: ShopRow, input: CreateSessionInput): Promise<SessionRow> {
+  shopee.assertWritable(shop);
   if (await isFrozen()) throw err.locked('frozen', 'Hệ thống đang đóng băng, tạm thời không tạo phiên mới');
   const svc = shopServiceState(shop);
   if (svc.state === 'expired') throw err.locked('shop_expired', 'Shop đã hết hạn dùng');
@@ -213,6 +214,7 @@ export async function preflight(shop: ShopRow, s: SessionRow | null, templateId:
     const open = await getOpenSession(shop.id);
     checks.push({ key: 'session', ok: !open, label: 'Shop chưa có phiên nào đang mở', detail: open ? `Phiên "${open.title}" chưa kết thúc` : undefined });
   }
+  if (shop.legacyHold) checks.push({ key: 'legacy_hold', ok: false, label: 'Shop đã chuyển hẳn sang hệ thống mới', detail: 'Shop đang chạy ở hệ thống cũ — bấm "Chuyển hẳn sang hệ thống mới" ở trang shop trước' });
   const svc = shopServiceState(shop);
   checks.push({ key: 'service', ok: svc.state === 'active' || svc.state === 'expiring', label: 'Shop còn hạn dùng', detail: svc.state === 'expired' ? 'Đã hết hạn' : undefined });
   checks.push({ key: 'connection', ok: shop.connection === 'ok' || shop.connection === 'expiring', label: 'Kết nối Shopee còn hiệu lực' });
@@ -441,6 +443,7 @@ export async function markEnded(s: SessionRow, reason: string, endedAt?: Date | 
 export async function endLiveSession(actor: ActorRef, shop: ShopRow, s: SessionRow, reason = 'manual'): Promise<'ended' | 'already_ended'> {
   if (s.state === 'ended') return 'already_ended';
   if (s.origin === 'external') throw err.conflict('external_session', 'Phiên mở từ app Shopee hoặc Shopee Live PC, MEXO không điều khiển được');
+  shopee.assertWritable(shop);
   if (s.endRequestedAt && Date.now() - s.endRequestedAt.getTime() < 15000 && s.state === 'ending')
     throw err.conflict('end_pending', 'Đã gửi lệnh kết thúc, đang chờ Shopee xác nhận. Vui lòng đợi ít giây.');
   const prevState = s.state;
@@ -868,6 +871,11 @@ export async function liveCutTick(): Promise<void> {
     .innerJoin(shops, eq(shops.id, liveSessions.shopId))
     .where(inArray(liveSessions.state, ['live', 'connecting', 'preparing', 'not_started', 'disconnected']));
   for (const { s, shop } of open) {
+    // Phiên của shop còn chạy ở hệ thống cũ do hệ thống cũ quản — không tự ngắt từ đây
+    if (shop.legacyHold) {
+      if (s.liveCutAt) await patchSession(s.id, { liveCutAt: null });
+      continue;
+    }
     const svc = shopServiceState(shop);
     if (svc.state !== 'expired' && svc.state !== 'suspended') {
       if (s.liveCutAt) await patchSession(s.id, { liveCutAt: null });
