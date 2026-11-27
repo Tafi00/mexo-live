@@ -105,7 +105,8 @@ export async function systemRoutes(app: FastifyInstance) {
       },
       sessions7d: { ok: Number(sess?.ok ?? 0), failed: Number(sess?.failed ?? 0), errored: Number(sess?.errored ?? 0), hours: Math.round(Number(sess?.hours ?? 0) * 10) / 10, orders: Number(sess?.orders ?? 0) },
       concurrent: active.filter((v) => v.status === 'live').length,
-      viewersNow: active.reduce((s, v) => s + (v.session?.viewers ?? 0), 0),
+      // Chỉ cộng shop đang live: phiên cũ "chưa xác minh" mang số người xem từ lúc backup, không phải hiện tại
+      viewersNow: active.reduce((s, v) => s + (v.status === 'live' ? (v.session?.viewers ?? 0) : 0), 0),
       schedules: { pending: Number(runs?.pending ?? 0), todayDone: Number(runs?.todayDone ?? 0), todayMissed: Number(runs?.todayMissed ?? 0) },
       upcoming: upcoming.map((u) => ({ ...u.r, title: u.title, shopName: u.alias || u.shopeeName })),
       daily: daily.map((d) => ({ day: d.day, sessions: Number(d.sessions), hours: Math.round(Number(d.hours) * 10) / 10, orders: Number(d.orders) })),

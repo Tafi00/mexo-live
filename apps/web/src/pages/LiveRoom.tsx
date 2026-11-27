@@ -296,7 +296,8 @@ export default function LiveRoom() {
       open: items.length,
       live: items.filter((i) => i.session.state === 'live').length,
       problems: items.filter((i) => problemsOf(i).length > 0).length,
-      viewers: items.reduce((s, i) => s + (i.session.viewers ?? 0), 0),
+      // Chỉ cộng phiên đang live: phiên cũ "chưa xác minh" mang số người xem từ lúc backup, không phải hiện tại
+      viewers: items.reduce((s, i) => s + (i.session.state === 'live' ? (i.session.viewers ?? 0) : 0), 0),
       orders: items.reduce((s, i) => s + (i.session.orders ?? 0), 0),
     }),
     [items],
