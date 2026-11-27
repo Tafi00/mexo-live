@@ -4,8 +4,9 @@
 # ── Cài dependency (cache theo lockfile) ──
 FROM node:22-alpine AS deps
 WORKDIR /app
-RUN --mount=type=cache,target=/root/.npm npm install -g pnpm@10.26.0
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+# pnpm đúng phiên bản ghi ở packageManager trong package.json
+RUN corepack enable && corepack install
 COPY packages/shared/package.json packages/shared/
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
