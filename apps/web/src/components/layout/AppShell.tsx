@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   Activity,
   BarChart3,
@@ -242,14 +242,14 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
   const shell = useShell();
   const [theme, toggleTheme] = useTheme();
   const nav = useNavigate();
-  const qc = useQueryClient();
   const alerts = shell.data?.unacknowledgedAlerts ?? 0;
   const critical = shell.data?.criticalAlerts ?? 0;
   async function logout() {
     await api.post('/api/auth/logout').catch(() => {});
-    qc.clear();
-    qc.setQueryData(['me'], null);
-    nav('/login');
+    // Tải lại hẳn trang đăng nhập: bỏ sạch dữ liệu đã tải, kết nối thời gian thực và bộ đếm của phiên cũ.
+    // (Xóa cache React Query rồi điều hướng trong app làm bộ theo dõi đăng nhập giữ thông tin cũ →
+    // trang đăng nhập tưởng vẫn đăng nhập, đẩy về Tổng quan và báo "Bạn cần đăng nhập".)
+    window.location.replace('/login');
   }
   return (
     <header className="sticky top-0 z-30 flex h-12 items-center gap-3 border-b border-line bg-surface/85 px-4 backdrop-blur-md lg:px-5">
