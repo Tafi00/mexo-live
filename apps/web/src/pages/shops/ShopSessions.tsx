@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Clock, Eye, Heart, History, ImageOff, ListVideo, Lock, Plug, Plus, Radio, ShoppingBag, Timer } from 'lucide-react';
+import { ArrowRight, CalendarClock, Clock, Eye, Heart, History, ImageOff, ListVideo, Lock, Plug, Plus, Radio, ShoppingBag, Timer, Zap } from 'lucide-react';
 import { SHOPEE_STATUS_LABELS } from '@mexo/shared';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { fmtClock, fmtDateTime, fmtDuration, fmtNumber, fmtRelative } from '@/lib/format';
+import { fmtClock, fmtDateTime, fmtNumber, fmtRelative } from '@/lib/format';
 import { useNow } from '@/lib/hooks';
 import type { LiveSession, ShopDetail } from '@/lib/types';
 import { SessionStateBadge, Signals, StreamStateBadge } from '@/components/domain/status';
 import { CreateSessionDialog } from '@/components/live/CreateSessionDialog';
+import { GoLiveDialog } from '@/components/live/GoLiveDialog';
 import { endedReasonLabel, liveSeconds, OriginBadge, sessionSignals } from '@/components/live/helpers';
 import type { ShopSessionsResponse } from '@/components/live/types';
 import { Button, ButtonLink } from '@/components/ui/button';
@@ -56,8 +57,8 @@ function CurrentSession({ s, shop }: { s: LiveSession; shop: ShopDetail }) {
           </ButtonLink>
         }
       />
-      <div className="flex flex-col gap-5 p-5 sm:flex-row">
-        <Link to={`/sessions/${s.id}`} className="relative block aspect-[3/4] w-24 shrink-0 overflow-hidden rounded-lg bg-surface-2 ring-1 ring-line">
+      <div className="flex flex-col gap-4 p-4 sm:flex-row">
+        <Link to={`/sessions/${s.id}`} className="relative block aspect-[3/4] w-20 shrink-0 overflow-hidden rounded-lg bg-surface-2 ring-1 ring-line">
           {s.coverKey ? (
             <img src={`/api/files/cover?key=${encodeURIComponent(s.coverKey)}`} alt="" className="absolute inset-0 size-full object-cover" />
           ) : (
@@ -67,16 +68,16 @@ function CurrentSession({ s, shop }: { s: LiveSession; shop: ShopDetail }) {
           )}
         </Link>
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             <SessionStateBadge state={s.state} stuck={s.stuck} />
             {s.origin !== 'external' && <StreamStateBadge state={s.streamState} />}
             <OriginBadge origin={s.origin} />
           </div>
-          <Link to={`/sessions/${s.id}`} className="mt-2 block text-[15px] font-semibold hover:text-brand-600">
+          <Link to={`/sessions/${s.id}`} className="mt-1.5 block text-base font-semibold leading-snug hover:text-brand-600">
             {s.title}
           </Link>
-          <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-muted">
-            {s.shopeeSessionId && <span className="font-mono text-xs leading-5">Session ID {s.shopeeSessionId}</span>}
+          <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
+            {s.shopeeSessionId && <span className="font-mono">Session ID {s.shopeeSessionId}</span>}
             <span>Shopee: {SHOPEE_STATUS_LABELS[s.shopeeStatus] ?? s.shopeeStatus}</span>
             <span>{s.startedAt ? `Lên sóng ${fmtRelative(s.startedAt)}` : `Tạo ${fmtRelative(s.createdAt)}`}</span>
             {s.templateName && (
@@ -87,14 +88,14 @@ function CurrentSession({ s, shop }: { s: LiveSession; shop: ShopDetail }) {
             )}
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
             {[
               { icon: Timer, label: 'Thời lượng', value: dur !== null ? fmtClock(dur) : '—' },
               { icon: Eye, label: 'Đang xem', value: fmtNumber(m.viewers ?? 0) },
               { icon: Heart, label: 'Lượt thích', value: fmtNumber(m.likes ?? 0) },
               { icon: ShoppingBag, label: 'Đơn hàng', value: fmtNumber(m.orders ?? 0) },
             ].map((x) => (
-              <div key={x.label} className="rounded-lg bg-surface-2 px-3 py-2">
+              <div key={x.label} className="rounded-lg bg-surface-2 px-2.5 py-1.5">
                 <p className="flex items-center gap-1 text-xs text-muted">
                   <x.icon className="size-3.5" />
                   {x.label}
@@ -104,15 +105,15 @@ function CurrentSession({ s, shop }: { s: LiveSession; shop: ShopDetail }) {
             ))}
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted">
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted">
             {s.origin !== 'external' && (
               <span className="inline-flex items-center gap-2">
                 Tín hiệu: <Signals signals={signals} />
               </span>
             )}
             {video && (
-              <span className="min-w-0 truncate">
-                Video {(s.videoIndex ?? 0) + 1}/{playlist.length}: {video.name}
+              <span className="min-w-0">
+                Video {(s.videoIndex ?? 0) + 1}/{playlist.length}: <span className="text-fg">{video.name}</span>
               </span>
             )}
           </div>
@@ -135,6 +136,7 @@ export default function ShopSessions() {
   const { can } = useAuth();
   const nav = useNavigate();
   const [params, setParams] = useSearchParams();
+  const [goLiveOpen, setGoLiveOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
 
   const q = useQuery({
@@ -145,12 +147,16 @@ export default function ShopSessions() {
 
   const open = q.data?.open ?? null;
   const block = q.data ? createBlock(shop, open, can('session.create')) : null;
+  const canStart = Boolean(q.data) && !block && can('session.control');
   const wantNew = params.get('new') === '1';
 
-  // Tự mở hộp tạo phiên khi URL có ?new=1 (chỉ khi được phép tạo)
+  // ?new=1 → mở "Phát ngay" (chỉ khi được phép)
   useEffect(() => {
     if (!wantNew || !q.data) return;
-    if (!block) setCreateOpen(true);
+    if (!block) {
+      if (can('session.control')) setGoLiveOpen(true);
+      else setCreateOpen(true);
+    }
     const p = new URLSearchParams(params);
     p.delete('new');
     setParams(p, { replace: true });
@@ -160,19 +166,26 @@ export default function ShopSessions() {
   const recent = q.data?.items ?? [];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-[15px] font-semibold">Phiên live</h2>
-          <p className="text-[13px] text-muted">Phiên đang mở của shop và các phiên gần đây. Mỗi shop chỉ có 1 phiên mở tại một thời điểm.</p>
+        <div className="min-w-0">
+          <h2 className="text-base font-semibold">Phiên live</h2>
+          <p className="text-xs text-muted">Phiên đang mở và các phiên gần đây. Mỗi shop chỉ có 1 phiên mở tại một thời điểm.</p>
         </div>
-        <Button variant="primary" icon={<Plus className="size-4" />} disabled={!q.data || Boolean(block)} onClick={() => setCreateOpen(true)}>
-          Tạo phiên live
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button icon={<Plus className="size-4" />} disabled={!q.data || Boolean(block)} onClick={() => setCreateOpen(true)} title="Chỉ tạo phiên trên Shopee, chưa phát — dùng khi muốn chuẩn bị giỏ live trước">
+            Tạo phiên thủ công
+          </Button>
+          {can('session.control') && (
+            <Button variant="primary" icon={<Zap className="size-4" />} disabled={!canStart} onClick={() => setGoLiveOpen(true)}>
+              Phát ngay
+            </Button>
+          )}
+        </div>
       </div>
 
       {q.isLoading ? (
-        <Skeleton className="h-56 rounded-xl" />
+        <Skeleton className="h-48 rounded-xl" />
       ) : (
         <>
           {block && !(open && block.action?.to === `/sessions/${open.id}`) && (
@@ -196,24 +209,54 @@ export default function ShopSessions() {
               <CurrentSession s={open} shop={shop} />
               {can('session.create') && <p className="px-1 text-xs text-muted">Muốn tạo phiên mới? Kết thúc phiên đang mở trước — Shopee và MEXO chỉ cho phép 1 phiên mở mỗi shop.</p>}
             </>
-          ) : (
+          ) : block ? (
             <Card>
-              <EmptyState
-                icon={Radio}
-                title="Shop chưa có phiên nào đang mở"
-                description={block ? block.text : 'Tạo phiên mới trên Shopee, sau đó bắt đầu phát tự động bằng mẫu phát. Hoặc đặt lịch phát để hệ thống tự bật.'}
-                action={
-                  !block && (
-                    <div className="flex flex-wrap justify-center gap-2">
-                      <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setCreateOpen(true)}>
-                        Tạo phiên live
-                      </Button>
-                      <ButtonLink to={`/shops/${shop.id}/schedules`}>Đặt lịch phát</ButtonLink>
-                    </div>
-                  )
-                }
-              />
+              <EmptyState compact icon={Radio} title="Shop chưa có phiên nào đang mở" description={block.text} />
             </Card>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Card className="flex flex-col gap-2 p-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="grid size-7 place-items-center rounded-md bg-brand-50 text-brand-600 dark:bg-brand-950/50 dark:text-brand-400">
+                    <Zap className="size-4" />
+                  </span>
+                  <p className="text-base font-semibold">Phát ngay</p>
+                  <span className="rounded bg-brand-50 px-1.5 text-2xs font-medium text-brand-700 dark:bg-brand-950/50 dark:text-brand-300">Khuyến nghị</span>
+                </div>
+                <p className="text-xs leading-relaxed text-muted">
+                  Chọn mẫu phát — hệ thống tạo phiên trên Shopee, thêm sản phẩm ghim vào giỏ, giao máy chủ phát và tự bắt đầu phiên khi Shopee đã nhận hình.
+                </p>
+                <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
+                  {can('session.control') ? (
+                    <Button variant="primary" size="sm" icon={<Zap className="size-3.5" />} onClick={() => setGoLiveOpen(true)}>
+                      Phát ngay
+                    </Button>
+                  ) : (
+                    <span className="text-xs text-muted">Cần quyền “Bắt đầu / kết thúc livestream”.</span>
+                  )}
+                  <ButtonLink to={`/shops/${shop.id}/schedules`} size="sm" variant="ghost" icon={<CalendarClock className="size-3.5" />}>
+                    Đặt lịch phát
+                  </ButtonLink>
+                </div>
+              </Card>
+              <Card className="flex flex-col gap-2 p-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="grid size-7 place-items-center rounded-md bg-surface-2 text-muted ring-1 ring-line">
+                    <Plus className="size-4" />
+                  </span>
+                  <p className="text-base font-semibold">Tạo phiên thủ công</p>
+                  <span className="rounded bg-surface-2 px-1.5 text-2xs font-medium text-muted">Nâng cao</span>
+                </div>
+                <p className="text-xs leading-relaxed text-muted">
+                  Chỉ tạo phiên trên Shopee (trạng thái “Chưa bắt đầu”), <b className="font-medium text-fg">chưa phát hình</b>. Dùng khi muốn chuẩn bị giỏ live trước, sau đó bấm “Bắt đầu phát tự động” trong bảng điều khiển phiên.
+                </p>
+                <div className="mt-auto pt-1">
+                  <Button size="sm" icon={<Plus className="size-3.5" />} onClick={() => setCreateOpen(true)}>
+                    Tạo phiên thủ công
+                  </Button>
+                </div>
+              </Card>
+            </div>
           )}
         </>
       )}
@@ -234,7 +277,7 @@ export default function ShopSessions() {
         {q.isLoading ? (
           <div className="space-y-2 p-4">
             {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-12" />
+              <Skeleton key={i} className="h-10" />
             ))}
           </div>
         ) : recent.length ? (
@@ -244,29 +287,31 @@ export default function ShopSessions() {
               const m = s.metrics ?? {};
               return (
                 <li key={s.id}>
-                  <button type="button" onClick={() => nav(`/sessions/${s.id}`)} className="flex w-full flex-wrap items-center gap-x-5 gap-y-1.5 px-5 py-3 text-left transition-colors hover:bg-surface-2/60">
+                  <button type="button" onClick={() => nav(`/sessions/${s.id}`)} className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 text-left transition-colors hover:bg-surface-2/60">
                     <div className="min-w-0 flex-1 basis-60">
-                      <p className="truncate text-[13px] font-medium">{s.title}</p>
-                      <p className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs text-muted">
-                        <span>{fmtDateTime(s.startedAt ?? s.createdAt)}</span>
+                      <p className="truncate text-sm font-medium" title={s.title}>
+                        {s.title}
+                      </p>
+                      <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted">
+                        <span className="tabular">{fmtDateTime(s.startedAt ?? s.createdAt)}</span>
                         {s.shopeeSessionId && <span className="font-mono">#{s.shopeeSessionId}</span>}
                         <OriginBadge origin={s.origin} />
                       </p>
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-muted">
-                      <span className="inline-flex items-center gap-1 tabular">
-                        <Clock className="size-3.5" />
-                        {s.startedAt ? fmtDuration(dur) : 'Không lên sóng'}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
+                      <span className="inline-flex w-[72px] items-center gap-1 tabular" title="Thời lượng phát">
+                        <Clock className="size-3.5 shrink-0" />
+                        {s.startedAt ? fmtClock(dur) : '—'}
                       </span>
-                      <span className="inline-flex items-center gap-1 tabular">
-                        <Eye className="size-3.5" />
+                      <span className="inline-flex w-14 items-center gap-1 tabular" title="Người xem cao nhất">
+                        <Eye className="size-3.5 shrink-0" />
                         {fmtNumber(m.peakViewers ?? 0)}
                       </span>
-                      <span className="inline-flex items-center gap-1 tabular">
-                        <ShoppingBag className="size-3.5" />
+                      <span className="inline-flex w-12 items-center gap-1 tabular" title="Đơn hàng">
+                        <ShoppingBag className="size-3.5 shrink-0" />
                         {fmtNumber(m.orders ?? 0)}
                       </span>
-                      <span className="w-36 truncate text-right">{endedReasonLabel(s.endedReason)}</span>
+                      <span className="sm:w-36 sm:text-right">{s.startedAt ? endedReasonLabel(s.endedReason) : 'Không lên sóng'}</span>
                     </div>
                   </button>
                 </li>
@@ -278,6 +323,7 @@ export default function ShopSessions() {
         )}
       </Card>
 
+      <GoLiveDialog open={goLiveOpen} onClose={() => setGoLiveOpen(false)} shopId={shop.id} shopName={shop.name} />
       <CreateSessionDialog shop={shop} open={createOpen} onClose={() => setCreateOpen(false)} />
     </div>
   );

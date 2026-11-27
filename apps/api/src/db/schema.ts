@@ -302,6 +302,8 @@ export const liveSessions = pgTable(
     feedSince: ts('feed_since'),
     feedLostAt: ts('feed_lost_at'),
     replyState: text('reply_state').notNull().default('off'),
+    /** Bật/tắt trả lời tự động riêng cho phiên: inherit (theo mẫu/shop) | on | off */
+    replyMode: text('reply_mode').notNull().default('inherit'),
     metrics: jsonb('metrics')
       .$type<{ viewers?: number; peakViewers?: number; views?: number; avgViewSec?: number; likes?: number; comments?: number; orders?: number; gmv?: number; shares?: number }>()
       .notNull()

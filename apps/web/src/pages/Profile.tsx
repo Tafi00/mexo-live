@@ -26,20 +26,20 @@ export default function Profile() {
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader title="Thông tin cá nhân" actions={<ButtonLink to="/change-password" icon={<KeyRound className="size-4" />}>Đổi mật khẩu</ButtonLink>} />
-      <div className="space-y-5">
+      <div className="space-y-4">
         <Card>
           <div className="flex items-center gap-4 p-5">
             <Avatar name={u.name} className="size-14 text-base" />
             <div className="min-w-0">
               <p className="text-lg font-semibold">{u.name}</p>
-              <p className="text-[13px] text-muted">@{u.username}</p>
+              <p className="text-sm text-muted">@{u.username}</p>
               <div className="mt-1.5">
                 <RoleBadge role={u.role} />
               </div>
             </div>
           </div>
           <div className="border-t border-line p-5">
-            <p className="text-[13px] text-muted">{ROLE_DESCRIPTIONS[u.role]}</p>
+            <p className="text-sm text-muted">{ROLE_DESCRIPTIONS[u.role]}</p>
             {u.owner && (
               <KV
                 className="mt-4"

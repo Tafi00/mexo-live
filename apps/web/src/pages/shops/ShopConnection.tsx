@@ -95,7 +95,7 @@ export default function ShopConnection() {
   const saveCart = useAction(() => api.patch(`/api/shops/${shop.id}`, { cartLimit: Number(cartLimit) }), { success: 'Đã lưu giới hạn giỏ live', onSuccess: refetch });
 
   return (
-    <div className="grid gap-5 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <Card>
         <CardHeader
           title="Kết nối Shopee"
@@ -127,7 +127,7 @@ export default function ShopConnection() {
           />
           {shop.connectionError && shop.connection !== 'ok' && <Callout tone="warning">{shop.connectionError}</Callout>}
           {checkResult && (
-            <div className="space-y-2 rounded-lg border border-line p-3 text-[13px]">
+            <div className="space-y-2 rounded-lg border border-line p-3 text-sm">
               <p className="font-medium">Kết quả kiểm tra</p>
               {[
                 ['Thông tin shop (shop/get_shop_info)', checkResult.shop],
@@ -154,7 +154,7 @@ export default function ShopConnection() {
         <div className="space-y-4 p-5">
           <div className="flex items-center gap-3">
             <ServiceBadge state={shop.service.state} daysLeft={shop.service.daysLeft} expiresOn={shop.service.expiresOn} />
-            <span className="text-[13px] text-muted">{shop.service.expiresOn ? `Hết hạn ngày ${fmtDate(shop.service.expiresOn)}` : shop.service.state !== 'suspended' ? 'Không thời hạn' : ''}</span>
+            <span className="text-sm text-muted">{shop.service.expiresOn ? `Hết hạn ngày ${fmtDate(shop.service.expiresOn)}` : shop.service.state !== 'suspended' ? 'Không thời hạn' : ''}</span>
           </div>
           <p className="text-xs text-muted">Hết hạn dùng: vẫn xem được dữ liệu và kết thúc phiên đang live; phiên đang live sẽ tự ngắt sau thời gian ân hạn.</p>
           {isStaff ? (
@@ -214,7 +214,7 @@ export default function ShopConnection() {
           <CardHeader title="Lịch sử tên shop" icon={<History className="size-4" />} description="Tìm theo tên cũ vẫn ra đúng shop" />
           <ul className="max-h-72 divide-y divide-line overflow-y-auto">
             {(names.data?.items ?? []).map((n: any) => (
-              <li key={n.id} className="flex items-center gap-3 px-5 py-2.5 text-[13px]">
+              <li key={n.id} className="flex items-center gap-3 px-5 py-2.5 text-sm">
                 <Badge tone={n.kind === 'alias' ? 'info' : 'neutral'} size="sm">
                   {n.kind === 'alias' ? 'Tên gợi nhớ' : 'Tên Shopee'}
                 </Badge>

@@ -70,7 +70,7 @@ function Tip({ active, payload }: { active?: boolean; payload?: { payload?: Char
   if (!p) return null;
   return (
     <div style={chartTooltip.contentStyle} className="min-w-[180px] px-3 py-2">
-      <p className="mb-1 text-[11px] text-muted">{p.full}</p>
+      <p className="mb-1 text-2xs text-muted">{p.full}</p>
       <div className="space-y-0.5 text-xs">
         <p className="flex justify-between gap-4">
           <span className="text-muted">Tỷ lệ thành công</span>
@@ -96,7 +96,7 @@ function Tip({ active, payload }: { active?: boolean; payload?: { payload?: Char
 }
 
 /** Biểu đồ tỷ lệ thành công — một trục, có vạch 90% (Shopee) và 97% (bình thường) */
-export function RateChart({ data, height = 240 }: { data: ChartPoint[]; height?: number }) {
+export function RateChart({ data, height = 220 }: { data: ChartPoint[]; height?: number }) {
   const rates = data.map((d) => d.rate).filter((r): r is number => r !== null);
   const min = rates.length ? Math.min(...rates) : 1;
   const yMin = Math.max(0, Math.min(0.8, Math.floor(min * 20) / 20));
@@ -119,7 +119,7 @@ export function RateChart({ data, height = 240 }: { data: ChartPoint[]; height?:
 }
 
 /** Biểu đồ số lệnh gọi — cột, một chuỗi */
-export function VolumeChart({ data, height = 240 }: { data: ChartPoint[]; height?: number }) {
+export function VolumeChart({ data, height = 220 }: { data: ChartPoint[]; height?: number }) {
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 12, right: 12, left: -4, bottom: 0 }} barCategoryGap="24%">
@@ -158,17 +158,17 @@ export function LevelBanner({ s }: { s: MonitorSummary }) {
       </div>
       <div className="grid flex-1 grid-cols-2 gap-3 sm:max-w-md">
         <div className="rounded-lg bg-surface/70 px-3 py-2 ring-1 ring-inset ring-line">
-          <p className="text-[11px] text-muted">1 giờ qua</p>
-          <p className="text-[15px] font-semibold tabular">{fmtPercent(s.lastHour.rate, 2)}</p>
-          <p className="text-[11px] text-muted tabular">{fmtNumber(s.lastHour.total)} lệnh gọi</p>
+          <p className="text-2xs text-muted">1 giờ qua</p>
+          <p className="text-base font-semibold tabular">{fmtPercent(s.lastHour.rate, 2)}</p>
+          <p className="text-2xs text-muted tabular">{fmtNumber(s.lastHour.total)} lệnh gọi</p>
         </div>
         <div className="rounded-lg bg-surface/70 px-3 py-2 ring-1 ring-inset ring-line">
-          <p className="text-[11px] text-muted">Hôm nay</p>
-          <p className="text-[15px] font-semibold tabular">{fmtPercent(s.today.rate, 2)}</p>
-          <p className="text-[11px] text-muted tabular">{fmtNumber(s.today.total)} lệnh gọi</p>
+          <p className="text-2xs text-muted">Hôm nay</p>
+          <p className="text-base font-semibold tabular">{fmtPercent(s.today.rate, 2)}</p>
+          <p className="text-2xs text-muted tabular">{fmtNumber(s.today.total)} lệnh gọi</p>
         </div>
       </div>
-      <div className="text-xs leading-relaxed text-muted sm:max-w-sm">
+      <div className="text-xs text-muted sm:max-w-sm">
         <p>
           <b className="text-fg">Shopee yêu cầu</b> tỷ lệ thành công trung bình ngày của App ≥ {pct(t.shopeeMin)}.
         </p>

@@ -45,7 +45,7 @@ function TemperatureSlider({ value, onChange, disabled }: { value: number; onCha
           className="absolute inset-0 h-full w-full cursor-pointer appearance-none bg-transparent disabled:cursor-not-allowed [&::-moz-range-thumb]:size-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-brand-500 [&::-moz-range-thumb]:bg-white [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-brand-500 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow"
         />
       </div>
-      <div className="relative mt-0.5 h-4 text-[11px] text-muted">
+      <div className="relative mt-0.5 h-4 text-2xs text-muted">
         <span className="absolute left-0">0 · ổn định</span>
         <span className="absolute -translate-x-1/2 font-medium text-emerald-700 dark:text-emerald-400" style={{ left: pct((BAND[0] + BAND[1]) / 2) }}>
           khuyến nghị
@@ -121,7 +121,7 @@ export function SettingsAi() {
   const noKey = !d.hasKey && !apiKey.trim();
 
   return (
-    <div className="grid gap-5 xl:grid-cols-5">
+    <div className="grid grid-cols-1 gap-4 xl:grid-cols-5">
       <Card className="xl:col-span-3">
         <CardHeader
           title="Kết nối mô hình AI"
@@ -139,8 +139,8 @@ export function SettingsAi() {
             )
           }
         />
-        <div className="space-y-5 p-5">
-          <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-4 p-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field label="Base URL" required error={urlErr} hint={!urlErr ? 'Bắt buộc HTTPS, không dùng địa chỉ nội bộ/IP riêng (trừ khi máy chủ bật cờ cho phép).' : undefined} className="sm:col-span-2">
               <Input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} disabled={!canEdit} placeholder="https://api.openai.com/v1" className="font-mono" spellCheck={false} invalid={Boolean(urlErr)} />
             </Field>
@@ -199,7 +199,7 @@ export function SettingsAi() {
             <Textarea value={ctx} onChange={(e) => setCtx(e.target.value)} disabled={!canEdit} rows={8} invalid={over} className="min-h-[180px]" />
           </Field>
 
-          <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line pt-4">
+          <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
             {dirty && <span className="mr-auto text-xs text-amber-700 dark:text-amber-400">Có thay đổi chưa lưu</span>}
             {dirty && (
               <Button
@@ -222,10 +222,10 @@ export function SettingsAi() {
         </div>
       </Card>
 
-      <div className="space-y-5 xl:col-span-2">
+      <div className="space-y-4 xl:col-span-2">
         <Card>
           <CardHeader title="Gọi thử" icon={<Sparkles className="size-4" />} description="Dùng cấu hình đang nhập (chưa cần lưu) để hỏi thử một câu" />
-          <div className="space-y-3 p-5">
+          <div className="space-y-3 p-4">
             <Field label="Câu hỏi của khách">
               <Input value={question} onChange={(e) => setQuestion(e.target.value)} maxLength={300} onKeyDown={(e) => e.key === 'Enter' && !runTest.isPending && runTest.mutate()} />
             </Field>
@@ -236,7 +236,7 @@ export function SettingsAi() {
             {test &&
               (test.ok ? (
                 <div className="space-y-2">
-                  <div className="rounded-xl rounded-tl-sm border border-line bg-surface-2 px-3.5 py-2.5 text-[13px] leading-relaxed">{test.answer || <span className="text-muted">(Không có nội dung trả lời)</span>}</div>
+                  <div className="rounded-xl rounded-tl-sm border border-line bg-surface-2 px-3 py-2 text-sm">{test.answer || <span className="text-muted">(Không có nội dung trả lời)</span>}</div>
                   <p className="inline-flex items-center gap-1 text-xs text-muted">
                     <Timer className="size-3.5" />
                     Phản hồi sau <b className={cn('tabular', test.latencyMs > 8000 ? 'text-rose-600' : test.latencyMs > 4000 ? 'text-amber-600' : 'text-fg')}>{fmtNumber(test.latencyMs)} ms</b>

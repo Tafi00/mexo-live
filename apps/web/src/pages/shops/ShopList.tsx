@@ -23,6 +23,7 @@ import {
   PlayCircle,
   PencilLine,
   PackageSearch,
+  Zap,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api, errorMessage } from '@/lib/api';
@@ -33,6 +34,7 @@ import { useCopy, useDebounced, useLocalState, useNow } from '@/lib/hooks';
 import type { ShopView } from '@/lib/types';
 import { BulkStartDialog } from '@/components/domain/BulkStartDialog';
 import { ConnectShopDialog } from '@/components/domain/ConnectShopDialog';
+import { GoLiveDialog } from '@/components/live/GoLiveDialog';
 import { ShopStatusBadge, ServiceBadge, Signals, ConnectionBadge, RoleBadge } from '@/components/domain/status';
 import { Button } from '@/components/ui/button';
 import { Dialog, useConfirm } from '@/components/ui/dialog';
@@ -84,6 +86,7 @@ export default function ShopList() {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [connectOpen, setConnectOpen] = useState(false);
   const [reauth, setReauth] = useState<ShopView | null>(null);
+  const [goLiveShop, setGoLiveShop] = useState<ShopView | null>(null);
   const [bulkStart, setBulkStart] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
   const pageSize = 50;
@@ -187,7 +190,7 @@ export default function ShopList() {
               key={t.value}
               onClick={() => setTab(t.value)}
               className={cn(
-                'flex shrink-0 items-center gap-2 rounded-lg border px-3.5 py-2 text-[13px] font-medium transition-colors',
+                'flex shrink-0 items-center gap-2 rounded-lg border px-3.5 py-2 text-sm font-medium transition-colors',
                 active ? 'border-brand-400 bg-surface text-fg shadow-card ring-1 ring-brand-400' : 'border-line bg-surface text-muted hover:border-line-strong hover:text-fg',
               )}
             >
@@ -245,7 +248,7 @@ export default function ShopList() {
 
         {selected.size > 0 && (
           <div className="flex flex-wrap items-center gap-2 border-b border-line bg-brand-50/60 px-3 py-2 dark:bg-brand-950/20">
-            <span className="text-[13px] font-medium">Đã chọn {selected.size} shop</span>
+            <span className="text-sm font-medium">Đã chọn {selected.size} shop</span>
             <button onClick={() => setSelected(new Set())} className="rounded p-0.5 text-muted hover:text-fg" aria-label="Bỏ chọn">
               <X className="size-4" />
             </button>
@@ -339,7 +342,7 @@ export default function ShopList() {
             action={tab === 'all' && !dq && <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setConnectOpen(true)}>Kết nối shop</Button>}
           />
         ) : (
-          <Table minWidth={1180}>
+          <Table minWidth={1040}>
             <THead>
               <tr>
                 <Th className="w-10">
@@ -353,19 +356,20 @@ export default function ShopList() {
                     }}
                   />
                 </Th>
-                <Th className="w-12">#</Th>
+                <Th className="w-10">#</Th>
                 <Th>Shop</Th>
-                <Th>Tình trạng</Th>
+                <Th className="w-[200px]">Tình trạng</Th>
                 <Th>Phiên hiện tại</Th>
-                <Th>Lịch tiếp theo</Th>
-                <Th>Hạn dùng</Th>
-                <Th>Quyền Shopee</Th>
-                <Th>Phụ trách</Th>
+                <Th className="w-[150px]">Lịch tiếp theo</Th>
+                <Th className="w-[150px]">Hạn dùng · Shopee</Th>
                 <Th className="w-10" />
               </tr>
             </THead>
             <tbody>
-              {items.map((s) => (
+              {items.map((s) => {
+                const problems = s.issues.filter((i) => i.level !== 'info' && i.code !== 'reauth' && i.code !== 'revoked' && i.code !== 'auth_expired' && i.code !== 'expired' && i.code !== 'expiring' && i.code !== 'auth_expiring');
+                const legacyUnverified = s.session?.origin === 'legacy' && s.session.state === 'unknown';
+                return (
                 <Tr key={s.id} selected={selected.has(s.id)} onClick={() => nav(`/shops/${s.id}`)}>
                   <Td onClick={(e) => e.stopPropagation()}>
                     <Checkbox
@@ -379,79 +383,67 @@ export default function ShopList() {
                     />
                   </Td>
                   <Td className="text-xs tabular text-subtle">{s.number}</Td>
-                  <Td className="max-w-[260px]">
-                    <Link to={`/shops/${s.id}`} onClick={(e) => e.stopPropagation()} className="block truncate font-medium hover:text-brand-600">
-                      {s.name}
-                    </Link>
-                    <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted">
-                      {s.alias && s.shopeeName && <span className="truncate">{s.shopeeName}</span>}
-                      <span className="shrink-0 font-mono text-[11px] text-subtle">{s.shopeeShopId}</span>
+                  <Td className="max-w-[280px]">
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <Link to={`/shops/${s.id}`} onClick={(e) => e.stopPropagation()} className="truncate font-medium hover:text-brand-600">
+                        {s.name}
+                      </Link>
+                      {s.tags.slice(0, 2).map((t) => (
+                        <Badge key={t} tone="muted" size="sm" className="shrink-0">
+                          {t}
+                        </Badge>
+                      ))}
+                      {s.tags.length > 2 && <span className="shrink-0 text-2xs text-subtle">+{s.tags.length - 2}</span>}
                     </div>
-                    {s.tags.length > 0 && (
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        {s.tags.slice(0, 3).map((t) => (
-                          <Badge key={t} tone="muted" size="sm">
-                            {t}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
+                    <p className="mt-0.5 truncate text-xs text-muted">
+                      {s.alias && s.shopeeName ? `${s.shopeeName} · ` : ''}
+                      <span className="font-mono text-2xs text-subtle">{s.shopeeShopId}</span>
+                      {(s.assignee || s.owner) && <span> · {s.assignee ? `PT: ${s.assignee.name}` : s.owner!.name}</span>}
+                    </p>
                   </Td>
                   <Td>
                     <ShopStatusBadge status={s.status} size="sm" />
-                    {s.issues.filter((i) => i.level !== 'info').length > 0 && (
-                      <div className="mt-1 space-y-0.5">
-                        {s.issues
-                          .filter((i) => i.level !== 'info')
-                          .slice(0, 2)
-                          .map((i) => (
-                            <p key={i.code} className={cn('flex items-center gap-1 text-[11px]', i.level === 'critical' ? 'text-rose-600 dark:text-rose-400' : 'text-amber-700 dark:text-amber-400')}>
-                              <AlertTriangle className="size-3 shrink-0" />
-                              <span className="truncate">{i.text}</span>
-                            </p>
-                          ))}
-                      </div>
+                    {problems.length > 0 && (
+                      <p className={cn('mt-0.5 flex items-center gap-1 text-2xs', problems[0]!.level === 'critical' ? 'text-rose-600 dark:text-rose-400' : 'text-amber-700 dark:text-amber-400')}>
+                        <AlertTriangle className="size-3 shrink-0" />
+                        <span className="truncate">{problems[0]!.text}</span>
+                        {problems.length > 1 && <span className="shrink-0 text-subtle">+{problems.length - 1}</span>}
+                      </p>
                     )}
                   </Td>
-                  <Td className="max-w-[300px]">
+                  <Td className="max-w-[320px]">
                     {s.session ? (
                       <div className="min-w-0">
                         <p className="truncate font-medium">{s.session.title}</p>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs text-muted">
-                          {s.session.startedAt ? (
-                            <span>
+                        <div className="mt-0.5 flex items-center gap-2 text-xs text-muted">
+                          {legacyUnverified ? (
+                            <span className="text-amber-700 dark:text-amber-400">Hệ thống cũ · chưa xác minh</span>
+                          ) : s.session.startedAt ? (
+                            <span className="tabular">
                               {fmtTime(s.session.startedAt)} · <LiveDuration since={s.session.startedAt} />
                             </span>
                           ) : (
                             <span>Chưa lên sóng</span>
                           )}
-                          <span className="inline-flex items-center gap-1">
+                          <span className="inline-flex items-center gap-0.5 tabular">
                             <Eye className="size-3" />
                             {s.session.viewers}
                           </span>
-                          {s.session.videoCount ? (
-                            <span>
-                              Video {(s.session.videoIndex ?? 0) + 1}/{s.session.videoCount}
-                            </span>
-                          ) : null}
+                          {s.session.videoCount ? <span className="tabular">V{(s.session.videoIndex ?? 0) + 1}/{s.session.videoCount}</span> : null}
+                          {s.session.origin !== 'legacy' && <Signals signals={s.session.signals} compact />}
                           {s.session.shareUrl && (
                             <button
-                              className="inline-flex items-center gap-0.5 hover:text-brand-600"
+                              className="ml-auto inline-flex shrink-0 items-center gap-0.5 hover:text-brand-600"
+                              title="Chép link xem live"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 void copy(s.session!.shareUrl!, 'Đã chép link xem live');
                               }}
                             >
                               <Copy className="size-3" />
-                              Link
                             </button>
                           )}
                         </div>
-                        {s.session.origin !== 'legacy' && (
-                          <div className="mt-1">
-                            <Signals signals={s.session.signals} />
-                          </div>
-                        )}
                       </div>
                     ) : (
                       <span className="text-xs text-subtle">—</span>
@@ -459,36 +451,37 @@ export default function ShopList() {
                   </Td>
                   <Td>
                     {s.nextRun ? (
-                      <div className="text-xs">
-                        <p className={cn('inline-flex items-center gap-1 font-medium', s.nextRun.today && 'text-sky-700 dark:text-sky-400')}>
+                      <div className="min-w-0 text-xs">
+                        <p className={cn('inline-flex items-center gap-1 font-medium tabular', s.nextRun.today && 'text-sky-700 dark:text-sky-400')}>
                           <CalendarClock className="size-3.5" />
-                          {s.nextRun.today ? `Hôm nay ${fmtTime(s.nextRun.startAt)}` : `${fmtDate(s.nextRun.startAt)} ${fmtTime(s.nextRun.startAt)}`}
+                          {s.nextRun.today ? `Hôm nay ${fmtTime(s.nextRun.startAt)}` : `${fmtDate(s.nextRun.startAt).slice(0, 5)} ${fmtTime(s.nextRun.startAt)}`}
                         </p>
-                        <p className="mt-0.5 max-w-[160px] truncate text-muted">{s.nextRun.title}</p>
+                        <p className="mt-0.5 max-w-[140px] truncate text-muted">{s.nextRun.title}</p>
                       </div>
                     ) : (
                       <span className="text-xs text-subtle">—</span>
                     )}
                   </Td>
                   <Td>
-                    <ServiceBadge state={s.service.state} daysLeft={s.service.daysLeft} expiresOn={s.service.expiresOn} size="sm" />
-                    {s.service.expiresOn && <p className="mt-0.5 text-[11px] text-subtle">{fmtDate(s.service.expiresOn)}</p>}
+                    <div className="text-xs">
+                      <ServiceBadge state={s.service.state} daysLeft={s.service.daysLeft} expiresOn={s.service.expiresOn} size="sm" />
+                    </div>
+                    <div className="mt-0.5">
+                      {s.connection === 'ok' ? (
+                        <Tooltip content={s.authExpiresAt ? `Uỷ quyền Shopee tới ${fmtDate(s.authExpiresAt)}` : 'Đang kết nối Shopee'}>
+                          <span className="text-2xs text-muted">Shopee {s.authExpiresAt ? fmtRelative(s.authExpiresAt).replace('sau ', 'còn ') : 'đang kết nối'}</span>
+                        </Tooltip>
+                      ) : (
+                        <ConnectionBadge state={s.connection} size="sm" />
+                      )}
+                    </div>
                   </Td>
-                  <Td>
-                    {s.connection === 'ok' ? (
-                      <Tooltip content={s.authExpiresAt ? `Hết hạn uỷ quyền ${fmtDate(s.authExpiresAt)}` : 'Đang kết nối'}>
-                        <span className="text-xs text-muted">{s.authExpiresAt ? fmtRelative(s.authExpiresAt).replace('sau ', 'còn ') : 'Đang kết nối'}</span>
-                      </Tooltip>
-                    ) : (
-                      <ConnectionBadge state={s.connection} size="sm" />
-                    )}
-                  </Td>
-                  <Td className="text-xs text-muted">{s.assignee?.name ?? (s.owner ? <span className="text-subtle">{s.owner.name}</span> : '—')}</Td>
                   <Td onClick={(e) => e.stopPropagation()}>
                     <Menu
                       trigger={({ toggle }) => <Button iconOnly variant="ghost" size="sm" icon={<MoreHorizontal className="size-4" />} onClick={toggle} aria-label="Thao tác" />}
                       items={[
                         { label: 'Mở shop', icon: <Store />, onClick: () => nav(`/shops/${s.id}`) },
+                        { label: 'Phát ngay', icon: <Zap />, hidden: Boolean(s.session) || !can('session.create') || !can('session.control') || !['ready', 'scheduled', 'attention'].includes(s.status) || !['ok', 'expiring'].includes(s.connection), onClick: () => setGoLiveShop(s) },
                         { label: 'Mở phiên', icon: <PlayCircle />, hidden: !s.session, onClick: () => nav(`/sessions/${s.session!.id}`) },
                         { label: 'Dừng đẩy hình', icon: <Square />, hidden: !s.session || s.session.signals.feed === 'off', onClick: () => void rowAction(s, 'stop') },
                         { divider: true, label: '' },
@@ -502,7 +495,8 @@ export default function ShopList() {
                     />
                   </Td>
                 </Tr>
-              ))}
+                );
+              })}
             </tbody>
           </Table>
         )}
@@ -532,6 +526,7 @@ export default function ShopList() {
         shops={items.filter((s) => selected.has(s.id)).map((s) => ({ id: s.id, name: s.name }))}
       />
       <ConnectShopDialog open={connectOpen} onClose={() => setConnectOpen(false)} />
+      {goLiveShop && <GoLiveDialog open onClose={() => setGoLiveShop(null)} shopId={goLiveShop.id} shopName={goLiveShop.name} />}
       <ConnectShopDialog open={Boolean(reauth)} onClose={() => setReauth(null)} reauthShopId={reauth?.id} reauthName={reauth?.name} />
     </div>
   );
@@ -555,9 +550,9 @@ function AssignDialog({ open, onClose, onPick, count, staff }: { open: boolean; 
         <div className="max-h-72 divide-y divide-line overflow-y-auto rounded-lg border border-line">
           {list.map((a) => (
             <button key={a.id} onClick={() => onPick(a.id)} className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-surface-2">
-              <Avatar name={a.name} className="size-7 text-[10px]" />
+              <Avatar name={a.name} className="size-7 text-2xs" />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[13px] font-medium">{a.name}</span>
+                <span className="block truncate text-sm font-medium">{a.name}</span>
                 <span className="block text-xs text-muted">@{a.username}</span>
               </span>
               <RoleBadge role={a.role} size="sm" />

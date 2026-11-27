@@ -4,7 +4,7 @@ import { products, templateItems, templates, videos, type PinPoint, type Playlis
 
 export interface TemplateIssue {
   position: number | null;
-  code: 'video_missing' | 'video_not_ready' | 'no_pin' | 'product_missing' | 'product_removed' | 'product_out' | 'empty' | 'legacy_review';
+  code: 'video_missing' | 'video_not_ready' | 'no_pin' | 'product_missing' | 'product_removed' | 'product_out' | 'empty' | 'legacy_review' | 'no_cover';
   message: string;
 }
 
@@ -20,6 +20,7 @@ export async function loadTemplateFull(templateId: number) {
   const pmap = new Map(prows.map((p) => [p.id, p]));
   const issues: TemplateIssue[] = [];
   if (!items.length) issues.push({ position: null, code: 'empty', message: 'Mẫu chưa có video nào' });
+  if (!tpl.coverKey) issues.push({ position: null, code: 'no_cover', message: 'Mẫu chưa có ảnh bìa — cần khi Phát ngay hoặc lịch phát không có ảnh riêng' });
   if (tpl.legacyNeedsReview) issues.push({ position: null, code: 'legacy_review', message: 'Mẫu nhập từ hệ thống cũ: cần kiểm tra thứ tự video và gán lại sản phẩm ghim' });
   const detailed = items.map((it) => {
     const v = vmap.get(it.videoId) ?? null;

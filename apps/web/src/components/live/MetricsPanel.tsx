@@ -7,16 +7,34 @@ import { Card, CardHeader } from '@/components/ui/misc';
 import type { MetricSample } from './types';
 
 const SERIES_COLOR = '#ee4d2d';
+const STEPS_MIN = [1, 2, 5, 10, 15, 30, 60, 120, 180, 360];
+
+/** Mốc trục thời gian tròn phút (tránh nhãn trùng "12:28 12:28…") */
+function timeTicks(min: number, max: number): { ticks: number[]; seconds: boolean } {
+  const range = max - min;
+  if (range < 3 * 60_000) {
+    const step = range < 60_000 ? 15_000 : 30_000;
+    const out: number[] = [];
+    for (let t = Math.ceil(min / step) * step; t <= max; t += step) out.push(t);
+    return { ticks: out, seconds: true };
+  }
+  const stepMin = STEPS_MIN.find((m) => range / (m * 60_000) <= 6) ?? 720;
+  const step = stepMin * 60_000;
+  const out: number[] = [];
+  for (let t = Math.ceil(min / step) * step; t <= max; t += step) out.push(t);
+  return { ticks: out, seconds: false };
+}
 
 function ViewersChart({ samples }: { samples: MetricSample[] }) {
   const data = useMemo(() => samples.filter((s) => s.viewers !== null).map((s) => ({ t: Date.parse(s.at), viewers: s.viewers ?? 0 })), [samples]);
+  const axis = useMemo(() => (data.length >= 2 ? timeTicks(data[0].t, data[data.length - 1].t) : { ticks: [], seconds: false }), [data]);
   if (data.length < 2)
     return <div className="grid h-[180px] place-items-center rounded-lg border border-dashed border-line-strong text-center text-xs text-muted">Chưa đủ dữ liệu — số người xem được ghi lại mỗi lần đồng bộ với Shopee khi phiên đang live.</div>;
   return (
     <ResponsiveContainer width="100%" height={180}>
       <LineChart data={data} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
         <CartesianGrid vertical={false} stroke="var(--line)" />
-        <XAxis dataKey="t" type="number" scale="time" domain={['dataMin', 'dataMax']} tickFormatter={(v: number) => fmtTime(v)} tickLine={false} axisLine={false} tick={{ fill: 'var(--muted)', fontSize: 11 }} minTickGap={40} />
+        <XAxis dataKey="t" type="number" scale="time" domain={['dataMin', 'dataMax']} ticks={axis.ticks} tickFormatter={(v: number) => fmtTime(v, axis.seconds)} tickLine={false} axisLine={false} tick={{ fill: 'var(--muted)', fontSize: 11 }} minTickGap={24} />
         <YAxis tickLine={false} axisLine={false} tick={{ fill: 'var(--muted)', fontSize: 11 }} allowDecimals={false} width={44} tickFormatter={(v: number) => fmtCompact(v)} />
         <RTooltip
           cursor={{ stroke: 'var(--line-strong)', strokeWidth: 1 }}
@@ -53,17 +71,17 @@ export function MetricsPanel({ session, samples }: { session: LiveSession; sampl
       />
       <div className="grid grid-cols-2 gap-px overflow-hidden border-b border-line bg-line sm:grid-cols-4">
         {tiles.map((t) => (
-          <div key={t.label} className="bg-surface px-4 py-3">
+          <div key={t.label} className="bg-surface px-4 py-2.5">
             <p className="flex items-center gap-1.5 text-xs text-muted">
               <t.icon className="size-3.5" />
               {t.label}
             </p>
-            <p className={t.strong ? 'mt-0.5 text-lg font-semibold tabular' : 'mt-0.5 text-[15px] font-semibold tabular'}>{t.value}</p>
+            <p className={t.strong ? 'mt-0.5 text-lg font-semibold tabular' : 'mt-0.5 text-base font-semibold tabular'}>{t.value}</p>
           </div>
         ))}
       </div>
-      <div className="px-5 py-4">
-        <p className="mb-2 text-[13px] font-medium">Người xem theo thời gian</p>
+      <div className="p-4">
+        <p className="mb-2 text-sm font-medium">Người xem theo thời gian</p>
         <ViewersChart samples={samples} />
       </div>
     </Card>

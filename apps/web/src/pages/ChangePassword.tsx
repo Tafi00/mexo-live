@@ -53,7 +53,7 @@ export default function ChangePassword() {
         </span>
         <div>
           <h1 className="text-lg font-semibold">Đổi mật khẩu</h1>
-          <p className="text-[13px] text-muted">{forced ? 'Bạn cần đặt mật khẩu mới trước khi tiếp tục.' : 'Sau khi đổi, các thiết bị khác sẽ bị đăng xuất.'}</p>
+          <p className="text-sm text-muted">{forced ? 'Bạn cần đặt mật khẩu mới trước khi tiếp tục.' : 'Sau khi đổi, các thiết bị khác sẽ bị đăng xuất.'}</p>
         </div>
       </div>
       <form onSubmit={submit} className="mt-6 space-y-4">

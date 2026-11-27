@@ -61,7 +61,7 @@ function VideoNote({ v, up }: { v: Video; up: UploadItem | undefined }) {
     const pct = up.size ? Math.floor((up.uploaded / up.size) * 100) : 0;
     return (
       <div className="mt-1.5">
-        <div className="mb-1 flex items-center justify-between text-[11px] text-muted">
+        <div className="mb-1 flex items-center justify-between text-2xs text-muted">
           <span>{up.phase === 'paused' ? 'Tạm dừng' : up.relinked ? 'Đang gắn lại file gốc' : up.uploaded >= up.size ? 'Đang kiểm tra…' : 'Đang tải lên'}</span>
           <span className="tabular">{pct}%</span>
         </div>
@@ -71,13 +71,13 @@ function VideoNote({ v, up }: { v: Video; up: UploadItem | undefined }) {
   }
   if (v.status === 'uploading')
     return (
-      <p className="mt-1 text-[11px] leading-snug text-sky-700 dark:text-sky-300">
+      <p className="mt-1 text-2xs leading-snug text-sky-700 dark:text-sky-300">
         Tải dở {fmtPercent(v.sizeBytes ? v.uploadedBytes / v.sizeBytes : 0, 0)} — chọn lại đúng file để tiếp tục.
       </p>
     );
   if (v.status === 'missing_file')
     return (
-      <p className="mt-1 text-[11px] leading-snug text-amber-700 dark:text-amber-400">
+      <p className="mt-1 text-2xs leading-snug text-amber-700 dark:text-amber-400">
         {v.sourceFileName ? (
           <>
             Cần file gốc <span className="break-all font-mono">{v.sourceFileName}</span> ({fmtBytes(v.sizeBytes)})
@@ -87,7 +87,7 @@ function VideoNote({ v, up }: { v: Video; up: UploadItem | undefined }) {
         )}
       </p>
     );
-  if (v.status === 'failed') return <p className="mt-1 text-[11px] leading-snug text-rose-600 dark:text-rose-400">{videoFailText(v.failReason) ?? 'Video lỗi'}</p>;
+  if (v.status === 'failed') return <p className="mt-1 text-2xs leading-snug text-rose-600 dark:text-rose-400">{videoFailText(v.failReason) ?? 'Video lỗi'}</p>;
   return null;
 }
 
@@ -355,10 +355,10 @@ export default function ShopVideos() {
 
   const folderButton = (key: FolderSel, label: string, count: number, icon: ReactNode, menu?: MenuItem[]) => (
     <div key={String(key)} className={cn('group/f flex items-center rounded-md', folder === key ? 'bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300' : 'text-fg hover:bg-surface-2')}>
-      <button type="button" onClick={() => setFolder(key)} className="flex min-w-0 flex-1 items-center gap-2 px-2.5 py-1.5 text-left text-[13px]">
+      <button type="button" onClick={() => setFolder(key)} className="flex min-w-0 flex-1 items-center gap-2 px-2.5 py-1.5 text-left text-sm">
         <span className={cn('shrink-0', folder === key ? 'text-brand-500' : 'text-muted')}>{icon}</span>
         <span className="min-w-0 flex-1 truncate">{label}</span>
-        <span className="text-[11px] tabular text-subtle">{count}</span>
+        <span className="text-2xs tabular text-subtle">{count}</span>
       </button>
       {menu && canManage && (
         <Menu
@@ -380,8 +380,8 @@ export default function ShopVideos() {
         <div className="pointer-events-none absolute inset-0 z-30 grid place-items-center rounded-xl border-2 border-dashed border-brand-400 bg-brand-50/85 backdrop-blur-[1px] dark:bg-brand-950/70">
           <div className="text-center">
             <CloudUpload className="mx-auto size-10 text-brand-500" />
-            <p className="mt-2 text-[15px] font-semibold text-brand-700 dark:text-brand-300">Thả file để tải lên</p>
-            <p className="text-[13px] text-brand-700/80 dark:text-brand-300/80">Vào thư mục: {currentFolderId ? currentFolderName : 'Chưa phân thư mục'}</p>
+            <p className="mt-2 text-base font-semibold text-brand-700 dark:text-brand-300">Thả file để tải lên</p>
+            <p className="text-sm text-brand-700/80 dark:text-brand-300/80">Vào thư mục: {currentFolderId ? currentFolderName : 'Chưa phân thư mục'}</p>
           </div>
         </div>
       )}
@@ -409,14 +409,14 @@ export default function ShopVideos() {
       />
 
       {/* Dung lượng + tải lên */}
-      <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
         <Card className="flex items-center gap-4 p-4">
           <div className={cn('grid size-10 shrink-0 place-items-center rounded-lg', usedPct >= 0.9 ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400' : 'bg-sky-50 text-sky-600 dark:bg-sky-950/50 dark:text-sky-400')}>
             <HardDrive className="size-5" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-baseline justify-between gap-x-3">
-              <p className="text-[13px] font-semibold">Dung lượng lưu trữ</p>
+              <p className="text-sm font-semibold">Dung lượng lưu trữ</p>
               {storage ? (
                 <p className="text-xs tabular text-muted">
                   <b className="font-semibold text-fg">{fmtBytes(storage.usedBytes)}</b> / {fmtBytes(storage.quotaBytes)} · {fmtPercent(usedPct, 0)}
@@ -426,7 +426,7 @@ export default function ShopVideos() {
               )}
             </div>
             <Progress value={storage?.usedBytes ?? 0} max={storage?.quotaBytes || 1} tone={usedPct >= 0.9 ? 'danger' : usedPct >= 0.75 ? 'warning' : 'info'} className="mt-2" />
-            <p className="mt-1.5 text-[11px] text-muted">
+            <p className="mt-1.5 text-2xs text-muted">
               {list.data ? `${list.data.counts.all} video · ${list.data.counts.ready} sẵn sàng` : '…'}
               {usedPct >= 0.9 && ' · Sắp hết dung lượng, hãy xóa video không dùng.'}
             </p>
@@ -436,15 +436,15 @@ export default function ShopVideos() {
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="group flex items-center gap-3 rounded-xl border border-dashed border-line-strong bg-surface px-5 py-4 text-left shadow-card transition-colors hover:border-brand-400 hover:bg-brand-50/40 dark:hover:bg-brand-950/20"
+            className="group flex items-center gap-3 rounded-xl border border-dashed border-line-strong bg-surface px-4 py-3 text-left shadow-card transition-colors hover:border-brand-400 hover:bg-brand-50/40 dark:hover:bg-brand-950/20"
           >
             <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-brand-500 text-white shadow-sm shadow-brand-500/30">
               <CloudUpload className="size-5" />
             </span>
             <span>
-              <span className="block text-[13px] font-semibold">Tải video lên{uploadingHere ? ` · đang tải ${uploadingHere}` : ''}</span>
+              <span className="block text-sm font-semibold">Tải video lên{uploadingHere ? ` · đang tải ${uploadingHere}` : ''}</span>
               <span className="block text-xs text-muted">Kéo thả nhiều file vào trang · MP4, MOV, MKV, WEBM, FLV, TS · ≤ 4 GB</span>
-              <span className="block text-[11px] text-subtle">Mất mạng vẫn tải tiếp được từ chỗ dở</span>
+              <span className="block text-2xs text-subtle">Mất mạng vẫn tải tiếp được từ chỗ dở</span>
             </span>
           </button>
         )}
@@ -478,7 +478,7 @@ export default function ShopVideos() {
         <aside className="hidden w-56 shrink-0 lg:block">
           <Card className="p-2">
             <div className="flex items-center justify-between px-2 pb-1.5 pt-1">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">Thư mục</p>
+              <p className="text-2xs font-semibold uppercase tracking-wide text-muted">Thư mục</p>
               {canManage && (
                 <Tooltip content="Tạo thư mục">
                   <button type="button" onClick={createFolder} className="rounded p-1 text-muted hover:bg-surface-2 hover:text-fg" aria-label="Tạo thư mục">
@@ -503,7 +503,7 @@ export default function ShopVideos() {
 
         <div className="min-w-0 flex-1">
           <Card>
-            <div className="px-4 pt-2">
+            <div className="px-4 pt-1">
               <Tabs<StatusFilter>
                 value={status}
                 onChange={setStatus}
@@ -517,7 +517,7 @@ export default function ShopVideos() {
                 ]}
               />
             </div>
-            <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">
+            <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-2.5">
               {/* Chọn thư mục trên màn nhỏ */}
               <div className="flex w-full gap-2 lg:hidden">
                 <Select
@@ -536,8 +536,8 @@ export default function ShopVideos() {
                 </Select>
                 {canManage && <Button iconOnly icon={<FolderPlus className="size-4" />} onClick={createFolder} aria-label="Tạo thư mục" />}
               </div>
-              <SearchInput value={q} onChange={setQ} placeholder="Tên video, tên file gốc…" className="w-full sm:w-72" />
-              <div className="ml-auto flex items-center gap-2">
+              <SearchInput value={q} onChange={setQ} placeholder="Tên video, tên file gốc…" className="min-w-0 flex-1 sm:w-72 sm:flex-none" />
+              <div className="ml-auto flex items-center gap-1">
                 <Segmented
                   size="sm"
                   value={view}
@@ -559,7 +559,7 @@ export default function ShopVideos() {
 
             {canManage && selected.size > 0 && (
               <div className="flex flex-wrap items-center gap-2 border-b border-line bg-brand-50/60 px-4 py-2 dark:bg-brand-950/20">
-                <span className="text-[13px] font-medium">Đã chọn {selected.size} video</span>
+                <span className="text-sm font-medium">Đã chọn {selected.size} video</span>
                 <button onClick={() => setSelected(new Set())} className="rounded p-0.5 text-muted hover:text-fg" aria-label="Bỏ chọn">
                   <X className="size-4" />
                 </button>
@@ -598,7 +598,7 @@ export default function ShopVideos() {
             ) : filtered.length === 0 ? (
               <EmptyState compact icon={Clapperboard} title={dq ? 'Không tìm thấy video phù hợp' : 'Không có video trong mục này'} description={dq ? 'Thử từ khóa khác hoặc chọn “Tất cả video”.' : undefined} />
             ) : view === 'grid' ? (
-              <div className="p-4">
+              <div className="p-3 sm:p-4">
                 {canManage && (
                   <div className="mb-3">
                     <Checkbox
@@ -613,7 +613,7 @@ export default function ShopVideos() {
                     />
                   </div>
                 )}
-                <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 xl:grid-cols-4 2xl:grid-cols-5">
                   {filtered.map((v) => {
                     const up = upByVideo.get(v.id);
                     const sel = selected.has(v.id);
@@ -639,12 +639,12 @@ export default function ShopVideos() {
                               <VideoStatusBadge status={v.status} size="sm" />
                             </span>
                           )}
-                          {v.durationSec ? <span className="absolute bottom-2 right-2 rounded bg-black/70 px-1.5 py-px text-[11px] font-medium tabular text-white">{fmtClock(v.durationSec)}</span> : null}
-                          {res && <span className="absolute bottom-2 left-2 rounded bg-black/55 px-1.5 py-px text-[10px] font-medium text-white/90">{res}</span>}
+                          {v.durationSec ? <span className="absolute bottom-2 right-2 rounded bg-black/70 px-1.5 py-px text-2xs font-medium tabular text-white">{fmtClock(v.durationSec)}</span> : null}
+                          {res && <span className="absolute bottom-2 left-2 rounded bg-black/55 px-1.5 py-px text-2xs font-medium text-white/90">{res}</span>}
                         </VideoThumb>
-                        <div className="flex flex-1 flex-col p-3">
+                        <div className="flex flex-1 flex-col p-2.5 sm:p-3">
                           <div className="flex items-start gap-1.5">
-                            <p className="line-clamp-2 min-w-0 flex-1 text-[13px] font-medium leading-snug" title={v.name}>
+                            <p className="line-clamp-2 min-w-0 flex-1 text-sm font-medium leading-snug" title={v.name}>
                               {v.name}
                             </p>
                             <Menu
@@ -657,7 +657,7 @@ export default function ShopVideos() {
                               items={videoMenu(v)}
                             />
                           </div>
-                          <p className="mt-1 text-[11px] text-muted">
+                          <p className="mt-1 text-2xs text-muted">
                             #{v.number} · {fmtBytes(v.sizeBytes)} · {fmtDate(v.createdAt)}
                           </p>
                           <div className="mt-1.5 flex flex-wrap gap-1">
@@ -728,7 +728,7 @@ export default function ShopVideos() {
                               <button type="button" onClick={() => setDetail(v)} className="block max-w-full truncate text-left font-medium hover:text-brand-600" title={v.name}>
                                 {v.name}
                               </button>
-                              {v.sourceFileName && <p className="truncate font-mono text-[11px] text-subtle">{v.sourceFileName}</p>}
+                              {v.sourceFileName && <p className="truncate font-mono text-2xs text-subtle">{v.sourceFileName}</p>}
                               <VideoNote v={v} up={up} />
                               {relinkAction(v, up)}
                             </div>

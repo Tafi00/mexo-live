@@ -15,6 +15,7 @@ import {
   Plug,
   Radio,
   ScrollText,
+  Zap,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -23,6 +24,7 @@ import { fmtDate } from '@/lib/format';
 import { useCopy } from '@/lib/hooks';
 import type { ShopDetail } from '@/lib/types';
 import { ConnectShopDialog } from '@/components/domain/ConnectShopDialog';
+import { GoLiveDialog } from '@/components/live/GoLiveDialog';
 import { ConnectionBadge, ShopStatusBadge } from '@/components/domain/status';
 import { Button, ButtonLink } from '@/components/ui/button';
 import { Badge, Callout, ErrorState, PageLoading } from '@/components/ui/misc';
@@ -43,6 +45,7 @@ export default function ShopLayout() {
   const { can, role } = useAuth();
   const copy = useCopy();
   const [reauth, setReauth] = useState(false);
+  const [goLive, setGoLive] = useState(false);
   const q = useQuery({ queryKey: ['shop', id], queryFn: () => api.get<ShopDetail>(`/api/shops/${id}`), refetchInterval: 20_000 });
 
   if (q.isLoading) return <PageLoading />;
@@ -53,12 +56,12 @@ export default function ShopLayout() {
     { to: '', label: 'Hôm nay', icon: LayoutGrid, end: true, show: true },
     { to: 'sessions', label: 'Phiên live', icon: Radio, show: true, badge: shop.session ? '●' : undefined },
     { to: 'products', label: 'Sản phẩm', icon: Package, show: true },
-    { to: 'videos', label: 'Thư viện video', icon: Clapperboard, show: true },
+    { to: 'videos', label: 'Video', icon: Clapperboard, show: true },
     { to: 'templates', label: 'Mẫu phát', icon: ListVideo, show: true },
     { to: 'schedules', label: 'Lịch phát', icon: CalendarClock, show: true },
-    { to: 'replies', label: 'Trả lời bình luận', icon: MessagesSquare, show: true },
+    { to: 'replies', label: 'Bình luận', icon: MessagesSquare, show: true },
     { to: 'history', label: 'Lịch sử', icon: History, show: can('report.view') },
-    { to: 'connection', label: 'Kết nối & hạn dùng', icon: Plug, show: true },
+    { to: 'connection', label: 'Kết nối & hạn', icon: Plug, show: true },
     { to: 'activity', label: 'Nhật ký', icon: ScrollText, show: role !== 'member' },
   ].filter((t) => t.show);
 
@@ -73,11 +76,11 @@ export default function ShopLayout() {
         <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="truncate text-[22px] font-semibold tracking-tight">{shop.name}</h1>
+              <h1 className="truncate text-2xl font-semibold tracking-tight">{shop.name}</h1>
               <ShopStatusBadge status={shop.status} />
               {shop.connection !== 'ok' && <ConnectionBadge state={shop.connection} />}
             </div>
-            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted">
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
               {shop.alias && <span>{shop.shopeeName}</span>}
               <button onClick={() => copy(String(shop.shopeeShopId), 'Đã chép Shop ID')} className="inline-flex items-center gap-1 font-mono text-xs hover:text-fg">
                 ID {shop.shopeeShopId} <Copy className="size-3" />
@@ -103,12 +106,13 @@ export default function ShopLayout() {
               </ButtonLink>
             ) : (
               can('session.create') &&
+              can('session.control') &&
               !needsReauth &&
               shop.status !== 'expired' &&
               shop.status !== 'suspended' && (
-                <ButtonLink to="sessions?new=1" variant="primary" icon={<Radio className="size-4" />}>
-                  Tạo phiên live
-                </ButtonLink>
+                <Button variant="primary" icon={<Zap className="size-4" />} onClick={() => setGoLive(true)}>
+                  Phát ngay
+                </Button>
               )
             )}
             {can('report.view') && (
@@ -144,20 +148,21 @@ export default function ShopLayout() {
             end={t.end}
             className={({ isActive }) =>
               cn(
-                'relative inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 pb-2.5 pt-1.5 text-[13px] font-medium transition-colors',
+                'relative inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-2.5 pb-2 pt-1 text-sm font-medium transition-colors',
                 isActive ? 'text-fg after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 after:rounded-full after:bg-brand-500' : 'text-muted hover:text-fg',
               )
             }
           >
-            <t.icon className="size-4" />
+            <t.icon className="size-3.5" />
             {t.label}
-            {t.badge && <span className="text-[10px] text-brand-500">{t.badge}</span>}
+            {t.badge && <span className="text-2xs text-brand-500">{t.badge}</span>}
           </NavLink>
         ))}
       </nav>
 
       <Outlet context={{ shop, refetch: () => void q.refetch() } satisfies ShopCtx} />
       <ConnectShopDialog open={reauth} onClose={() => setReauth(false)} reauthShopId={shop.id} reauthName={shop.name} />
+      <GoLiveDialog open={goLive} onClose={() => setGoLive(false)} shopId={shop.id} shopName={shop.name} />
     </div>
   );
 }

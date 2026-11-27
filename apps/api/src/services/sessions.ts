@@ -199,15 +199,20 @@ export interface PreflightCheck {
   detail?: string;
 }
 
-export async function preflight(shop: ShopRow, s: SessionRow, templateId: number, serverId?: number | null) {
+export async function preflight(shop: ShopRow, s: SessionRow | null, templateId: number, serverId?: number | null) {
   const checks: PreflightCheck[] = [];
-  const job = await activeJob(s.id);
-  checks.push({
-    key: 'session',
-    ok: s.state !== 'ended' && s.state !== 'ending' && !job,
-    label: 'Phiên chưa kết thúc và không có việc phát khác',
-    detail: job ? 'Phiên đang được một máy chủ phát' : s.state === 'ended' ? 'Phiên đã kết thúc' : undefined,
-  });
+  if (s) {
+    const job = await activeJob(s.id);
+    checks.push({
+      key: 'session',
+      ok: s.state !== 'ended' && s.state !== 'ending' && !job,
+      label: 'Phiên chưa kết thúc và không có việc phát khác',
+      detail: job ? 'Phiên đang được một máy chủ phát' : s.state === 'ended' ? 'Phiên đã kết thúc' : undefined,
+    });
+  } else {
+    const open = await getOpenSession(shop.id);
+    checks.push({ key: 'session', ok: !open, label: 'Shop chưa có phiên nào đang mở', detail: open ? `Phiên "${open.title}" chưa kết thúc` : undefined });
+  }
   const svc = shopServiceState(shop);
   checks.push({ key: 'service', ok: svc.state === 'active' || svc.state === 'expiring', label: 'Shop còn hạn dùng', detail: svc.state === 'expired' ? 'Đã hết hạn' : undefined });
   checks.push({ key: 'connection', ok: shop.connection === 'ok' || shop.connection === 'expiring', label: 'Kết nối Shopee còn hiệu lực' });
@@ -246,7 +251,12 @@ export async function preflight(shop: ShopRow, s: SessionRow, templateId: number
   let missingInCart: number[] = [];
   let cartOk = true;
   let cartDetail: string | undefined;
-  if (s.shopeeSessionId && (shop.connection === 'ok' || shop.connection === 'expiring')) {
+  if (!s) {
+    // Phiên mới: giỏ trống, mọi sản phẩm ghim sẽ được thêm
+    missingInCart = needed;
+    cartOk = needed.length <= shop.cartLimit;
+    cartDetail = `Sẽ thêm ${needed.length} sản phẩm ghim vào giỏ (tối đa ${shop.cartLimit})`;
+  } else if (s.shopeeSessionId && (shop.connection === 'ok' || shop.connection === 'expiring')) {
     try {
       const cart = await shopee.getCartItems(shop, s.shopeeSessionId);
       missingInCart = needed.filter((id) => !cart.includes(id));
@@ -312,12 +322,58 @@ export async function startAutoPlay(actor: ActorRef, shop: ShopRow, s: SessionRo
     pinError: null,
     manualPinVideoIndex: null,
     lastError: null,
-    replyState: shop.replyEnabled && full.template.replyMode !== 'off' ? 'ok' : full.template.replyMode === 'on' ? 'ok' : 'off',
+    replyState:
+      s.replyMode === 'on' ? 'ok' : s.replyMode === 'off' ? 'off' : shop.replyEnabled && full.template.replyMode !== 'off' ? 'ok' : full.template.replyMode === 'on' ? 'ok' : 'off',
   });
   await logEvent(s.id, 'info', 'stream_assigned', `Giao việc phát cho máy ${pf.server!.name} (${pf.playlist.length} video, ${full.template.loop ? 'lặp vòng' : 'phát 1 lượt'})`, { jobId: job!.id });
   await audit(actor, 'stream_started', { shopId: shop.id, params: { sessionId: s.shopeeSessionId, template: full.template.name, server: pf.server!.name } });
   notify(s);
   return job!;
+}
+
+export interface GoLiveInput {
+  templateId: number;
+  title?: string | null;
+  description?: string | null;
+  coverKey?: string | null;
+  serverId?: number | null;
+}
+
+/** Tiêu đề / ảnh bìa thực tế: ưu tiên giá trị nhập, rồi tới cấu hình của mẫu phát */
+export function resolveLiveMeta(tpl: { name: string; liveTitle: string | null; liveDescription: string | null; coverKey: string | null }, input: { title?: string | null; description?: string | null; coverKey?: string | null }) {
+  return {
+    title: (input.title || tpl.liveTitle || tpl.name).trim().slice(0, 200),
+    description: input.description ?? tpl.liveDescription ?? '',
+    coverKey: input.coverKey || tpl.coverKey || null,
+  };
+}
+
+/**
+ * Phát ngay (1 bước): kiểm tra trước → tạo phiên trên Shopee → thêm sản phẩm ghim vào giỏ → giao máy phát.
+ * Phiên chỉ bắt đầu trên Shopee khi máy phát đã đẩy hình. dryRun: chỉ trả kết quả kiểm tra, không tạo gì.
+ */
+export async function goLive(actor: ActorRef, shop: ShopRow, input: GoLiveInput & { dryRun?: boolean }) {
+  const full = await loadTemplateFull(input.templateId);
+  if (!full || full.template.shopId !== shop.id) throw err.notFound('Không tìm thấy mẫu phát');
+  const meta = resolveLiveMeta(full.template, input);
+  const pf = await preflight(shop, null, input.templateId, input.serverId);
+  const checks = [
+    { key: 'cover', ok: Boolean(meta.coverKey), label: 'Có ảnh bìa (của mẫu phát hoặc tải lên)', detail: meta.coverKey ? undefined : 'Mẫu chưa có ảnh bìa — tải ảnh bìa hoặc thêm vào mẫu phát' },
+    ...pf.checks,
+  ];
+  const ok = checks.every((c) => c.ok);
+  const summary = { title: meta.title, coverKey: meta.coverKey, videos: pf.playlist.length, products: new Set(pf.playlist.flatMap((p) => p.pins.map((x) => x.itemId))).size, server: pf.server ? { id: pf.server.id, name: pf.server.name } : null };
+  if (input.dryRun || !ok) return { ok, started: false, checks, summary, sessionId: null as number | null };
+  const s = await createLiveSession(actor, shop, { title: meta.title, description: meta.description, coverKey: meta.coverKey!, templateId: input.templateId });
+  try {
+    await startAutoPlay(actor, shop, s, input.templateId, input.serverId);
+  } catch (e) {
+    // Phiên đã tạo nhưng chưa giao được máy phát: giữ phiên để người dùng sửa rồi bấm "Bắt đầu phát" lại
+    await logEvent(s.id, 'error', 'go_live_failed', `Chưa bắt đầu phát được: ${e instanceof Error ? e.message : e}`);
+    const details = e instanceof AppError ? (e.details as { checks?: PreflightCheck[] } | undefined) : undefined;
+    return { ok: false, started: false, checks: details?.checks ?? checks, summary, sessionId: s.id, error: e instanceof Error ? e.message : String(e) };
+  }
+  return { ok: true, started: true, checks, summary, sessionId: s.id };
 }
 
 export async function stopFeed(actor: ActorRef, s: SessionRow, reason = 'Dừng theo yêu cầu') {

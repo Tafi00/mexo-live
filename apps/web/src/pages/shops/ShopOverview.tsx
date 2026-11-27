@@ -15,7 +15,7 @@ function CheckRow({ ok, warn, label, detail, to }: { ok: boolean; warn?: boolean
     <div className="flex items-center gap-3 px-5 py-3">
       {ok ? <CheckCircle2 className="size-[18px] shrink-0 text-emerald-500" /> : warn ? <AlertTriangle className="size-[18px] shrink-0 text-amber-500" /> : <Circle className="size-[18px] shrink-0 text-subtle" />}
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-medium">{label}</p>
+        <p className="text-sm font-medium">{label}</p>
         {detail && <p className="text-xs text-muted">{detail}</p>}
       </div>
       {to && <ArrowRight className="size-4 text-subtle" />}
@@ -49,8 +49,8 @@ export default function ShopOverview() {
   const tc = tpl.data?.counts;
 
   return (
-    <div className="grid gap-5 xl:grid-cols-3">
-      <div className="space-y-5 xl:col-span-2">
+    <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+      <div className="space-y-4 xl:col-span-2">
         <Card>
           <CardHeader
             title="Phiên hiện tại"
@@ -65,8 +65,8 @@ export default function ShopOverview() {
                 {s.origin === 'schedule' && <span className="text-xs text-muted">· Theo lịch phát</span>}
                 {s.origin === 'legacy' && <span className="text-xs text-amber-600">· Từ hệ thống cũ</span>}
               </div>
-              <p className="mt-2 text-[15px] font-semibold">{s.title}</p>
-              <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-muted">
+              <p className="mt-2 text-base font-semibold">{s.title}</p>
+              <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
                 <span>{s.startedAt ? `Lên sóng ${fmtTime(s.startedAt)} (${fmtRelative(s.startedAt)})` : 'Chưa lên sóng'}</span>
                 {s.videoCount ? <span>Video {(s.videoIndex ?? 0) + 1}/{s.videoCount}{s.videoName ? `: ${s.videoName}` : ''}</span> : null}
                 {s.templateName && <span>Mẫu: {s.templateName}</span>}
@@ -93,7 +93,7 @@ export default function ShopOverview() {
               {s.lastError && <p className="mt-3 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">{s.lastError}</p>}
             </div>
           ) : (
-            <EmptyState compact icon={Radio} title="Shop chưa có phiên nào đang mở" description="Tạo phiên mới hoặc đặt lịch phát tự động." action={<ButtonLink to="sessions?new=1" variant="primary" size="sm">Tạo phiên live</ButtonLink>} />
+            <EmptyState compact icon={Radio} title="Shop chưa có phiên nào đang mở" description="Bấm “Phát ngay” ở đầu trang để phát theo mẫu, hoặc đặt lịch phát tự động." action={<ButtonLink to="schedules" size="sm">Đặt lịch phát</ButtonLink>} />
           )}
         </Card>
 
@@ -104,10 +104,10 @@ export default function ShopOverview() {
               {runs.slice(0, 6).map((r) => (
                 <div key={r.id} className="flex items-center gap-4 px-5 py-3">
                   <div className="w-24 shrink-0">
-                    <p className="text-[13px] font-semibold tabular">{fmtTime(r.startAt)}–{fmtTime(r.endAt)}</p>
+                    <p className="text-sm font-semibold tabular">{fmtTime(r.startAt)}–{fmtTime(r.endAt)}</p>
                     <p className="text-xs text-muted">{r.runDate === today ? 'Hôm nay' : fmtDate(r.runDate)}</p>
                   </div>
-                  <p className="min-w-0 flex-1 truncate text-[13px]">{sched.data?.schedules.find((x: any) => x.id === r.scheduleId)?.title ?? 'Lịch phát'}</p>
+                  <p className="min-w-0 flex-1 truncate text-sm">{sched.data?.schedules.find((x: any) => x.id === r.scheduleId)?.title ?? 'Lịch phát'}</p>
                   <RunStatusBadge status={r.status} size="sm" />
                 </div>
               ))}
@@ -118,7 +118,7 @@ export default function ShopOverview() {
         </Card>
       </div>
 
-      <div className="space-y-5">
+      <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <StatCard label="Phiên 7 ngày" value={report.data ? fmtNumber(report.data.summary.count) : '—'} icon={<Radio className="size-4" />} tone="brand" />
           <StatCard label="Giờ phát 7 ngày" value={report.data ? fmtNumber(report.data.summary.totalSeconds / 3600, 1) : '—'} icon={<Clock className="size-4" />} tone="info" />
@@ -144,7 +144,7 @@ export default function ShopOverview() {
             <CardHeader title="Việc cần xử lý" icon={<AlertTriangle className="size-4 text-amber-500" />} />
             <ul className="divide-y divide-line">
               {shop.issues.map((i) => (
-                <li key={i.code} className={cn('px-5 py-2.5 text-[13px]', i.level === 'critical' ? 'text-rose-700 dark:text-rose-400' : i.level === 'warning' ? 'text-amber-700 dark:text-amber-400' : 'text-muted')}>
+                <li key={i.code} className={cn('px-5 py-2.5 text-sm', i.level === 'critical' ? 'text-rose-700 dark:text-rose-400' : i.level === 'warning' ? 'text-amber-700 dark:text-amber-400' : 'text-muted')}>
                   {i.text}
                 </li>
               ))}

@@ -24,7 +24,7 @@ export default function SettingsPage() {
     <div>
       <PageHeader title="Cấu hình hệ thống" description="Trợ lý AI, giới hạn vận hành, đóng băng khẩn cấp và kết nối hạ tầng" />
       <Tabs<Tab>
-        className="mb-5"
+        className="mb-4"
         value={tab}
         onChange={(v) => {
           const p = new URLSearchParams(params);

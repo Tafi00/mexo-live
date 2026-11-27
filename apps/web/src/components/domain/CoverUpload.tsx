@@ -5,7 +5,7 @@ import { api, errorMessage } from '@/lib/api';
 import { cn } from '@/lib/cn';
 
 /** Ảnh bìa livestream (JPG/PNG ≤ 2 MB). value = storage key */
-export function CoverUpload({ value, onChange, className, required }: { value: string | null | undefined; onChange: (key: string | null) => void; className?: string; required?: boolean }) {
+export function CoverUpload({ value, onChange, className, required, removable = true }: { value: string | null | undefined; onChange: (key: string | null) => void; className?: string; required?: boolean; removable?: boolean }) {
   const ref = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const url = value ? `/api/files/cover?key=${encodeURIComponent(value)}` : null;
@@ -46,7 +46,7 @@ export function CoverUpload({ value, onChange, className, required }: { value: s
             </span>
           </>
         ) : (
-          <span className="flex flex-col items-center gap-1 text-[11px]">
+          <span className="flex flex-col items-center gap-1 text-2xs">
             <ImagePlus className="size-5" />
             Tải ảnh bìa
           </span>
@@ -55,7 +55,7 @@ export function CoverUpload({ value, onChange, className, required }: { value: s
       <div className="space-y-1.5 pt-1 text-xs text-muted">
         <p>JPG hoặc PNG, tối đa 2 MB.</p>
         <p>Nên dùng ảnh dọc 3:4 hoặc 9:16.</p>
-        {value && (
+        {value && removable && (
           <button type="button" onClick={() => onChange(null)} className="inline-flex items-center gap-1 text-rose-600 hover:underline">
             <X className="size-3" /> Bỏ ảnh
           </button>

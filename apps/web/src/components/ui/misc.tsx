@@ -10,11 +10,11 @@ export function Card({ className, children, padded = false }: { className?: stri
 
 export function CardHeader({ title, description, actions, className, icon }: { title: ReactNode; description?: ReactNode; actions?: ReactNode; className?: string; icon?: ReactNode }) {
   return (
-    <div className={cn('flex flex-wrap items-start justify-between gap-3 border-b border-line px-5 py-3.5', className)}>
+    <div className={cn('flex flex-wrap items-start justify-between gap-3 border-b border-line px-4 py-2.5', className)}>
       <div className="flex min-w-0 items-start gap-2.5">
         {icon && <span className="mt-0.5 text-muted">{icon}</span>}
         <div className="min-w-0">
-          <h3 className="text-[14px] font-semibold leading-snug">{title}</h3>
+          <h3 className="text-base font-semibold leading-snug">{title}</h3>
           {description && <p className="mt-0.5 text-xs text-muted">{description}</p>}
         </div>
       </div>
@@ -48,7 +48,7 @@ const dotTones: Record<Tone, string> = {
 
 export function Badge({ tone = 'neutral', children, dot, pulse, className, size = 'md', icon }: { tone?: Tone; children: ReactNode; dot?: boolean; pulse?: boolean; className?: string; size?: 'sm' | 'md'; icon?: ReactNode }) {
   return (
-    <span className={cn('inline-flex max-w-full items-center gap-1.5 whitespace-nowrap rounded-full font-medium ring-1 ring-inset', size === 'sm' ? 'px-1.5 py-px text-[11px]' : 'px-2 py-0.5 text-xs', tones[tone], className)}>
+    <span className={cn('inline-flex max-w-full items-center gap-1.5 whitespace-nowrap rounded-full font-medium ring-1 ring-inset', size === 'sm' ? 'px-1.5 py-px text-2xs' : 'px-2 py-0.5 text-xs', tones[tone], className)}>
       {dot && <span className={cn('size-1.5 shrink-0 rounded-full', dotTones[tone], pulse && 'animate-pulse-dot')} />}
       {icon}
       <span className="truncate">{children}</span>
@@ -87,7 +87,7 @@ export function EmptyState({ icon: Icon, title, description, action, className, 
         </div>
       )}
       <p className="text-sm font-semibold">{title}</p>
-      {description && <p className="mt-1 max-w-md text-[13px] text-muted">{description}</p>}
+      {description && <p className="mt-1 max-w-md text-sm text-muted">{description}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );
@@ -121,7 +121,7 @@ export function Callout({ tone = 'info', title, children, className, icon, actio
   } as const;
   const [cls, ic] = map[tone];
   return (
-    <div className={cn('flex gap-3 rounded-lg border px-3.5 py-3 text-[13px]', cls, className)}>
+    <div className={cn('flex gap-2.5 rounded-lg border px-3 py-2.5 text-sm', cls, className)}>
       <span className="mt-px shrink-0">{icon ?? ic}</span>
       <div className="min-w-0 flex-1">
         {title && <p className="font-semibold">{title}</p>}
@@ -135,11 +135,11 @@ export function Callout({ tone = 'info', title, children, className, icon, actio
 // ───────────── Tiêu đề trang ─────────────
 export function PageHeader({ title, description, actions, breadcrumb, className }: { title: ReactNode; description?: ReactNode; actions?: ReactNode; breadcrumb?: ReactNode; className?: string }) {
   return (
-    <div className={cn('mb-5 flex flex-wrap items-end justify-between gap-x-4 gap-y-3', className)}>
+    <div className={cn('mb-4 flex flex-wrap items-end justify-between gap-x-4 gap-y-2', className)}>
       <div className="min-w-0">
         {breadcrumb && <div className="mb-1.5 text-xs text-muted">{breadcrumb}</div>}
-        <h1 className="text-[22px] font-semibold tracking-tight">{title}</h1>
-        {description && <p className="mt-1 text-[13px] text-muted">{description}</p>}
+        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+        {description && <p className="mt-1 text-sm text-muted">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
@@ -162,12 +162,12 @@ export function StatCard({ label, value, hint, icon, tone = 'neutral', onClick, 
   return (
     <Comp
       onClick={onClick}
-      className={cn('flex min-w-0 items-start gap-3 rounded-xl border bg-surface p-4 text-left shadow-card transition-colors', active ? 'border-brand-400 ring-1 ring-brand-400' : 'border-line', onClick && 'hover:border-line-strong')}
+      className={cn('flex min-w-0 items-start gap-3 rounded-xl border bg-surface px-3.5 py-3 text-left shadow-card transition-colors', active ? 'border-brand-400 ring-1 ring-brand-400' : 'border-line', onClick && 'hover:border-line-strong')}
     >
       {icon && <div className={cn('hidden size-9 shrink-0 place-items-center rounded-lg sm:grid', iconTone[tone])}>{icon}</div>}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-xs font-medium text-muted">{label}</p>
-        <p className="mt-0.5 text-[22px] font-semibold leading-tight tracking-tight tabular">{value}</p>
+        <p className="line-clamp-1 text-xs font-medium text-muted" title={typeof label === 'string' ? label : undefined}>{label}</p>
+        <p className="mt-0.5 text-xl font-semibold leading-tight tracking-tight tabular">{value}</p>
         {(hint || trend) && (
           <p className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-muted">
             {trend}
@@ -188,14 +188,14 @@ export function Tabs<T extends string>({ value, onChange, items, className }: { 
           key={it.value}
           onClick={() => onChange(it.value)}
           className={cn(
-            'relative inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 pb-2.5 pt-2 text-[13px] font-medium transition-colors',
+            'relative inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 pb-2.5 pt-2 text-sm font-medium transition-colors',
             value === it.value ? 'text-fg after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full after:bg-brand-500' : 'text-muted hover:text-fg',
           )}
         >
           {it.icon}
           {it.label}
           {it.count !== undefined && it.count !== null && (
-            <span className={cn('rounded-full px-1.5 text-[11px] tabular', it.tone && it.count > 0 ? tones[it.tone] + ' ring-1 ring-inset' : 'bg-surface-2 text-muted')}>{it.count}</span>
+            <span className={cn('rounded-full px-1.5 text-2xs tabular', it.tone && it.count > 0 ? tones[it.tone] + ' ring-1 ring-inset' : 'bg-surface-2 text-muted')}>{it.count}</span>
           )}
         </button>
       ))}
@@ -263,13 +263,13 @@ export function Menu({ trigger, items, align = 'right', width = 'w-56' }: { trig
                   it.onClick?.();
                 }}
                 className={cn(
-                  'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+                  'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50',
                   it.danger ? 'text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40' : 'text-fg hover:bg-surface-2',
                 )}
               >
                 {it.icon && <span className="shrink-0 text-muted [&>svg]:size-4">{it.icon}</span>}
                 <span className="min-w-0 flex-1 truncate">{it.label}</span>
-                {it.hint && <span className="text-[11px] text-subtle">{it.hint}</span>}
+                {it.hint && <span className="text-2xs text-subtle">{it.hint}</span>}
               </button>
             ),
           )}
@@ -299,7 +299,7 @@ export function KV({ items, className, cols = 2 }: { items: { label: ReactNode; 
         .map((it, i) => (
           <div key={i} className="min-w-0">
             <dt className="text-xs text-muted">{it.label}</dt>
-            <dd className="mt-0.5 break-words text-[13px] font-medium">{it.value}</dd>
+            <dd className="mt-0.5 break-words text-sm font-medium">{it.value}</dd>
           </div>
         ))}
     </dl>
@@ -315,7 +315,7 @@ export function Avatar({ name, className }: { name: string; className?: string }
     .join('');
   const hue = [...name].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
   return (
-    <span className={cn('grid size-8 shrink-0 place-items-center rounded-full text-[11px] font-semibold text-white', className)} style={{ background: `hsl(${hue} 55% 50%)` }}>
+    <span className={cn('grid size-8 shrink-0 place-items-center rounded-full text-2xs font-semibold text-white', className)} style={{ background: `hsl(${hue} 55% 50%)` }}>
       {initials || '?'}
     </span>
   );
@@ -328,7 +328,8 @@ export function Tooltip({ content, children, side = 'top' }: { content: ReactNod
       <span
         role="tooltip"
         className={cn(
-          'pointer-events-none absolute left-1/2 z-50 w-max max-w-xs -translate-x-1/2 rounded-md bg-slate-900 px-2 py-1 text-[11px] leading-snug text-white opacity-0 shadow-lg transition-opacity group-hover/tt:opacity-100 dark:bg-slate-700',
+          // Ẩn hẳn (display:none) khi không rê chuột để không chiếm chỗ ngoài mép màn hình (gây cuộn ngang trên điện thoại)
+          'pointer-events-none absolute left-1/2 z-50 hidden w-max max-w-xs -translate-x-1/2 animate-fade-in rounded-md bg-slate-900 px-2 py-1 text-2xs leading-snug text-white shadow-lg group-hover/tt:block dark:bg-slate-700',
           side === 'top' ? 'bottom-full mb-1.5' : 'top-full mt-1.5',
         )}
       >
@@ -339,5 +340,5 @@ export function Tooltip({ content, children, side = 'top' }: { content: ReactNod
 }
 
 export function Kbd({ children }: { children: ReactNode }) {
-  return <kbd className="rounded border border-line-strong bg-surface-2 px-1.5 py-px font-mono text-[10px] text-muted">{children}</kbd>;
+  return <kbd className="rounded border border-line-strong bg-surface-2 px-1.5 py-px font-mono text-2xs text-muted">{children}</kbd>;
 }

@@ -25,10 +25,11 @@ import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/cn';
 import { fmtDate, fmtTime } from '@/lib/format';
 import { useAction, useLocalState, useNow } from '@/lib/hooks';
-import type { Schedule, ScheduleRun } from '@/lib/types';
+import type { ScheduleRun } from '@/lib/types';
 import { RunStatusBadge } from '@/components/domain/status';
 import { RunWindowText } from '@/components/schedule/CalendarViews';
 import { ScheduleDialog } from '@/components/schedule/ScheduleDialog';
+import { coverUrl, useShopTemplates, type ScheduleRow } from '@/components/schedule/ScheduleForm';
 import { isOvernight, minutesLabel, relativeDay, repeatSummary, runIssueLabel, SCHEDULE_STATE, shortDay, windowLabel, windowMinutes } from '@/components/schedule/utils';
 import { Button, ButtonLink } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/dialog';
@@ -36,6 +37,8 @@ import { Segmented, Select } from '@/components/ui/form';
 import { Badge, Callout, Card, CardHeader, EmptyState, ErrorState, Menu, Skeleton, StatCard, Tooltip } from '@/components/ui/misc';
 import { Table, Td, Th, THead, Tr } from '@/components/ui/table';
 import { useShop } from './ShopLayout';
+
+type Schedule = ScheduleRow;
 
 interface SchedulesResp {
   schedules: Schedule[];
@@ -48,7 +51,7 @@ const STATE_ORDER: Record<string, number> = { active: 0, paused: 1, cancelled: 2
 const isPending = (r: ScheduleRun) => ['upcoming', 'starting', 'live', 'ending'].includes(r.status);
 
 function HowItWorks() {
-  const [open, setOpen] = useLocalState('mexo-schedule-help', true);
+  const [open, setOpen] = useLocalState('mexo-schedule-help', false);
   return (
     <Callout
       tone="info"
@@ -66,7 +69,7 @@ function HowItWorks() {
           <li>
             <b>Tới giờ bật</b>, hệ thống kiểm tra kết nối Shopee, phiên đang mở, video và sản phẩm của mẫu phát.
           </li>
-          <li>Tạo phiên Shopee với đúng tiêu đề và ảnh bìa của lịch này, rồi phát mẫu phát đã chọn.</li>
+          <li>Tạo phiên Shopee với tiêu đề và ảnh bìa của lịch (để trống thì lấy theo mẫu phát), rồi phát mẫu phát đã chọn.</li>
           <li>Phiên được bắt đầu khi Shopee nhận được hình; sản phẩm được ghim theo mẫu.</li>
           <li>
             <b>Tới giờ tắt</b>, hệ thống kết thúc đúng phiên do lịch tạo — không bao giờ đụng tới phiên tạo thủ công.
@@ -83,16 +86,16 @@ function HowItWorks() {
   );
 }
 
-function CoverThumb({ s }: { s: Schedule }) {
-  if (!s.coverKey)
+function CoverThumb({ coverKey }: { coverKey: string | null }) {
+  if (!coverKey)
     return (
       <Tooltip content="Thiếu ảnh bìa — lần phát sẽ bị bỏ lỡ">
-        <span className="grid h-10 w-[30px] place-items-center rounded border border-dashed border-amber-400 text-amber-500">
+        <span className="grid h-10 w-[30px] shrink-0 place-items-center rounded border border-dashed border-amber-400 text-amber-500">
           <ImageOff className="size-3.5" />
         </span>
       </Tooltip>
     );
-  return <img src={`/api/files/cover?key=${encodeURIComponent(s.coverKey)}`} alt="" className="h-10 w-[30px] rounded border border-line object-cover" loading="lazy" />;
+  return <img src={coverUrl(coverKey)} alt="" className="h-10 w-[30px] shrink-0 rounded border border-line object-cover" loading="lazy" />;
 }
 
 export default function ShopSchedules() {
@@ -128,6 +131,8 @@ export default function ShopSchedules() {
 
   const data = q.data;
   const now = useNow(60_000);
+  const templates = useShopTemplates(shop.id);
+  const tplCover = useMemo(() => new Map((templates.data?.items ?? []).map((t) => [t.id, t.coverKey])), [templates.data]);
   const schedules = useMemo(() => [...(data?.schedules ?? [])].sort((a, b) => STATE_ORDER[a.state] - STATE_ORDER[b.state] || b.id - a.id), [data]);
   const shown = showCancelled ? schedules : schedules.filter((s) => s.state !== 'cancelled');
   const cancelledCount = schedules.length - schedules.filter((s) => s.state !== 'cancelled').length;
@@ -191,7 +196,7 @@ export default function ShopSchedules() {
   const pausedCount = schedules.filter((s) => s.state === 'paused').length;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <HowItWorks />
 
       {!canWrite && can('schedule.manage') && (
@@ -201,18 +206,18 @@ export default function ShopSchedules() {
       {!data ? (
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-[86px] rounded-xl" />
+            <Skeleton key={i} className="h-[74px] rounded-xl" />
           ))}
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatCard label="Lịch đang hoạt động" value={activeCount} hint={pausedCount ? `${pausedCount} lịch tạm dừng` : `${schedules.length} lịch tổng cộng`} icon={<CalendarCheck2 className="size-4" />} tone="success" />
-          <StatCard label="Lần phát sắp tới" value={counts.upcoming ?? 0} hint="Trong 14 ngày tới" icon={<CalendarClock className="size-4" />} tone="info" />
-          <StatCard label="Đã chạy" value={counts.done ?? 0} hint="Trong 14 ngày qua" icon={<PlayCircle className="size-4" />} tone="neutral" />
+          <StatCard label="Lịch đang chạy" value={activeCount} hint={pausedCount ? `${pausedCount} lịch tạm dừng` : "Không có lịch tạm dừng"} icon={<CalendarCheck2 className="size-4" />} tone="success" />
+          <StatCard label="Sắp tới" value={counts.upcoming ?? 0} hint="14 ngày tới" icon={<CalendarClock className="size-4" />} tone="info" />
+          <StatCard label="Đã chạy" value={counts.done ?? 0} hint="14 ngày qua" icon={<PlayCircle className="size-4" />} tone="neutral" />
           <StatCard
-            label="Bỏ lỡ / thất bại"
+            label="Bỏ lỡ / lỗi"
             value={(counts.missed ?? 0) + (counts.failed ?? 0)}
-            hint="Trong 14 ngày qua"
+            hint="14 ngày qua"
             icon={<CalendarX2 className="size-4" />}
             tone={(counts.missed ?? 0) + (counts.failed ?? 0) ? 'danger' : 'neutral'}
             onClick={() => setRunFilter('past')}
@@ -224,7 +229,7 @@ export default function ShopSchedules() {
         <CardHeader
           title="Lịch phát"
           icon={<CalendarClock className="size-4" />}
-          description="Giờ Việt Nam (UTC+7). Mỗi shop chỉ phát một phiên tại một thời điểm."
+          description="Giờ Việt Nam · mỗi shop phát một phiên tại một thời điểm"
           actions={
             <>
               <ButtonLink to={`/schedules?shopId=${shop.id}`} size="sm" variant="ghost">
@@ -258,17 +263,16 @@ export default function ShopSchedules() {
             }
           />
         ) : (
-          <Table minWidth={980}>
+          <Table minWidth={940}>
             <THead>
               <tr>
                 <Th>Lịch</Th>
+                <Th>Mẫu phát</Th>
                 <Th>Lặp lại</Th>
                 <Th>Khung giờ</Th>
-                <Th>Mẫu phát</Th>
-                <Th>Ảnh bìa</Th>
-                <Th>Thời gian áp dụng</Th>
+                <Th>Áp dụng</Th>
                 <Th>Trạng thái</Th>
-                <Th className="w-24" />
+                <Th className="w-20" />
               </tr>
             </THead>
             <tbody>
@@ -279,11 +283,32 @@ export default function ShopSchedules() {
                 const editable = canWrite && s.state !== 'cancelled';
                 return (
                   <Tr key={s.id} className={cn(s.state === 'cancelled' && 'opacity-60')}>
-                    <Td className="max-w-[260px]">
-                      <button type="button" disabled={!editable} onClick={() => setDialog({ schedule: s })} className="block max-w-full truncate text-left font-medium enabled:hover:text-brand-600">
-                        {s.title}
-                      </button>
-                      {s.description && <p className="truncate text-xs text-muted">{s.description}</p>}
+                    <Td className="max-w-[300px]">
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <CoverThumb coverKey={s.coverKey ?? (s.coverFromTemplate && s.templateId ? (tplCover.get(s.templateId) ?? null) : null)} />
+                        <div className="min-w-0">
+                          <button type="button" disabled={!editable} onClick={() => setDialog({ schedule: s })} className="block max-w-full truncate text-left font-medium enabled:hover:text-brand-600" title={s.title}>
+                            {s.title}
+                          </button>
+                          {(s.titleFromTemplate || s.coverFromTemplate) && (
+                            <p className="truncate text-2xs text-muted">
+                              {s.titleFromTemplate && s.coverFromTemplate ? 'Tiêu đề & ảnh bìa theo mẫu phát' : s.titleFromTemplate ? 'Tiêu đề theo mẫu phát' : 'Ảnh bìa theo mẫu phát'}
+                            </p>
+                          )}
+                          {!s.hasCover && <p className="truncate text-2xs font-medium text-amber-700 dark:text-amber-400">Thiếu ảnh bìa</p>}
+                        </div>
+                      </div>
+                    </Td>
+                    <Td className="max-w-[180px]">
+                      {s.templateId && s.templateName ? (
+                        <Link to={`/shops/${shop.id}/templates/${s.templateId}`} className="block truncate hover:text-brand-600" title={s.templateName}>
+                          {s.templateName}
+                        </Link>
+                      ) : (
+                        <Badge tone="warning" size="sm">
+                          Chưa có mẫu
+                        </Badge>
+                      )}
                     </Td>
                     <Td className="whitespace-nowrap">
                       <p>{repeatSummary(s)}</p>
@@ -292,7 +317,7 @@ export default function ShopSchedules() {
                           Lần tới: {relativeDay(nr.runDate) ?? shortDay(nr.runDate)} {fmtTime(nr.startAt)}
                         </p>
                       ) : s.state === 'active' ? (
-                        <p className="text-xs text-subtle">Không còn lần phát trong 14 ngày</p>
+                        <p className="text-xs text-subtle">Không có lần phát trong 14 ngày</p>
                       ) : null}
                     </Td>
                     <Td className="whitespace-nowrap">
@@ -302,21 +327,7 @@ export default function ShopSchedules() {
                       </p>
                       <p className="text-xs text-muted">{minutesLabel(windowMinutes(s.startTime, s.endTime))}</p>
                     </Td>
-                    <Td className="max-w-[180px]">
-                      {s.templateId && s.templateName ? (
-                        <Link to={`/shops/${shop.id}/templates/${s.templateId}`} className="block truncate hover:text-brand-600">
-                          {s.templateName}
-                        </Link>
-                      ) : (
-                        <Badge tone="warning" size="sm">
-                          Chưa có mẫu
-                        </Badge>
-                      )}
-                    </Td>
-                    <Td>
-                      <CoverThumb s={s} />
-                    </Td>
-                    <Td className="whitespace-nowrap text-[13px]">
+                    <Td className="whitespace-nowrap text-sm">
                       {s.repeat === 'once' ? (
                         fmtDate(s.startDate)
                       ) : s.endDate ? (
@@ -335,7 +346,7 @@ export default function ShopSchedules() {
                         {st?.label ?? s.state}
                       </Badge>
                       {bad && s.state !== 'cancelled' && (
-                        <p className="mt-0.5 truncate text-[11px] text-rose-600 dark:text-rose-400" title={runIssueLabel(bad.issue) ?? ''}>
+                        <p className="mt-0.5 truncate text-2xs text-rose-600 dark:text-rose-400" title={runIssueLabel(bad.issue) ?? ''}>
                           Lần gần nhất: {bad.status === 'missed' ? 'bỏ lỡ' : 'thất bại'}
                         </p>
                       )}

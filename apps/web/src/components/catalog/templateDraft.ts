@@ -167,6 +167,38 @@ export function suggestAt(pins: DraftPin[], duration: number | null): number {
   return next;
 }
 
+// ───────────── Sản phẩm chính ─────────────
+/**
+ * Sản phẩm chính của video = mốc sớm nhất. Khi phát, sản phẩm này được ghim ngay từ đầu video
+ * (trước mốc đầu tiên hệ thống vẫn ghim sản phẩm có mốc sớm nhất).
+ */
+export function primaryPin(pins: DraftPin[]): DraftPin | null {
+  return sortPins(pins)[0] ?? null;
+}
+
+/** Đặt / đổi sản phẩm chính (mốc 0), giữ nguyên các mốc chuyển ghim phía sau */
+export function setPrimary(it: DraftItem, product: PinProduct): DraftItem {
+  const sorted = sortPins(it.pins);
+  const first = sorted[0];
+  if (!first) return { ...it, pins: [{ key: newKey(), productId: product.id, at: '0', product }] };
+  return { ...it, pins: [{ ...first, productId: product.id, product, at: '0' }, ...sorted.slice(1)] };
+}
+
+export function toPinProduct(p: { id: number; itemId: number; name: string; sku: string | null; imageUrl: string | null; stock: number | null; removed?: boolean }): PinProduct {
+  return { id: p.id, itemId: p.itemId, name: p.name, sku: p.sku, imageUrl: p.imageUrl, stock: p.stock, removed: Boolean(p.removed) };
+}
+
+/** Một dòng mã sản phẩm / link Shopee → item ID (khớp cách máy chủ tách mã); không nhận ra → null */
+export function parseItemRef(line: string): number | null {
+  const s = line.trim();
+  const m1 = /-i\.\d+\.(\d+)/.exec(s);
+  if (m1) return Number(m1[1]);
+  const m2 = /\/product\/\d+\/(\d+)/.exec(s);
+  if (m2) return Number(m2[1]);
+  if (/^\d{5,}$/.test(s)) return Number(s);
+  return null;
+}
+
 // ───────────── Kiểm tra ─────────────
 export type Level = 'error' | 'warn' | 'info';
 export interface Issue {
@@ -186,6 +218,12 @@ export interface Analysis {
   totalSec: number;
   productCount: number;
   unknownDuration: number;
+  /** Video chưa có sản phẩm ghim */
+  noPin: number;
+  /** Video chưa sẵn sàng / đã bị xóa */
+  notReady: number;
+  /** Chưa có ảnh bìa (Phát ngay / lịch phát cần) */
+  noCover: boolean;
 }
 
 /**
@@ -199,6 +237,8 @@ export function analyze(d: Draft, lib: Map<number, Video> | null): Analysis {
   let warnings = 0;
   let totalSec = 0;
   let unknownDuration = 0;
+  let noPin = 0;
+  let notReady = 0;
   const products = new Set<number>();
   const push = (arr: Issue[], level: Level, text: string) => {
     arr.push({ level, text });
@@ -218,6 +258,8 @@ export function analyze(d: Draft, lib: Map<number, Video> | null): Analysis {
     if (dur) totalSec += dur;
     else if (video) unknownDuration++;
 
+    if (!video || video.status !== 'ready') notReady++;
+    if (!it.pins.length) noPin++;
     if (!video) push(issues, 'warn', 'Video đã bị xóa khỏi thư viện — hãy đổi video khác hoặc xóa dòng này.');
     else if (video.status !== 'ready') {
       const why =
@@ -230,7 +272,7 @@ export function analyze(d: Draft, lib: Map<number, Video> | null): Analysis {
               : 'Video đang được xử lý.';
       push(issues, 'warn', `${why} Video chưa sẵn sàng sẽ bị bỏ qua khi phát.`);
     }
-    if (!it.pins.length) push(issues, 'warn', 'Chưa gán sản phẩm ghim — khi phát video này sẽ không có sản phẩm nào được ghim.');
+    if (!it.pins.length) push(issues, 'warn', 'Chưa chọn sản phẩm — khi phát video này sẽ không ghim sản phẩm nào.');
     if (it.pins.length > MAX_PINS) push(issues, 'error', `Mỗi video tối đa ${MAX_PINS} sản phẩm ghim.`);
     if (video && !dur && it.pins.length > 1) push(issues, 'info', 'Chưa rõ thời lượng video nên chưa kiểm tra được các mốc ghim.');
 
@@ -261,5 +303,8 @@ export function analyze(d: Draft, lib: Map<number, Video> | null): Analysis {
   else if (exp > 0 && !d.loop && d.items.length && totalSec > 0 && totalSec < exp * 60)
     push(global, 'warn', `Danh sách dài ${fmtClock(totalSec)}, ngắn hơn thời lượng dự kiến ${exp} phút — bật “Phát lặp danh sách” để không hết video giữa chừng.`);
 
-  return { items, global, errors, warnings, totalSec, productCount: products.size, unknownDuration };
+  const noCover = !d.coverKey;
+  if (noCover) warnings++;
+
+  return { items, global, errors, warnings, totalSec, productCount: products.size, unknownDuration, noPin, notReady, noCover };
 }

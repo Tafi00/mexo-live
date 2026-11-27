@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CalendarClock, History, KeyRound, Lock, LockOpen, MoreHorizontal, PencilLine, Plus, ShieldHalf, Store, Trash2, UserCog, Users } from 'lucide-react';
 import { toast } from 'sonner';
@@ -16,7 +16,7 @@ import { RoleBadge } from '@/components/domain/status';
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/dialog';
 import { SearchInput } from '@/components/ui/form';
-import { Avatar, Badge, Card, EmptyState, ErrorState, PageHeader, Skeleton, Tabs, Tooltip, type MenuItem } from '@/components/ui/misc';
+import { Avatar, Badge, Card, EmptyState, ErrorState, PageHeader, Pagination, Skeleton, Tabs, Tooltip, type MenuItem } from '@/components/ui/misc';
 import { Table, Td, Th, THead, Tr } from '@/components/ui/table';
 
 type Tab = 'all' | Role | 'locked';
@@ -28,6 +28,9 @@ export default function Accounts() {
   const copy = useCopy();
   const [tab, setTab] = useState<Tab>('all');
   const [q, setQ] = useState('');
+  const [page, setPage] = useState(1);
+  const pageSize = 50;
+  useEffect(() => setPage(1), [tab, q]);
   const [showGuide, setShowGuide] = useLocalState('mexo-accounts-guide', false);
   const [createOpen, setCreateOpen] = useState(false);
   const [secret, setSecret] = useState<{ username: string; password: string; kind: 'new' | 'reset' } | null>(null);
@@ -142,7 +145,7 @@ export default function Accounts() {
     <div>
       <PageHeader
         title={ownerView ? 'Nhân viên & phân quyền' : 'Tài khoản & phân quyền'}
-        description={ownerView ? 'Tạo tài khoản cho nhân viên, giao shop và cấp từng quyền. Nhân viên chỉ thấy shop được giao.' : 'Quản lý tài khoản nội bộ, chủ shop và nhân viên. Mỗi tài khoản chỉ thấy đúng dữ liệu được phép.'}
+        description={ownerView ? 'Tạo tài khoản nhân viên, giao shop và cấp từng quyền — nhân viên chỉ thấy shop được giao' : 'Tài khoản nội bộ, chủ shop và nhân viên — mỗi tài khoản chỉ thấy đúng dữ liệu được phép'}
         actions={
           <>
             <Button icon={<ShieldHalf className="size-4" />} variant={showGuide ? 'secondary' : 'outline'} onClick={() => setShowGuide(!showGuide)}>
@@ -160,12 +163,11 @@ export default function Accounts() {
       {showGuide && <RoleGuide ownerView={ownerView} />}
 
       <Card>
-        <div className="px-3 pt-1">
+        <div className="px-2 pt-0.5">
           <Tabs<Tab> value={tab} onChange={setTab} items={tabs} />
         </div>
         <div className="flex flex-wrap items-center gap-2 border-b border-line p-3">
-          <SearchInput value={q} onChange={setQ} placeholder="Tên, tên đăng nhập, email, số điện thoại…" className="w-full sm:w-80" inputSize="sm" />
-          <span className="ml-auto text-xs text-muted">{list.data ? `${items.length} tài khoản` : ''}</span>
+          <SearchInput value={q} onChange={setQ} placeholder="Tên, tên đăng nhập, email, số điện thoại…" className="w-full sm:w-80" />
         </div>
         {!list.data ? (
           <div className="space-y-2 p-4">
@@ -187,7 +189,7 @@ export default function Accounts() {
               </tr>
             </THead>
             <tbody>
-              {items.map((a) => (
+              {items.slice((page - 1) * pageSize, page * pageSize).map((a) => (
                 <Tr key={a.id} onClick={() => setDetail(a)}>
                   <Td>
                     <div className="flex items-center gap-3">
@@ -210,14 +212,14 @@ export default function Accounts() {
                   </Td>
                   <Td>
                     <RoleBadge role={a.role} size="sm" />
-                    {a.role === 'member' && a.parentName && !ownerView && <p className="mt-0.5 truncate text-[11px] text-muted">thuộc {a.parentName}</p>}
+                    {a.role === 'member' && a.parentName && !ownerView && <p className="mt-0.5 truncate text-2xs text-muted">thuộc {a.parentName}</p>}
                   </Td>
                   <Td>
                     <AccountStatus a={a} />
                   </Td>
                   <Td>
                     {a.role === 'owner' ? (
-                      <span className="text-[13px] tabular">
+                      <span className="text-sm tabular">
                         {a.shopCount}
                         <span className="text-muted">{a.shopLimit !== null ? ` / ${a.shopLimit}` : ''} shop</span>
                         {a.shopLimit !== null && a.shopCount >= a.shopLimit && (
@@ -227,7 +229,7 @@ export default function Accounts() {
                         )}
                       </span>
                     ) : a.role === 'member' ? (
-                      <span className="text-[13px]">
+                      <span className="text-sm">
                         <span className="tabular">{a.shopCount}</span> <span className="text-muted">shop ·</span>{' '}
                         <Tooltip content={a.permissions.length ? `${a.permissions.length} quyền được cấp` : 'Chưa có quyền nào'}>
                           <span className={cn('tabular', !a.permissions.includes('shop.view') && 'text-amber-700 dark:text-amber-400')}>
@@ -236,11 +238,11 @@ export default function Accounts() {
                         </Tooltip>
                       </span>
                     ) : (
-                      <span className="text-[13px] text-muted">Mọi shop</span>
+                      <span className="text-sm text-muted">Mọi shop</span>
                     )}
                   </Td>
-                  {!ownerView && <Td className="text-[13px]">{a.role === 'owner' ? <ExpiryText date={a.serviceExpiresOn} /> : <span className="text-subtle">—</span>}</Td>}
-                  <Td className="text-[13px]">
+                  {!ownerView && <Td className="text-sm">{a.role === 'owner' ? <ExpiryText date={a.serviceExpiresOn} /> : <span className="text-subtle">—</span>}</Td>}
+                  <Td className="text-sm">
                     {a.lastLoginAt ? (
                       <span title={fmtDateTime(a.lastLoginAt)}>{fmtRelative(a.lastLoginAt)}</span>
                     ) : (
@@ -275,9 +277,14 @@ export default function Accounts() {
             }
           />
         )}
+        {items.length > 0 && (
+          <div className="border-t border-line px-4 py-2.5">
+            <Pagination page={page} pageSize={pageSize} total={items.length} onChange={setPage} />
+          </div>
+        )}
       </Card>
 
-      <p className="mt-3 text-xs text-muted">
+      <p className="mt-2 text-xs text-muted">
         {ownerView
           ? 'Bạn chỉ thấy và quản lý nhân viên của chính mình. Tài khoản của bạn do MEXO quản lý — liên hệ quản trị viên để đổi gói hoặc gia hạn.'
           : 'Không thao tác được trên chính tài khoản của mình tại đây (dùng trang Hồ sơ). Quản trị viên không quản lý được tài khoản quản trị.'}

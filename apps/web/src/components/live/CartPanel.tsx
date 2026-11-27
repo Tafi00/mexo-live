@@ -19,7 +19,7 @@ function AddResult({ r, onClose }: { r: CartAddResult; onClose: () => void }) {
   return (
     <Callout
       tone={tone}
-      className="mx-5 mt-4"
+      className="mx-4 mt-3"
       title={`Đã thêm ${r.added.length} sản phẩm vào giỏ live`}
       action={
         <button type="button" onClick={onClose} className="rounded p-0.5 opacity-70 hover:opacity-100" aria-label="Đóng">
@@ -89,7 +89,7 @@ function PlanDialog({ session, open, onClose, onAdd, adding }: { session: LiveSe
         </>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-3">
         <Field label="Mẫu phát">
           <Select value={templateId ?? ''} onChange={(e) => setTemplateId(e.target.value ? Number(e.target.value) : null)}>
             {!tpl.data?.items.length && <option value="">{tpl.isLoading ? 'Đang tải…' : 'Shop chưa có mẫu phát'}</option>}
@@ -240,8 +240,8 @@ export function CartPanel({
           {cart && <Progress value={cart.count} max={cart.limit} tone={cart.count >= cart.limit ? 'danger' : cart.count >= cart.limit * 0.9 ? 'warning' : 'brand'} size="sm" className="rounded-none" />}
           {result && <AddResult r={result} onClose={() => setResult(null)} />}
           {sel.size > 0 && (
-            <div className="mt-3 flex flex-wrap items-center gap-2 border-y border-line bg-brand-50/60 px-5 py-2 dark:bg-brand-950/20">
-              <span className="text-[13px] font-medium">Đã chọn {sel.size}</span>
+            <div className="mt-2 flex flex-wrap items-center gap-2 border-y border-line bg-brand-50/60 px-4 py-1.5 dark:bg-brand-950/20">
+              <span className="text-sm font-medium">Đã chọn {sel.size}</span>
               <button onClick={() => setSel(new Set())} className="rounded p-0.5 text-muted hover:text-fg" aria-label="Bỏ chọn">
                 <X className="size-4" />
               </button>
@@ -255,7 +255,7 @@ export function CartPanel({
           ) : (
             <div>
               {canManage && (
-                <div className="flex items-center gap-2 px-5 pb-1 pt-3">
+                <div className="flex items-center gap-2 px-4 pb-1 pt-2.5">
                   <Checkbox
                     checked={allSel}
                     indeterminate={!allSel && items.some((i) => sel.has(i.itemId))}
@@ -269,7 +269,7 @@ export function CartPanel({
                   const p = it.product;
                   const isPinned = pinnedId === it.itemId;
                   return (
-                    <li key={it.itemId} className={cn('group flex items-center gap-3 px-5 py-2', isPinned && 'bg-brand-50/60 dark:bg-brand-950/20')}>
+                    <li key={it.itemId} className={cn('group flex items-center gap-3 px-4 py-2', isPinned && 'bg-brand-50/60 dark:bg-brand-950/20')}>
                       {canManage && (
                         <Checkbox
                           checked={sel.has(it.itemId)}
@@ -284,7 +284,7 @@ export function CartPanel({
                       <span className="w-6 shrink-0 text-right text-xs tabular text-subtle">{it.position}</span>
                       <ProductThumb url={p?.imageUrl} />
                       <div className="min-w-0 flex-1">
-                        <p className="line-clamp-1 text-[13px] font-medium">{p?.name ?? <span className="text-muted">Sản phẩm {it.itemId} (chưa có trong danh mục MEXO)</span>}</p>
+                        <p className="line-clamp-2 text-sm font-medium leading-snug" title={p?.name}>{p?.name ?? <span className="text-muted">Sản phẩm {it.itemId} (chưa có trong danh mục MEXO)</span>}</p>
                         <p className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs text-muted">
                           <span className="font-mono">{p?.sku || it.itemId}</span>
                           {p && <span>{fmtMoney(p.price)}</span>}

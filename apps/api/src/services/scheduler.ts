@@ -104,9 +104,12 @@ async function executeStart(runId: number): Promise<void> {
   const [shop] = await db.select().from(shops).where(eq(shops.id, run.shopId));
   if (!sch || !shop) return failRun(runId, 'missed', 'schedule_cancelled');
   if (!sch.templateId) return failRun(runId, 'missed', 'no_template');
-  if (!sch.coverKey) return failRun(runId, 'missed', 'no_cover');
   const [tpl] = await db.select().from(templates).where(eq(templates.id, sch.templateId));
   if (!tpl) return failRun(runId, 'missed', 'no_template');
+  // Tiêu đề / ảnh bìa của lịch để trống → dùng của mẫu phát
+  const coverKey = sch.coverKey || tpl.coverKey;
+  const liveTitle = sch.title || tpl.liveTitle || tpl.name;
+  if (!coverKey) return failRun(runId, 'missed', 'no_cover');
   const svc = shopServiceState(shop);
   if (svc.state === 'expired') return failRun(runId, 'missed', 'shop_expired');
   if (svc.state === 'suspended') return failRun(runId, 'missed', 'shop_suspended');
@@ -117,9 +120,9 @@ async function executeStart(runId: number): Promise<void> {
   let sessionId: number;
   try {
     const s = await createLiveSession(SYSTEM_ACTOR, shop, {
-      title: sch.title,
-      description: sch.description,
-      coverKey: sch.coverKey,
+      title: liveTitle,
+      description: sch.description || tpl.liveDescription || '',
+      coverKey,
       templateId: sch.templateId,
       origin: 'schedule',
       scheduleRunId: run.id,
@@ -246,7 +249,7 @@ export async function recoverRuns(): Promise<void> {
   }
 }
 
-export async function validateScheduleInput(shopId: number, input: { templateId: number | null; startTime: string; endTime: string; startDate: string; endDate: string | null; repeat: string; weekdays: number[] }, excludeId?: number) {
+export async function validateScheduleInput(shopId: number, input: { templateId: number | null; startTime: string; endTime: string; startDate: string; endDate: string | null; repeat: string; weekdays: number[]; coverKey?: string | null }, excludeId?: number) {
   if (!/^\d{2}:\d{2}$/.test(input.startTime) || !/^\d{2}:\d{2}$/.test(input.endTime)) throw err.badRequest('bad_time', 'Giờ phải theo định dạng HH:mm (24 giờ)');
   if (input.startTime === input.endTime) throw err.badRequest('bad_time', 'Giờ tắt phải khác giờ bật');
   if (input.repeat === 'weekly' && !input.weekdays.length) throw err.badRequest('no_weekdays', 'Chọn ít nhất một thứ trong tuần');
@@ -256,11 +259,19 @@ export async function validateScheduleInput(shopId: number, input: { templateId:
   if (input.repeat === 'once' && runWindow(input.startDate, input.startTime, input.endTime).startAt.getTime() < Date.now())
     throw err.badRequest('in_past', 'Giờ bật đã qua');
   if (input.templateId) {
-    const [t] = await db.select({ shopId: templates.shopId }).from(templates).where(eq(templates.id, input.templateId));
+    const [t] = await db.select({ shopId: templates.shopId, coverKey: templates.coverKey }).from(templates).where(eq(templates.id, input.templateId));
     if (!t || t.shopId !== shopId) throw err.badRequest('bad_template', 'Mẫu phát không thuộc shop này');
+    if (input.coverKey !== undefined && !input.coverKey && !t.coverKey) throw err.badRequest('cover_required', 'Mẫu phát chưa có ảnh bìa — tải ảnh bìa cho lịch hoặc thêm vào mẫu phát');
   }
   const overlap = await findOverlap(shopId, { ...input, weekdays: input.weekdays } as any, excludeId);
-  if (overlap) throw err.conflict('schedule_overlap', `Trùng khung giờ với lịch "${overlap.schedule.title}" (${overlap.schedule.startTime}–${overlap.schedule.endTime}) ngày ${overlap.date}`);
+  if (overlap) {
+    let name = overlap.schedule.title;
+    if (!name && overlap.schedule.templateId) {
+      const [ot] = await db.select({ name: templates.name, liveTitle: templates.liveTitle }).from(templates).where(eq(templates.id, overlap.schedule.templateId));
+      name = ot?.liveTitle || ot?.name || '';
+    }
+    throw err.conflict('schedule_overlap', `Trùng khung giờ với lịch "${name || 'không tên'}" (${overlap.schedule.startTime}–${overlap.schedule.endTime}) ngày ${overlap.date}`);
+  }
   const [active] = await db
     .select({ n: sql<number>`count(*)` })
     .from(schedules)

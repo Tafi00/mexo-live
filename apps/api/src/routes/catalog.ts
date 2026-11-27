@@ -125,6 +125,32 @@ export async function catalogRoutes(app: FastifyInstance) {
     return { items: ids.map((id) => ({ itemId: id, product: map.get(id) ? productDto(map.get(id)!) : null })) };
   });
 
+  // Khớp từng dòng (giữ nguyên thứ tự, không gộp trùng): nhận item ID, link Shopee hoặc SKU
+  app.post('/api/shops/:id/products/resolve-lines', async (req) => {
+    const { shop } = await requireShop(req, idOf(req.params));
+    const body = parse(z.object({ lines: z.array(z.string().max(500)).max(LIMITS.pasteMaxItems) }), req.body);
+    const parsed = body.lines.map((raw) => {
+      const line = raw.trim();
+      const ids = parseItemRefs(line, 1);
+      return { line, itemId: ids[0] ?? null, sku: ids.length ? null : line };
+    });
+    const itemIds = [...new Set(parsed.map((p) => p.itemId).filter((x): x is number => x !== null))];
+    const skus = [...new Set(parsed.map((p) => p.sku?.toLowerCase()).filter((x): x is string => Boolean(x)))];
+    const byId = itemIds.length ? await db.select().from(products).where(and(eq(products.shopId, shop.id), inArray(products.itemId, itemIds))) : [];
+    const bySku = skus.length
+      ? await db.select().from(products).where(and(eq(products.shopId, shop.id), inArray(sql`lower(${products.sku})`, skus)))
+      : [];
+    const idMap = new Map(byId.map((p) => [p.itemId, p]));
+    const skuMap = new Map<string, typeof products.$inferSelect>();
+    for (const p of bySku) if (p.sku && (!skuMap.has(p.sku.toLowerCase()) || !p.removed)) skuMap.set(p.sku.toLowerCase(), p);
+    return {
+      items: parsed.map((p) => {
+        const prod = p.itemId !== null ? idMap.get(p.itemId) : p.sku ? skuMap.get(p.sku.toLowerCase()) : undefined;
+        return { line: p.line, matchedBy: prod ? (p.itemId !== null ? 'id' : 'sku') : null, itemId: p.itemId, product: prod ? productDto(prod) : null };
+      }),
+    };
+  });
+
   app.post('/api/shops/:id/products/by-ids', async (req) => {
     const { shop } = await requireShop(req, idOf(req.params));
     const body = parse(z.object({ ids: z.array(z.number().int()).max(1000) }), req.body);

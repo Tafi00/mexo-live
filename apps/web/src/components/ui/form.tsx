@@ -7,7 +7,7 @@ const fieldBase =
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean; leading?: ReactNode; trailing?: ReactNode; inputSize?: 'sm' | 'md' }>(
   function Input({ className, invalid, leading, trailing, inputSize = 'md', ...rest }, ref) {
-    const h = inputSize === 'sm' ? 'h-8 text-[13px]' : 'h-9 text-sm';
+    const h = inputSize === 'sm' ? 'h-7 text-xs' : 'h-8 text-sm';
     if (leading || trailing)
       return (
         <div className={cn('relative flex items-center', className)}>
@@ -21,13 +21,13 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
 );
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement> & { invalid?: boolean }>(function Textarea({ className, invalid, ...rest }, ref) {
-  return <textarea ref={ref} className={cn(fieldBase, 'min-h-[80px] px-3 py-2 text-sm leading-relaxed', invalid && 'border-rose-400', className)} {...rest} />;
+  return <textarea ref={ref} className={cn(fieldBase, 'min-h-[72px] px-2.5 py-1.5 text-sm leading-relaxed', invalid && 'border-rose-400', className)} {...rest} />;
 });
 
 export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement> & { inputSize?: 'sm' | 'md' }>(function Select({ className, children, inputSize = 'md', ...rest }, ref) {
   return (
     <div className={cn('relative', className)}>
-      <select ref={ref} className={cn(fieldBase, inputSize === 'sm' ? 'h-8 text-[13px]' : 'h-9 text-sm', 'appearance-none pl-3 pr-8')} {...rest}>
+      <select ref={ref} className={cn(fieldBase, inputSize === 'sm' ? 'h-7 text-xs' : 'h-8 text-sm', 'appearance-none pl-2.5 pr-8')} {...rest}>
         {children}
       </select>
       <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-subtle" />
@@ -61,7 +61,7 @@ export function Field({ label, hint, error, required, children, className, htmlF
     <div className={cn('space-y-1.5', className)}>
       {label && (
         <div className="flex items-center justify-between gap-2">
-          <label htmlFor={htmlFor} className="text-[13px] font-medium text-fg">
+          <label htmlFor={htmlFor} className="text-xs font-medium text-fg">
             {label}
             {required && <span className="ml-0.5 text-rose-500">*</span>}
           </label>
@@ -136,12 +136,12 @@ export function Segmented<T extends string>({ value, onChange, options, size = '
           onClick={() => onChange(o.value)}
           className={cn(
             'inline-flex items-center gap-1.5 rounded-md font-medium transition-colors',
-            size === 'sm' ? 'h-7 px-2.5 text-xs' : 'h-8 px-3 text-[13px]',
+            size === 'sm' ? 'h-6 px-2 text-xs' : 'h-7 px-2.5 text-xs',
             value === o.value ? 'bg-surface text-fg shadow-card ring-1 ring-line' : 'text-muted hover:text-fg',
           )}
         >
           {o.label}
-          {o.count !== undefined && <span className={cn('rounded px-1 text-[11px] tabular', value === o.value ? 'bg-surface-2 text-fg' : 'text-subtle')}>{o.count}</span>}
+          {o.count !== undefined && <span className={cn('rounded px-1 text-2xs tabular', value === o.value ? 'bg-surface-2 text-fg' : 'text-subtle')}>{o.count}</span>}
         </button>
       ))}
     </div>

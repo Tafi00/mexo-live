@@ -60,10 +60,10 @@ function ModelsPanel({ shopId, product, connected }: { shopId: number; product: 
   const fromCache = !q.data && Boolean(product.models);
 
   return (
-    <div className="border-b border-line bg-surface-2/50 px-4 py-3 sm:pl-14">
+    <div className="border-b border-line bg-surface-2/50 px-4 py-2.5 sm:pl-12">
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <Layers className="size-4 text-muted" />
-        <p className="text-[13px] font-semibold">Phân loại hàng{models.length ? ` (${models.length})` : ''}</p>
+        <p className="text-sm font-semibold">Phân loại hàng{models.length ? ` (${models.length})` : ''}</p>
         <span className="text-xs text-muted">{fromCache ? 'Bản lưu gần nhất' : q.isFetching ? 'Đang lấy từ Shopee…' : q.data ? 'Vừa lấy từ Shopee' : ''}</span>
         <Button
           size="xs"
@@ -89,9 +89,9 @@ function ModelsPanel({ shopId, product, connected }: { shopId: number; product: 
         <p className="py-1 text-xs text-muted">Sản phẩm không có phân loại (chỉ một loại duy nhất).</p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-line bg-surface">
-          <table className="w-full min-w-[520px] text-[12.5px]">
+          <table className="w-full min-w-[520px] text-xs">
             <thead>
-              <tr className="text-left text-[11px] uppercase tracking-wide text-muted">
+              <tr className="text-left text-2xs uppercase tracking-wide text-muted">
                 <th className="border-b border-line px-3 py-1.5 font-semibold">Phân loại</th>
                 <th className="border-b border-line px-3 py-1.5 font-semibold">SKU</th>
                 <th className="border-b border-line px-3 py-1.5 text-right font-semibold">Giá</th>
@@ -115,7 +115,7 @@ function ModelsPanel({ shopId, product, connected }: { shopId: number; product: 
           </table>
         </div>
       )}
-      <p className="mt-2 text-[11px] text-subtle">Phân loại được lấy trực tiếp từ Shopee khi bạn mở (mỗi lần 1 lượt gọi), các thông tin khác dùng bản sao trong hệ thống.</p>
+      <p className="mt-2 text-2xs text-subtle">Phân loại được lấy trực tiếp từ Shopee khi bạn mở (mỗi lần 1 lượt gọi), các thông tin khác dùng bản sao trong hệ thống.</p>
     </div>
   );
 }
@@ -208,7 +208,7 @@ export default function ShopProducts() {
           </div>
           <div className="min-w-[220px] flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-[14px] font-semibold">Danh mục sản phẩm sao chép từ Shopee</p>
+              <p className="text-base font-semibold">Danh mục sản phẩm sao chép từ Shopee</p>
               {sync?.status === 'done' && !syncing && (
                 <Badge tone="success" size="sm" dot>
                   Đã đồng bộ
@@ -265,7 +265,7 @@ export default function ShopProducts() {
           tone="warning"
           title="Shop chưa kết nối Shopee"
           action={
-            <Link to="../connection" className="text-[13px] font-medium underline-offset-2 hover:underline">
+            <Link to="../connection" className="text-sm font-medium underline-offset-2 hover:underline">
               Kiểm tra kết nối
             </Link>
           }
@@ -286,7 +286,7 @@ export default function ShopProducts() {
       )}
 
       <Card>
-        <div className="px-4 pt-2">
+        <div className="px-4 pt-1">
           <Tabs<Filter>
             value={filter}
             onChange={setFilter}
@@ -298,16 +298,16 @@ export default function ShopProducts() {
             ]}
           />
         </div>
-        <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-2.5">
           <SearchInput value={q} onChange={setQ} placeholder="Tên, SKU hoặc ID sản phẩm…" className="w-full sm:w-80" />
-          <Select value={sort} onChange={(e) => setSort(e.target.value as Sort)} className="w-full sm:ml-auto sm:w-48" aria-label="Sắp xếp">
+          <Select value={sort} onChange={(e) => setSort(e.target.value as Sort)} className="min-w-0 flex-1 sm:ml-auto sm:w-48 sm:flex-none" aria-label="Sắp xếp">
             {SORTS.map((s) => (
               <option key={s.value} value={s.value}>
                 {s.label}
               </option>
             ))}
           </Select>
-          <Select value={String(pageSize)} onChange={(e) => setPageSize(Number(e.target.value))} className="w-[calc(50%-4px)] sm:w-28" aria-label="Số dòng mỗi trang">
+          <Select value={String(pageSize)} onChange={(e) => setPageSize(Number(e.target.value))} className="w-28" aria-label="Số dòng mỗi trang">
             {[25, 50, 100, 200].map((n) => (
               <option key={n} value={n}>
                 {n} / trang
@@ -341,7 +341,7 @@ export default function ShopProducts() {
             description={dq ? 'Thử tìm theo tên khác, SKU hoặc dán đúng ID sản phẩm.' : filter === 'removed' ? 'Mọi sản phẩm trong bản sao đều còn trên Shopee.' : undefined}
           />
         ) : (
-          <Table minWidth={1040}>
+          <Table minWidth={960}>
             <THead>
               <tr>
                 <Th className="w-8" />
@@ -382,7 +382,7 @@ export default function ShopProducts() {
                               {p.name}
                             </p>
                             <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted">
-                              {p.sku ? <span className="font-mono">SKU {p.sku}</span> : <span className="text-subtle">Không có SKU</span>}
+                              {p.sku ? <span className="font-mono" title="SKU">{p.sku}</span> : <span className="text-subtle">Không có SKU</span>}
                               {p.removed && (
                                 <Badge tone="muted" size="sm">
                                   Đã gỡ khỏi Shopee
@@ -401,7 +401,7 @@ export default function ShopProducts() {
                       <Td align="right" className="whitespace-nowrap">
                         <p className="font-medium tabular">{fmtMoney(p.price, p.currency || 'VND')}</p>
                         {discount > 0 && (
-                          <p className="text-[11px] text-subtle">
+                          <p className="text-2xs text-subtle">
                             <span className="line-through">{fmtMoney(p.originalPrice, p.currency || 'VND')}</span>
                             <span className="ml-1 text-brand-600 dark:text-brand-400">-{discount}%</span>
                           </p>

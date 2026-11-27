@@ -92,7 +92,7 @@ export function RuleDialog({ open, onClose, shopId, rule }: { open: boolean; onC
           label="Từ khóa"
           required
           error={errors.keywords}
-          aside={<span className="text-[11px] tabular text-subtle">{f.keywords.length}/{LIMITS.ruleKeywordsMax}</span>}
+          aside={<span className="text-2xs tabular text-subtle">{f.keywords.length}/{LIMITS.ruleKeywordsMax}</span>}
           hint={
             sampleKw ? (
               <>
@@ -112,7 +112,7 @@ export function RuleDialog({ open, onClose, shopId, rule }: { open: boolean; onC
           label="Câu trả lời"
           required
           error={errors.answer ?? (over ? `Tối đa ${LIMITS.ruleAnswerMax} ký tự` : undefined)}
-          aside={<span className={cn('text-[11px] tabular', over ? 'font-semibold text-rose-600' : f.answer.length > LIMITS.ruleAnswerMax * 0.9 ? 'text-amber-600' : 'text-subtle')}>{f.answer.length}/{LIMITS.ruleAnswerMax}</span>}
+          aside={<span className={cn('text-2xs tabular', over ? 'font-semibold text-rose-600' : f.answer.length > LIMITS.ruleAnswerMax * 0.9 ? 'text-amber-600' : 'text-subtle')}>{f.answer.length}/{LIMITS.ruleAnswerMax}</span>}
           hint="Không chứa link, số điện thoại, kênh liên hệ ngoài Shopee, giá tiền hoặc tên sàn khác — sẽ bị lớp lọc chặn."
         >
           <Textarea rows={4} value={f.answer} invalid={Boolean(errors.answer) || over} onChange={(e) => setF({ ...f, answer: e.target.value })} placeholder="Dạ sản phẩm được bảo hành 12 tháng, lỗi do nhà sản xuất shop đổi mới trong 7 ngày ạ." />

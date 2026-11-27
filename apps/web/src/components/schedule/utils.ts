@@ -179,6 +179,7 @@ const CODE_FIELD: Record<string, ScheduleField> = {
   too_far: 'startDate',
   in_past: 'startDate',
   bad_template: 'templateId',
+  cover_required: 'coverKey',
 };
 
 const CODE_HINT: Record<string, string> = {

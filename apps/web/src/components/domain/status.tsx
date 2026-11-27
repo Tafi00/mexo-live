@@ -53,7 +53,7 @@ export function ServiceBadge({ state, daysLeft, expiresOn, size }: { state: stri
   if (state === 'expired') return <Badge tone="danger" size={size}>Hết hạn</Badge>;
   if (state === 'expiring') return <Badge tone="warning" size={size}>Còn {daysLeft} ngày</Badge>;
   return (
-    <span className="whitespace-nowrap text-[13px] tabular text-fg">
+    <span className="whitespace-nowrap text-sm tabular text-fg">
       Còn {daysLeft} ngày
     </span>
   );
@@ -119,7 +119,7 @@ export function Signals({ signals, compact }: { signals: { feed: 'ok' | 'attn' |
     <span className="inline-flex items-center gap-2.5">
       {items.map(([label, v]) => (
         <Tooltip key={label} content={`${label}: ${sigLabel[v] ?? v}`}>
-          <span className={cn('inline-flex items-center gap-1 text-[11px]', v === 'attn' ? 'text-rose-600 dark:text-rose-400' : v === 'off' ? 'text-subtle' : 'text-muted')}>
+          <span className={cn('inline-flex items-center gap-1 text-2xs', v === 'attn' ? 'text-rose-600 dark:text-rose-400' : v === 'off' ? 'text-subtle' : 'text-muted')}>
             <Dot tone={sigTone[v] ?? 'muted'} pulse={v === 'attn'} />
             {!compact && label}
           </span>

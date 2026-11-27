@@ -39,7 +39,7 @@ export default function Login() {
     <PublicShell>
       <Card className="p-6 sm:p-7">
         <h1 className="text-lg font-semibold">Đăng nhập</h1>
-        <p className="mt-1 text-[13px] text-muted">Nền tảng quản lý và tự động hóa Shopee Livestream đa gian hàng</p>
+        <p className="mt-1 text-sm text-muted">Nền tảng quản lý và tự động hóa Shopee Livestream đa gian hàng</p>
         <form onSubmit={submit} className="mt-6 space-y-4">
           {error && <Callout tone="danger">{error}</Callout>}
           <Field label="Tên đăng nhập" htmlFor="u">

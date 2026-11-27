@@ -125,11 +125,11 @@ export default function Monitor() {
   if (summary.isError && !s) return <ErrorState error={summary.error} onRetry={() => summary.refetch()} />;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <PageHeader
         className="mb-0"
         title="Giám sát API Shopee"
-        description="Tỷ lệ lệnh gọi Open API thành công của App MEXO — Shopee có thể hạn chế App nếu trung bình ngày dưới 90%."
+        description="Tỷ lệ gọi Shopee Open API thành công, lỗi theo API/shop và đối chiếu với Console Shopee"
         actions={
           <Button icon={<Download className="size-4" />} onClick={() => download('/api/monitor/export', { from, to })}>
             Xuất CSV (định dạng Shopee)
@@ -139,7 +139,7 @@ export default function Monitor() {
 
       {s ? <LevelBanner s={s} /> : <Skeleton className="h-[92px] rounded-xl" />}
 
-      <Card className="flex flex-wrap items-center gap-x-4 gap-y-2.5 p-3">
+      <Card className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3">
         <DateRangeBar
           from={from}
           to={to}
@@ -148,7 +148,7 @@ export default function Monitor() {
             setTo(t);
           }}
         />
-        <Switch size="sm" checked={compare} onChange={setCompare} label={<span className="text-[13px]">So với kỳ trước</span>} />
+        <Switch size="sm" checked={compare} onChange={setCompare} label={<span className="text-sm">So với kỳ trước</span>} />
         <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
           {apiName && <FilterChip label={<>API: <span className="font-mono">{apiName}</span></>} onClear={() => setApiName('')} />}
           {shop && <FilterChip label={<>Shop: {shop.name}</>} onClear={() => setShop(null)} />}
@@ -158,7 +158,7 @@ export default function Monitor() {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           label="Tỷ lệ thành công"
-          value={s ? <RateValue rate={s.current.rate} className="text-[22px] font-semibold [&>svg]:size-5" /> : '—'}
+          value={s ? <RateValue rate={s.current.rate} className="text-xl font-semibold [&>svg]:size-4" /> : '—'}
           icon={<Activity className="size-4" />}
           tone="brand"
           trend={compare && s ? <Delta current={s.current.rate} previous={s.previous.rate} mode="pp" digits={2} /> : undefined}
@@ -175,11 +175,11 @@ export default function Monitor() {
         </p>
       )}
 
-      <div className="grid gap-5 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <Card>
           <CardHeader
             title="Tỷ lệ thành công"
-            description={`${gran === 'day' ? 'Theo ngày' : 'Theo giờ'} · vạch đỏ: mức tối thiểu Shopee 90% · vạch xanh: bình thường 97%`}
+            description={`${gran === 'day' ? 'Theo ngày' : 'Theo giờ'} · vạch đỏ 90% (Shopee tối thiểu) · vạch xanh 97%`}
             actions={
               <Segmented<'day' | 'hour'>
                 size="sm"
@@ -192,16 +192,16 @@ export default function Monitor() {
               />
             }
           />
-          <div className={cn('px-3 pb-3 pt-4', series.isFetching && series.isPlaceholderData && 'opacity-60')}>{series.data ? <RateChart data={chartData} /> : <Skeleton className="h-[240px]" />}</div>
+          <div className={cn('px-2 pb-2 pt-3', series.isFetching && series.isPlaceholderData && 'opacity-60')}>{series.data ? <RateChart data={chartData} /> : <Skeleton className="h-[220px]" />}</div>
         </Card>
         <Card>
           <CardHeader title="Số lệnh gọi" description={`${gran === 'day' ? 'Theo ngày' : 'Theo giờ'}${apiName ? ` · ${apiName}` : ''}${shop ? ` · ${shop.name}` : ''}`} />
-          <div className={cn('px-3 pb-3 pt-4', series.isFetching && series.isPlaceholderData && 'opacity-60')}>{series.data ? <VolumeChart data={chartData} /> : <Skeleton className="h-[240px]" />}</div>
+          <div className={cn('px-2 pb-2 pt-3', series.isFetching && series.isPlaceholderData && 'opacity-60')}>{series.data ? <VolumeChart data={chartData} /> : <Skeleton className="h-[220px]" />}</div>
         </Card>
       </div>
 
       <Card>
-        <div className="px-3 pt-1">
+        <div className="px-2 pt-0.5">
           <Tabs<Tab>
             value={tab}
             onChange={setTab}
@@ -308,7 +308,7 @@ export default function Monitor() {
         {tab === 'errors' && (
           <>
             {errByClass.length > 0 && (
-              <div className="grid gap-3 border-b border-line p-4 sm:grid-cols-3">
+              <div className="grid gap-3 border-b border-line p-3 sm:grid-cols-3">
                 {errByClass.map(([cls, n]) => {
                   const info = errorClassInfo(cls);
                   return (
@@ -317,8 +317,8 @@ export default function Monitor() {
                         <ErrorClassBadge value={cls} />
                         <span className="text-sm font-semibold tabular">{fmtNumber(n)}</span>
                       </div>
-                      <p className="mt-1.5 text-xs text-muted">{info.hint}</p>
-                      <p className="mt-1 text-[11px] text-subtle tabular">{errTotal ? ((n / errTotal) * 100).toFixed(1) : 0}% tổng lỗi</p>
+                      <p className="mt-1 text-xs text-muted">{info.hint}</p>
+                      <p className="mt-1 text-2xs text-subtle tabular">{errTotal ? ((n / errTotal) * 100).toFixed(1) : 0}% tổng lỗi</p>
                     </div>
                   );
                 })}
@@ -371,7 +371,6 @@ export default function Monitor() {
           <>
             <div className="flex flex-wrap items-center gap-2 border-b border-line p-3">
               <Segmented<'' | 'true' | 'false'>
-                size="sm"
                 value={success}
                 onChange={setSuccess}
                 options={[
@@ -380,8 +379,7 @@ export default function Monitor() {
                   { value: 'false', label: 'Lỗi' },
                 ]}
               />
-              <SearchInput value={ref} onChange={setRef} placeholder="Mã tham chiếu (ref) hoặc request_id — khớp chính xác" inputSize="sm" className="w-full sm:w-96" />
-              <span className="ml-auto text-xs text-muted">{calls.data ? `${fmtNumber(calls.data.total)} lệnh gọi` : ''}</span>
+              <SearchInput value={ref} onChange={setRef} placeholder="Mã tham chiếu (ref) hoặc request_id — khớp chính xác" className="w-full sm:w-96" />
             </div>
             {calls.isError ? (
               <ErrorState error={calls.error} onRetry={() => calls.refetch()} />
@@ -406,7 +404,7 @@ export default function Monitor() {
                         <Td className="whitespace-nowrap text-xs tabular">{fmtDateTime(c.at, { seconds: true })}</Td>
                         <Td>
                           <span className="font-mono text-xs">{c.api}</span>
-                          {c.sessionId && <p className="text-[11px] text-muted">Phiên Shopee #{c.sessionId}</p>}
+                          {c.sessionId && <p className="text-2xs text-muted">Phiên Shopee #{c.sessionId}</p>}
                         </Td>
                         <Td className="max-w-[180px] truncate text-xs">{c.shopName ?? <span className="text-subtle">—</span>}</Td>
                         <Td className="max-w-[340px]">
@@ -426,7 +424,7 @@ export default function Monitor() {
                                 <ErrorClassBadge value={c.errorClass} />
                               </div>
                               {c.errorMessage && (
-                                <p className="truncate text-[11px] text-muted" title={c.errorMessage}>
+                                <p className="truncate text-2xs text-muted" title={c.errorMessage}>
                                   {c.errorMessage}
                                 </p>
                               )}
@@ -439,7 +437,7 @@ export default function Monitor() {
                           )}
                         </Td>
                         <Td align="right" className="tabular text-xs">{c.durationMs !== null ? `${fmtNumber(c.durationMs)} ms` : '—'}</Td>
-                        <Td className="text-[11px]">
+                        <Td className="text-2xs">
                           {c.requestId && (
                             <button className="group/c flex max-w-[220px] items-center gap-1 font-mono text-muted hover:text-fg" onClick={() => void copy(c.requestId!, 'Đã sao chép request_id')} title="Sao chép request_id">
                               <span className="truncate">{c.requestId}</span>
@@ -458,7 +456,9 @@ export default function Monitor() {
                     ))}
                   </tbody>
                 </Table>
-                <Pagination className="px-4 py-3" page={page} pageSize={50} total={calls.data.total} onChange={setPage} />
+                <div className="border-t border-line px-4 py-2.5">
+                  <Pagination page={page} pageSize={50} total={calls.data.total} onChange={setPage} />
+                </div>
               </div>
             ) : (
               <EmptyState compact icon={Activity} title={dref ? `Không tìm thấy lệnh gọi có mã “${dref}”` : 'Không có lệnh gọi phù hợp'} description={dref ? 'Mã tham chiếu phải khớp chính xác và nằm trong khoảng ngày đã chọn.' : undefined} />

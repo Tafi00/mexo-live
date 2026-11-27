@@ -127,11 +127,11 @@ export default function SchedulesCalendar() {
             </Button>
             <Button size="sm" variant="ghost" iconOnly icon={<ChevronLeft className="size-4" />} onClick={() => step(-1)} aria-label="Trước" />
             <Button size="sm" variant="ghost" iconOnly icon={<ChevronRight className="size-4" />} onClick={() => step(1)} aria-label="Sau" />
-            <h2 className="ml-1 min-w-[150px] text-[15px] font-semibold tabular">{label}</h2>
+            <h2 className="ml-1 text-base font-semibold tabular">{label}</h2>
             {q.isFetching && <Spinner className="size-3.5" />}
           </div>
-          <div className="ml-auto flex flex-wrap items-center gap-2">
-            <Select inputSize="sm" value={shopId} onChange={(e) => setShop(e.target.value)} className="w-48">
+          <div className="flex w-full flex-wrap items-center gap-2 lg:ml-auto lg:w-auto">
+            <Select inputSize="sm" value={shopId} onChange={(e) => setShop(e.target.value)} className="w-[calc(50%-0.25rem)] lg:w-48">
               <option value="">Tất cả shop</option>
               {(shops.data ?? []).map((s) => (
                 <option key={s.id} value={s.id}>
@@ -139,7 +139,7 @@ export default function SchedulesCalendar() {
                 </option>
               ))}
             </Select>
-            <Select inputSize="sm" value={status} onChange={(e) => setStatus(e.target.value)} className="w-40">
+            <Select inputSize="sm" value={status} onChange={(e) => setStatus(e.target.value)} className="w-[calc(50%-0.25rem)] lg:w-40">
               <option value="">Mọi trạng thái</option>
               {RUN_STATES.map((s) => (
                 <option key={s} value={s}>

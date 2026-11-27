@@ -99,7 +99,7 @@ export function ShopPicker({ open, onClose, onPick, title = 'Chọn shop', exclu
                   else n.add(s.id);
                   setSel(n);
                 }}
-                className={cn('flex w-full items-center gap-3 px-3 py-2 text-left text-[13px]', sel.has(s.id) ? 'bg-brand-50/70 dark:bg-brand-950/30' : 'hover:bg-surface-2')}
+                className={cn('flex w-full items-center gap-3 px-3 py-2 text-left text-sm', sel.has(s.id) ? 'bg-brand-50/70 dark:bg-brand-950/30' : 'hover:bg-surface-2')}
               >
                 <span className={cn('grid size-4 place-items-center rounded border', sel.has(s.id) ? 'border-brand-500 bg-brand-500 text-white' : 'border-line-strong')}>{sel.has(s.id) && <Check className="size-3" />}</span>
                 <span className="w-8 text-xs tabular text-subtle">#{s.number}</span>

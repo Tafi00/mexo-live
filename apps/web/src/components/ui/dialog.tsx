@@ -50,10 +50,10 @@ export function Dialog({
       <div className="fixed inset-0 animate-fade-in bg-slate-950/45 backdrop-blur-[2px]" onClick={close} />
       <div role="dialog" aria-modal="true" className={cn('relative my-auto flex max-h-[calc(100vh-2rem)] w-full animate-slide-up flex-col rounded-xl border border-line bg-surface shadow-pop', widths[size], className)}>
         {(title || description) && (
-          <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
+          <div className="flex items-start justify-between gap-4 border-b border-line px-4 py-3">
             <div className="min-w-0">
-              {title && <h2 className="text-[15px] font-semibold leading-tight">{title}</h2>}
-              {description && <p className="mt-1 text-[13px] text-muted">{description}</p>}
+              {title && <h2 className="text-base font-semibold leading-tight">{title}</h2>}
+              {description && <p className="mt-1 text-sm text-muted">{description}</p>}
             </div>
             {dismissable && (
               <button onClick={onClose} className="-mr-1 rounded-md p-1 text-subtle hover:bg-surface-2 hover:text-fg" aria-label="Đóng">
@@ -62,8 +62,8 @@ export function Dialog({
             )}
           </div>
         )}
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
-        {footer && <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line bg-surface-2/50 px-5 py-3">{footer}</div>}
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">{children}</div>
+        {footer && <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line bg-surface-2/50 px-4 py-2.5">{footer}</div>}
       </div>
     </div>,
     document.body,
@@ -77,17 +77,17 @@ export function Sheet({ open, onClose, title, description, children, footer, wid
     <div className="fixed inset-0 z-50">
       <div className="fixed inset-0 animate-fade-in bg-slate-950/40" onClick={onClose} />
       <div className={cn('fixed inset-y-0 right-0 flex w-full animate-slide-left flex-col border-l border-line bg-surface shadow-pop', width)}>
-        <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
+        <div className="flex items-start justify-between gap-4 border-b border-line px-4 py-3">
           <div className="min-w-0">
-            {title && <h2 className="truncate text-[15px] font-semibold">{title}</h2>}
-            {description && <p className="mt-1 text-[13px] text-muted">{description}</p>}
+            {title && <h2 className="truncate text-base font-semibold">{title}</h2>}
+            {description && <p className="mt-1 text-sm text-muted">{description}</p>}
           </div>
           <button onClick={onClose} className="-mr-1 rounded-md p-1 text-subtle hover:bg-surface-2 hover:text-fg" aria-label="Đóng">
             <X className="size-4" />
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
-        {footer && <div className="flex items-center justify-end gap-2 border-t border-line px-5 py-3">{footer}</div>}
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">{children}</div>
+        {footer && <div className="flex items-center justify-end gap-2 border-t border-line px-4 py-2.5">{footer}</div>}
       </div>
     </div>,
     document.body,
@@ -157,8 +157,8 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
             )}
             <div className="min-w-0 flex-1 space-y-3">
               <div>
-                <h3 className="text-[15px] font-semibold">{state.title}</h3>
-                {state.description && <div className="mt-1.5 text-[13px] leading-relaxed text-muted">{state.description}</div>}
+                <h3 className="text-base font-semibold">{state.title}</h3>
+                {state.description && <div className="mt-1.5 text-sm leading-relaxed text-muted">{state.description}</div>}
               </div>
               {state.input && (
                 <Field label={state.input.label} required={state.input.required}>

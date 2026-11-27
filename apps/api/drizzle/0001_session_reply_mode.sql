@@ -1,0 +1,1 @@
+ALTER TABLE "live_sessions" ADD COLUMN "reply_mode" text DEFAULT 'inherit' NOT NULL;

@@ -74,13 +74,13 @@ export function PortalMenu({ trigger, items, width = 240 }: { trigger: (p: { ope
                     it.onClick?.();
                   }}
                   className={cn(
-                    'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+                    'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50',
                     it.danger ? 'text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40' : 'text-fg hover:bg-surface-2',
                   )}
                 >
                   {it.icon && <span className={cn('shrink-0 [&>svg]:size-4', it.danger ? '' : 'text-muted')}>{it.icon}</span>}
                   <span className="min-w-0 flex-1 truncate">{it.label}</span>
-                  {it.hint && <span className="text-[11px] text-subtle">{it.hint}</span>}
+                  {it.hint && <span className="text-2xs text-subtle">{it.hint}</span>}
                 </button>
               ),
             )}

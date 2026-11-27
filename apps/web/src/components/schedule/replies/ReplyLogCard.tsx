@@ -17,7 +17,7 @@ const SOURCE_OPTS = ['rule', 'ai', 'manual'] as const;
 function Mini({ label, value, tone, active, onClick }: { label: string; value: string; tone?: string; active?: boolean; onClick?: () => void }) {
   return (
     <button type="button" onClick={onClick} className={cn('min-w-0 rounded-lg border px-3 py-2 text-left transition-colors', active ? 'border-brand-400 ring-1 ring-brand-400' : 'border-line hover:border-line-strong')}>
-      <p className="truncate text-[11px] font-medium text-muted">{label}</p>
+      <p className="truncate text-2xs font-medium text-muted">{label}</p>
       <p className={cn('text-lg font-semibold leading-tight tabular', tone)}>{value}</p>
     </button>
   );

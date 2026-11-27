@@ -11,10 +11,10 @@ import { publish } from '../services/events.js';
 import { clearFutureRuns, materializeRuns, validateScheduleInput } from '../services/scheduler.js';
 
 const scheduleSchema = z.object({
-  title: z.string().trim().min(1, 'Cần nhập tiêu đề phiên').max(200),
+  title: z.string().trim().max(200).default(''),
   description: z.string().max(1000).default(''),
   templateId: z.number().int({ message: 'Cần chọn mẫu phát' }),
-  coverKey: z.string().min(1, 'Cần ảnh bìa'),
+  coverKey: z.string().nullable().optional(),
   repeat: z.enum(['once', 'daily', 'weekly']),
   weekdays: z.array(z.number().int().min(0).max(6)).default([]),
   startDate: dateStr,
@@ -31,15 +31,16 @@ async function loadSchedule(req: FastifyRequest, write = true) {
   return { ...ctx, sch: s };
 }
 
-function scheduleDto(s: typeof schedules.$inferSelect, tplName?: string | null) {
-  return { ...s, templateName: tplName ?? null, hasCover: Boolean(s.coverKey) };
+function scheduleDto(s: typeof schedules.$inferSelect, tplName?: string | null, tplCover?: string | null, tplTitle?: string | null) {
+  // Tiêu đề / ảnh bìa để trống → hiển thị theo mẫu phát (giá trị thực tế khi chạy)
+  return { ...s, title: s.title || tplTitle || tplName || '', titleFromTemplate: !s.title, templateName: tplName ?? null, hasCover: Boolean(s.coverKey || tplCover), coverFromTemplate: !s.coverKey && Boolean(tplCover) };
 }
 
 export async function scheduleRoutes(app: FastifyInstance) {
   app.get('/api/shops/:id/schedules', async (req) => {
     const { shop } = await requireShop(req, idOf(req.params));
     const rows = await db
-      .select({ s: schedules, tplName: templates.name })
+      .select({ s: schedules, tplName: templates.name, tplCover: templates.coverKey, tplTitle: templates.liveTitle })
       .from(schedules)
       .leftJoin(templates, eq(templates.id, schedules.templateId))
       .where(eq(schedules.shopId, shop.id))
@@ -51,7 +52,7 @@ export async function scheduleRoutes(app: FastifyInstance) {
       .orderBy(asc(scheduleRuns.startAt));
     const counts = { upcoming: 0, live: 0, done: 0, missed: 0, cancelled: 0, failed: 0 } as Record<string, number>;
     for (const r of runs) counts[r.status] = (counts[r.status] ?? 0) + 1;
-    return { schedules: rows.map((r) => scheduleDto(r.s, r.tplName)), runs, counts, today: vnDate() };
+    return { schedules: rows.map((r) => scheduleDto(r.s, r.tplName, r.tplCover, r.tplTitle)), runs, counts, today: vnDate() };
   });
 
   // Lịch toàn hệ thống (Calendar) theo khoảng ngày
@@ -67,7 +68,7 @@ export async function scheduleRoutes(app: FastifyInstance) {
     if (allowed !== null) conds.push(inArray(scheduleRuns.shopId, allowed));
     if (q.status) conds.push(eq(scheduleRuns.status, q.status));
     const rows = await db
-      .select({ r: scheduleRuns, title: schedules.title, repeat: schedules.repeat, weekdays: schedules.weekdays, templateId: schedules.templateId, scheduleState: schedules.state, shopAlias: shops.alias, shopName: shops.shopeeName, tplName: templates.name })
+      .select({ r: scheduleRuns, title: schedules.title, repeat: schedules.repeat, weekdays: schedules.weekdays, templateId: schedules.templateId, scheduleState: schedules.state, shopAlias: shops.alias, shopName: shops.shopeeName, tplName: templates.name, tplTitle: templates.liveTitle })
       .from(scheduleRuns)
       .innerJoin(schedules, eq(schedules.id, scheduleRuns.scheduleId))
       .innerJoin(shops, eq(shops.id, scheduleRuns.shopId))
@@ -76,7 +77,7 @@ export async function scheduleRoutes(app: FastifyInstance) {
       .orderBy(asc(scheduleRuns.startAt))
       .limit(5000);
     return {
-      items: rows.map((x) => ({ ...x.r, title: x.title, repeat: x.repeat, weekdays: x.weekdays, templateName: x.tplName, scheduleState: x.scheduleState, shopName: x.shopAlias || x.shopName })),
+      items: rows.map((x) => ({ ...x.r, title: x.title || x.tplTitle || x.tplName || 'Lịch phát', repeat: x.repeat, weekdays: x.weekdays, templateName: x.tplName, scheduleState: x.scheduleState, shopName: x.shopAlias || x.shopName })),
       from,
       to,
     };
@@ -85,7 +86,7 @@ export async function scheduleRoutes(app: FastifyInstance) {
   app.post('/api/shops/:id/schedules', async (req) => {
     const { actor, shop } = await requireShop(req, idOf(req.params), 'schedule.manage', 'write');
     const body = parse(scheduleSchema, req.body);
-    await validateScheduleInput(shop.id, body);
+    await validateScheduleInput(shop.id, { ...body, coverKey: body.coverKey ?? null });
     const [row] = await db.insert(schedules).values({ ...body, shopId: shop.id, createdBy: actor.id }).returning();
     await materializeRuns(row!.id);
     await audit(actorRef(actor), 'schedule_created', { shopId: shop.id, params: { title: body.title, repeat: body.repeat, time: `${body.startTime}-${body.endTime}` } });
@@ -104,7 +105,7 @@ export async function scheduleRoutes(app: FastifyInstance) {
     for (const it of body.items) {
       try {
         const { shop } = await requireShop(req, it.shopId, 'schedule.manage', 'write');
-        const input = { ...body, templateId: it.templateId };
+        const input = { ...body, templateId: it.templateId, coverKey: body.coverKey ?? null };
         await validateScheduleInput(shop.id, input);
         const { items: _items, ...rest } = body;
         const [row] = await db.insert(schedules).values({ ...rest, templateId: it.templateId, shopId: shop.id, createdBy: a.id }).returning();
@@ -122,7 +123,7 @@ export async function scheduleRoutes(app: FastifyInstance) {
     const { actor, shop, sch } = await loadSchedule(req);
     if (sch.state === 'cancelled') throw err.conflict('cancelled', 'Lịch đã hủy, không sửa được');
     const body = parse(scheduleSchema, req.body);
-    await validateScheduleInput(shop.id, body, sch.id);
+    await validateScheduleInput(shop.id, { ...body, coverKey: body.coverKey ?? null }, sch.id);
     await db.update(schedules).set({ ...body, updatedAt: new Date() }).where(eq(schedules.id, sch.id));
     await clearFutureRuns(sch.id);
     await materializeRuns(sch.id);

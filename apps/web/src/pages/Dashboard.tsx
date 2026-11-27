@@ -70,7 +70,7 @@ export default function Dashboard() {
   if (q.isError) return <ErrorState error={q.error} onRetry={() => q.refetch()} />;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <PageHeader
         title={`${greet}, ${me?.user.name ?? ''}`}
         description="Tổng quan hoạt động livestream trên các gian hàng bạn quản lý"
@@ -116,7 +116,7 @@ export default function Dashboard() {
             )}
           </div>
 
-          <div className="grid gap-5 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
             <Card className="xl:col-span-2">
               <CardHeader
                 title={`${METRIC_LABEL[metric]} 14 ngày qua`}
@@ -147,7 +147,7 @@ export default function Dashboard() {
                     <li key={s.id}>
                       <Link to={`/shops/${s.id}`} className="flex items-start gap-3 px-5 py-2.5 hover:bg-surface-2/60">
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-[13px] font-medium">{s.name}</p>
+                          <p className="truncate text-sm font-medium">{s.name}</p>
                           <p className={cn('truncate text-xs', s.issues[0]?.level === 'critical' ? 'text-rose-600 dark:text-rose-400' : 'text-amber-700 dark:text-amber-400')}>
                             {s.issues.filter((i: any) => i.level !== 'info').map((i: any) => i.text).join(' · ')}
                           </p>
@@ -163,7 +163,7 @@ export default function Dashboard() {
             </Card>
           </div>
 
-          <div className="grid gap-5 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
             <Card className="xl:col-span-2">
               <CardHeader title="Đang livestream" description="Nhiều người xem nhất" icon={<Radio className="size-4 text-brand-500" />} actions={<ButtonLink to="/live" size="sm">Phòng điều khiển</ButtonLink>} />
               {d.topLive.length ? (
@@ -175,7 +175,7 @@ export default function Dashboard() {
                         <span className="relative inline-flex size-2.5 rounded-full bg-brand-500" />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[13px] font-medium">{s.name}</p>
+                        <p className="truncate text-sm font-medium">{s.name}</p>
                         <p className="truncate text-xs text-muted">
                           {s.session.title}
                           {s.session.startedAt && ` · từ ${fmtTime(s.session.startedAt)}`}
@@ -183,7 +183,7 @@ export default function Dashboard() {
                         </p>
                       </div>
                       <span className="hidden sm:block">{s.session.origin !== 'legacy' && <Signals signals={s.session.signals} compact />}</span>
-                      <span className="inline-flex w-16 items-center justify-end gap-1 text-[13px] font-semibold tabular">
+                      <span className="inline-flex w-16 items-center justify-end gap-1 text-sm font-semibold tabular">
                         <Eye className="size-3.5 text-muted" />
                         {fmtNumber(s.session.viewers)}
                       </span>
@@ -195,7 +195,7 @@ export default function Dashboard() {
               )}
             </Card>
 
-            <div className="space-y-5">
+            <div className="space-y-4">
               <Card>
                 <CardHeader title="Lịch phát sắp tới" icon={<CalendarClock className="size-4" />} actions={<Link to="/schedules" className="text-xs font-medium text-brand-600 hover:underline">Lịch</Link>} />
                 {d.upcoming.length ? (
@@ -203,11 +203,11 @@ export default function Dashboard() {
                     {d.upcoming.map((r: any) => (
                       <li key={r.id} className="flex items-center gap-3 px-5 py-2.5">
                         <div className="w-14 shrink-0 text-center">
-                          <p className="text-[13px] font-semibold tabular">{fmtTime(r.startAt)}</p>
-                          <p className="text-[11px] text-muted">{r.runDate === todayVn() ? 'Hôm nay' : fmtDate(r.runDate).slice(0, 5)}</p>
+                          <p className="text-sm font-semibold tabular">{fmtTime(r.startAt)}</p>
+                          <p className="text-2xs text-muted">{r.runDate === todayVn() ? 'Hôm nay' : fmtDate(r.runDate).slice(0, 5)}</p>
                         </div>
                         <div className="min-w-0">
-                          <Link to={`/shops/${r.shopId}/schedules`} className="block truncate text-[13px] font-medium hover:text-brand-600">
+                          <Link to={`/shops/${r.shopId}/schedules`} className="block truncate text-sm font-medium hover:text-brand-600">
                             {r.shopName}
                           </Link>
                           <p className="truncate text-xs text-muted">{r.title}</p>
@@ -252,7 +252,7 @@ export default function Dashboard() {
                       {ALERT_SEVERITY_LABELS[a.severity as 'critical']}
                     </Badge>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-medium">
+                      <p className="text-sm font-medium">
                         {a.title}
                         {a.count > 1 && <span className="ml-1.5 text-xs font-normal text-muted">×{a.count}</span>}
                       </p>

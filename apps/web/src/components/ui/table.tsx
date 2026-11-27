@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn';
 export function Table({ children, className, minWidth = 720 }: { children: ReactNode; className?: string; minWidth?: number }) {
   return (
     <div className={cn('w-full overflow-x-auto', className)}>
-      <table className="w-full border-separate border-spacing-0 text-[13px]" style={{ minWidth }}>
+      <table className="w-full border-separate border-spacing-0 text-sm" style={{ minWidth }}>
         {children}
       </table>
     </div>
@@ -21,7 +21,7 @@ export function Th({ className, children, sort, onSort, align, ...rest }: ThHTML
   return (
     <th
       className={cn(
-        'whitespace-nowrap border-b border-line bg-surface-2/80 px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-muted backdrop-blur first:pl-4 last:pr-4',
+        'whitespace-nowrap border-b border-line bg-surface-2/80 px-3 py-2 text-left text-2xs font-semibold uppercase tracking-wide text-muted backdrop-blur first:pl-4 last:pr-4',
         align === 'right' && 'text-right',
         align === 'center' && 'text-center',
         onSort && 'cursor-pointer select-none hover:text-fg',
@@ -44,5 +44,5 @@ export function Tr({ className, selected, onClick, ...rest }: HTMLAttributes<HTM
 }
 
 export function Td({ className, align, ...rest }: TdHTMLAttributes<HTMLTableCellElement> & { align?: 'left' | 'right' | 'center' }) {
-  return <td className={cn('border-b border-line px-3 py-2.5 align-middle first:pl-4 last:pr-4', align === 'right' && 'text-right', align === 'center' && 'text-center', className)} {...rest} />;
+  return <td className={cn('border-b border-line px-3 py-2 align-middle first:pl-4 last:pr-4', align === 'right' && 'text-right', align === 'center' && 'text-center', className)} {...rest} />;
 }

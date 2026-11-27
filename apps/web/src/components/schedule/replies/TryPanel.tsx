@@ -55,13 +55,13 @@ export function TryPanel({ shopId, unmatched, context, dirty }: { shopId: number
         />
         <div className="flex flex-wrap gap-1.5">
           {SAMPLES.map((s) => (
-            <button key={s} type="button" onClick={() => go(s)} className="rounded-full border border-line px-2 py-0.5 text-[11px] text-muted hover:border-line-strong hover:text-fg">
+            <button key={s} type="button" onClick={() => go(s)} className="rounded-full border border-line px-2 py-0.5 text-2xs text-muted hover:border-line-strong hover:text-fg">
               {s}
             </button>
           ))}
         </div>
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[11px] text-subtle">
+          <p className="text-2xs text-subtle">
             {unmatched === 'ai' ? 'Câu không khớp: AI trả lời' : 'Câu không khớp: không trả lời'}
             {dirty && ' · theo cài đặt chưa lưu'}
           </p>
@@ -86,15 +86,15 @@ export function TryPanel({ shopId, unmatched, context, dirty }: { shopId: number
                   AI
                 </Badge>
               )}
-              <span className="ml-auto inline-flex items-center gap-1 text-[11px] tabular text-muted">
+              <span className="ml-auto inline-flex items-center gap-1 text-2xs tabular text-muted">
                 <Timer className="size-3" />
                 {fmtLatency(result.latencyMs)}
               </span>
             </div>
-            <div className="space-y-1.5 text-[13px]">
+            <div className="space-y-1.5 text-sm">
               <div className="flex justify-start">
                 <p className="max-w-[90%] rounded-2xl rounded-bl-sm bg-surface px-3 py-1.5 ring-1 ring-line">
-                  <span className="block text-[10px] font-medium uppercase tracking-wide text-subtle">Người xem</span>
+                  <span className="block text-2xs font-medium uppercase tracking-wide text-subtle">Người xem</span>
                   {result.comment}
                 </p>
               </div>
@@ -106,7 +106,7 @@ export function TryPanel({ shopId, unmatched, context, dirty }: { shopId: number
                       result.status === 'blocked' ? 'bg-rose-50 text-rose-900 line-through decoration-rose-400/70 ring-1 ring-rose-200 dark:bg-rose-950/40 dark:text-rose-200 dark:ring-rose-900' : 'bg-brand-500 text-white',
                     )}
                   >
-                    <span className={cn('block text-[10px] font-medium uppercase tracking-wide', result.status === 'blocked' ? 'text-rose-500 no-underline' : 'text-white/75')}>Shop</span>
+                    <span className={cn('block text-2xs font-medium uppercase tracking-wide', result.status === 'blocked' ? 'text-rose-500 no-underline' : 'text-white/75')}>Shop</span>
                     {result.answer}
                   </p>
                 </div>

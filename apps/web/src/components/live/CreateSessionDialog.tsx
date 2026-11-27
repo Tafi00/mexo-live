@@ -93,7 +93,7 @@ export function CreateSessionDialog({ shop, open, onClose }: { shop: Pick<ShopDe
       }
     >
       <form
-        className="space-y-4"
+        className="space-y-3"
         onSubmit={(e) => {
           e.preventDefault();
           submit();

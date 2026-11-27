@@ -77,12 +77,12 @@ export function CopyTemplateDialog({ shopId, template, onClose }: { shopId: numb
         }
       >
         {running ? (
-          <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted">
+          <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted">
             <Spinner /> Đang sao chép và khớp video, sản phẩm…
           </div>
         ) : results ? (
           <div className="space-y-3">
-            <p className="text-[13px]">
+            <p className="text-sm">
               Đã tạo mẫu ở <b>{okCount}</b> / {results.length} shop.
             </p>
             <ul className="divide-y divide-line rounded-lg border border-line">
@@ -92,7 +92,7 @@ export function CopyTemplateDialog({ shopId, template, onClose }: { shopId: numb
                   <li key={r.shopId} className="flex items-start gap-3 px-3 py-2.5">
                     {r.ok ? <CheckCircle2 className={partial ? 'mt-0.5 size-4 shrink-0 text-amber-500' : 'mt-0.5 size-4 shrink-0 text-emerald-500'} /> : <CircleAlert className="mt-0.5 size-4 shrink-0 text-rose-500" />}
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13px] font-medium">{shopName(r.shopId)}</p>
+                      <p className="truncate text-sm font-medium">{shopName(r.shopId)}</p>
                       {r.ok ? (
                         <div className="mt-0.5 space-y-0.5 text-xs text-muted">
                           {!partial && <p>Khớp đầy đủ video và sản phẩm ghim.</p>}
@@ -125,9 +125,9 @@ export function CopyTemplateDialog({ shopId, template, onClose }: { shopId: numb
             )}
           </div>
         ) : (
-          <div className="space-y-3 text-[13px]">
+          <div className="space-y-3 text-sm">
             <p>Hệ thống tạo một mẫu phát mới ở từng shop đích, giữ nguyên tiêu đề, mô tả, ảnh bìa, chế độ lặp và trả lời. Video và sản phẩm được khớp với dữ liệu sẵn có của shop đích:</p>
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <div className="rounded-lg border border-line bg-surface-2/50 p-3">
                 <p className="flex items-center gap-1.5 font-medium">
                   <Clapperboard className="size-4 text-muted" /> Video — khớp theo tên

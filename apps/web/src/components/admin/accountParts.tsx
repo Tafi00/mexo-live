@@ -90,7 +90,7 @@ export function ExpiryText({ date }: { date: string | null }) {
   return (
     <span className="inline-flex flex-col">
       <span className="tabular">{fmtDate(date)}</span>
-      <span className={cn('text-[11px]', d < 0 ? 'font-medium text-rose-600 dark:text-rose-400' : d <= 7 ? 'font-medium text-amber-700 dark:text-amber-400' : 'text-muted')}>
+      <span className={cn('text-2xs', d < 0 ? 'font-medium text-rose-600 dark:text-rose-400' : d <= 7 ? 'font-medium text-amber-700 dark:text-amber-400' : 'text-muted')}>
         {d < 0 ? `Đã hết hạn ${-d} ngày` : d === 0 ? 'Hết hạn hôm nay' : `Còn ${d} ngày`}
       </span>
     </span>
@@ -143,13 +143,13 @@ export function PermissionChecklist({ value, onChange, disabled }: { value: Set<
           {value.size}/{PERMISSIONS.length} quyền
         </span>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {PERM_GROUPS.map((g) => (
           <div key={g.title} className="rounded-lg border border-line p-3">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-subtle">{g.title}</p>
+            <p className="mb-2 text-2xs font-semibold uppercase tracking-wide text-subtle">{g.title}</p>
             <div className="space-y-2">
               {g.items.map((p) => (
-                <Checkbox key={p} className="flex" checked={value.has(p)} disabled={disabled} onChange={(v) => toggle(p, v)} label={PERMISSION_LABELS[p]} description={<span className="font-mono text-[10px]">{p}</span>} />
+                <Checkbox key={p} className="flex" checked={value.has(p)} disabled={disabled} onChange={(v) => toggle(p, v)} label={PERMISSION_LABELS[p]} description={<span className="font-mono text-2xs">{p}</span>} />
               ))}
             </div>
           </div>
@@ -174,7 +174,7 @@ export function ShopChecklist({ shops, selected, onChange, disabledReason, loadi
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-3">
-        <SearchInput value={q} onChange={setQ} placeholder="Tên shop, Shop ID…" inputSize="sm" className="min-w-0 flex-1" />
+        <SearchInput value={q} onChange={setQ} placeholder="Tên shop, Shop ID…" className="min-w-0 flex-1" />
         <Checkbox
           checked={allSel}
           indeterminate={!allSel && selectable.some((s) => selected.has(s.id))}
@@ -183,12 +183,12 @@ export function ShopChecklist({ shops, selected, onChange, disabledReason, loadi
             selectable.forEach((s) => (v ? n.add(s.id) : n.delete(s.id)));
             onChange(n);
           }}
-          label={<span className="text-[13px]">Chọn tất cả ({selectable.length})</span>}
+          label={<span className="text-sm">Chọn tất cả ({selectable.length})</span>}
         />
       </div>
       <div className={cn('divide-y divide-line overflow-y-auto rounded-lg border border-line', maxHeight)}>
         {loading ? (
-          <div className="flex justify-center p-6">
+          <div className="flex justify-center p-4">
             <Spinner />
           </div>
         ) : list.length ? (
@@ -206,13 +206,13 @@ export function ShopChecklist({ shops, selected, onChange, disabledReason, loadi
                   else n.add(s.id);
                   onChange(n);
                 }}
-                className={cn('flex w-full items-center gap-3 px-3 py-2 text-left text-[13px] disabled:cursor-not-allowed', on ? 'bg-brand-50/70 dark:bg-brand-950/30' : 'hover:bg-surface-2', reason && 'opacity-60')}
+                className={cn('flex w-full items-center gap-3 px-3 py-2 text-left text-sm disabled:cursor-not-allowed', on ? 'bg-brand-50/70 dark:bg-brand-950/30' : 'hover:bg-surface-2', reason && 'opacity-60')}
               >
                 <span className={cn('grid size-4 shrink-0 place-items-center rounded border', on ? 'border-brand-500 bg-brand-500 text-white' : 'border-line-strong')}>{on && <Check className="size-3" />}</span>
                 <span className="w-9 shrink-0 text-xs tabular text-subtle">#{s.number}</span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{s.name}</span>
-                  {reason && <span className="block truncate text-[11px] text-muted">{reason}</span>}
+                  {reason && <span className="block truncate text-2xs text-muted">{reason}</span>}
                 </span>
                 {s.status === 'suspended' && (
                   <Badge tone="muted" size="sm">
@@ -237,12 +237,12 @@ export function RoleGuide({ ownerView }: { ownerView: boolean }) {
   return (
     <Card className="mb-4">
       <CardHeader title="Vai trò & phân quyền" icon={<ShieldHalf className="size-4" />} description="Mỗi tài khoản chỉ thấy đúng dữ liệu và chức năng được phép" />
-      <div className="grid gap-5 p-5 lg:grid-cols-5">
-        <div className="space-y-2.5 lg:col-span-2">
+      <div className="grid gap-4 p-4 lg:grid-cols-5">
+        <div className="space-y-2 lg:col-span-2">
           {roles.map((r) => (
             <div key={r} className="rounded-lg border border-line p-3">
               <RoleBadge role={r} />
-              <p className="mt-1.5 text-[13px] leading-relaxed text-muted">{ROLE_DESCRIPTIONS[r]}</p>
+              <p className="mt-1.5 text-sm text-muted">{ROLE_DESCRIPTIONS[r]}</p>
             </div>
           ))}
           <Callout tone="info" icon={<ShieldCheck className="size-4" />} title="Cách ly dữ liệu">
@@ -250,7 +250,7 @@ export function RoleGuide({ ownerView }: { ownerView: boolean }) {
           </Callout>
         </div>
         <div className="min-w-0 lg:col-span-3">
-          <p className="mb-2 text-[13px] font-medium">Quyền chi tiết của nhân viên — theo mẫu nhanh</p>
+          <p className="mb-2 text-sm font-medium">Quyền chi tiết của nhân viên — theo mẫu nhanh</p>
           <div className="overflow-hidden rounded-lg border border-line">
             <Table minWidth={520}>
               <THead>
@@ -268,7 +268,7 @@ export function RoleGuide({ ownerView }: { ownerView: boolean }) {
                   <Tr key={perm}>
                     <Td className="py-2">
                       <span className="block">{PERMISSION_LABELS[perm]}</span>
-                      <span className="font-mono text-[10px] text-subtle">{perm}</span>
+                      <span className="font-mono text-2xs text-subtle">{perm}</span>
                     </Td>
                     {PERMISSION_PRESETS.map((p) => (
                       <Td key={p.key} align="center" className="py-2">
@@ -298,8 +298,8 @@ export function AccountDrawer({ account, onClose }: { account: Account | null; o
   return (
     <Sheet open={Boolean(a)} onClose={onClose} title={a ? a.name : ''} description={a ? `@${a.username} · ${ROLE_LABELS[a.role]}` : ''} width="max-w-2xl">
       {a && (
-        <div className="-mx-5 -my-4">
-          <div className="flex items-center gap-3 border-b border-line px-5 py-4">
+        <div className="-mx-4 -my-4">
+          <div className="flex items-center gap-3 border-b border-line px-4 py-3">
             <Avatar name={a.name} className="size-10 text-sm" />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
@@ -309,7 +309,7 @@ export function AccountDrawer({ account, onClose }: { account: Account | null; o
               {a.parentName && <p className="mt-1 text-xs text-muted">Nhân viên của {a.parentName}</p>}
             </div>
           </div>
-          <div className="border-b border-line px-5 py-4">
+          <div className="border-b border-line px-4 py-3">
             <KV
               items={[
                 { label: 'Email', value: a.email || '—' },
@@ -341,11 +341,11 @@ export function AccountDrawer({ account, onClose }: { account: Account | null; o
               </div>
             )}
           </div>
-          <div className="px-5 pb-1 pt-4">
-            <p className="text-[13px] font-semibold">Nhật ký hoạt động</p>
+          <div className="px-4 pb-1 pt-3">
+            <p className="text-sm font-semibold">Nhật ký hoạt động</p>
             <p className="text-xs text-muted">Do tài khoản này thực hiện hoặc tác động lên tài khoản này (300 mục gần nhất)</p>
           </div>
-          {q.isLoading ? <PageLoading /> : q.isError ? <p className="px-5 py-6 text-center text-sm text-rose-600">Không tải được nhật ký</p> : <ActivityList items={q.data?.items ?? []} showShop />}
+          {q.isLoading ? <PageLoading /> : q.isError ? <p className="px-4 py-6 text-center text-sm text-rose-600">Không tải được nhật ký</p> : <ActivityList items={q.data?.items ?? []} showShop />}
         </div>
       )}
     </Sheet>

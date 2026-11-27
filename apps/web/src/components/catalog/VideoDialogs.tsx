@@ -74,7 +74,7 @@ export function RenameVideoDialog({ shopId, video, all, onClose }: { shopId: num
           required
           error={touched || name !== video?.name ? error : null}
           hint="Không chứa < > |, không kết thúc bằng dấu chấm, không trùng tên video khác trong shop."
-          aside={<span className={cn('text-[11px] tabular', name.trim().length > LIMITS.videoNameMax ? 'text-rose-600' : 'text-subtle')}>{name.trim().length}/{LIMITS.videoNameMax}</span>}
+          aside={<span className={cn('text-2xs tabular', name.trim().length > LIMITS.videoNameMax ? 'text-rose-600' : 'text-subtle')}>{name.trim().length}/{LIMITS.videoNameMax}</span>}
         >
           <Input autoFocus value={name} invalid={Boolean(error) && touched} onChange={(e) => setName(e.target.value)} onBlur={() => setTouched(true)} />
         </Field>
@@ -128,11 +128,11 @@ export function MoveVideosDialog({ shopId, ids, folders, currentFolderId, onClos
             key={o.id ?? 'none'}
             type="button"
             onClick={() => setTarget(o.id)}
-            className={cn('flex w-full items-center gap-2.5 rounded-lg border px-3 py-2 text-left text-[13px] transition-colors', target === o.id ? 'border-brand-400 bg-brand-50/60 ring-1 ring-brand-400 dark:bg-brand-950/20' : 'border-line hover:bg-surface-2')}
+            className={cn('flex w-full items-center gap-2.5 rounded-lg border px-3 py-2 text-left text-sm transition-colors', target === o.id ? 'border-brand-400 bg-brand-50/60 ring-1 ring-brand-400 dark:bg-brand-950/20' : 'border-line hover:bg-surface-2')}
           >
             {target === o.id ? <FolderOpen className="size-4 text-brand-500" /> : <Folder className="size-4 text-muted" />}
             <span className={cn('flex-1 truncate', o.id === null && 'text-muted')}>{o.name}</span>
-            {o.id === currentFolderId && <span className="text-[11px] text-subtle">Hiện tại</span>}
+            {o.id === currentFolderId && <span className="text-2xs text-subtle">Hiện tại</span>}
           </button>
         ))}
         {!folders.length && <p className="px-1 pt-2 text-xs text-muted">Chưa có thư mục nào. Tạo thư mục ở cột bên trái thư viện.</p>}
@@ -213,7 +213,7 @@ export function BulkDeleteResultDialog({ result, onClose }: { result: BulkDelete
     >
       {result && (
         <div className="space-y-3">
-          <p className="text-[13px]">
+          <p className="text-sm">
             Đã xóa <b>{result.deleted.length}</b> video.{' '}
             {result.blocked.length > 0 && (
               <>
@@ -227,7 +227,7 @@ export function BulkDeleteResultDialog({ result, onClose }: { result: BulkDelete
                 <li key={b.id} className="flex items-start gap-2.5 px-3 py-2">
                   <Ban className="mt-0.5 size-4 shrink-0 text-amber-500" />
                   <div className="min-w-0">
-                    <p className="truncate text-[13px] font-medium">{b.name}</p>
+                    <p className="truncate text-sm font-medium">{b.name}</p>
                     <p className="text-xs text-muted">Dùng trong: {b.templates.join(', ')}</p>
                   </div>
                 </li>

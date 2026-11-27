@@ -45,7 +45,7 @@ export function NowPlayingPanel({
   return (
     <Card>
       <CardHeader
-        title="Đang phát"
+        title={hasJob ? 'Đang phát' : 'Danh sách phát'}
         icon={<Film className="size-4" />}
         description={playlist.length ? `${session.templateName ?? 'Mẫu phát'} · ${playlist.length} video · ${fmtDuration(totalSec)}` : undefined}
         actions={
@@ -76,17 +76,17 @@ export function NowPlayingPanel({
       ) : (
         <div>
           {cur && (
-            <div className="border-b border-line px-5 py-4">
+            <div className="border-b border-line px-4 py-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-xs text-muted">
                     Video {(idx ?? 0) + 1}/{playlist.length}
                   </p>
-                  <p className="truncate text-[15px] font-semibold" title={cur.name}>
+                  <p className="truncate text-base font-semibold" title={cur.name}>
                     {cur.name}
                   </p>
                 </div>
-                <p className="shrink-0 pt-4 text-[13px] tabular text-muted">
+                <p className="shrink-0 pt-4 text-sm tabular text-muted">
                   <span className="font-medium text-fg">{fmtClock(pos)}</span> / {fmtClock(dur)}
                 </p>
               </div>
@@ -103,20 +103,26 @@ export function NowPlayingPanel({
             {playlist.map((v, i) => {
               const active = i === idx;
               return (
-                <li key={`${v.videoId}-${i}`} className={cn('group flex items-center gap-3 px-5 py-2', active ? 'bg-brand-50/70 dark:bg-brand-950/25' : 'hover:bg-surface-2/60')}>
+                <li key={`${v.videoId}-${i}`} className={cn('group flex items-center gap-3 px-4 py-1.5', active ? 'bg-brand-50/70 dark:bg-brand-950/25' : 'hover:bg-surface-2/60')}>
                   <span className={cn('w-6 shrink-0 text-right text-xs tabular', active ? 'font-semibold text-brand-600 dark:text-brand-400' : 'text-subtle')}>{i + 1}</span>
                   <div className="min-w-0 flex-1">
-                    <p className={cn('truncate text-[13px]', active && 'font-semibold')} title={v.name}>
+                    <p className={cn('truncate text-sm', active && 'font-semibold')} title={v.name}>
                       {v.name}
                     </p>
-                    <p className="text-[11px] text-muted">
+                    <p className="text-2xs text-muted">
                       {fmtClock(v.durationSec)} · {v.pins.length ? `${v.pins.length} sản phẩm ghim` : 'Không ghim'}
                     </p>
                   </div>
                   {active ? (
-                    <Badge tone="brand" size="sm" dot pulse={session.streamState === 'pushing'}>
-                      Đang phát
-                    </Badge>
+                    hasJob ? (
+                      <Badge tone="brand" size="sm" dot pulse={session.streamState === 'pushing'}>
+                        Đang phát
+                      </Badge>
+                    ) : (
+                      <Badge tone="muted" size="sm">
+                        Dừng tại đây
+                      </Badge>
+                    )
                   ) : (
                     canSkip && (
                       <Button

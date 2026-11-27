@@ -170,7 +170,7 @@ export function ProductPicker({
                     >
                       <ProductThumb url={p.imageUrl} />
                       <span className="min-w-0 flex-1">
-                        <span className="line-clamp-1 text-[13px] font-medium">{p.name}</span>
+                        <span className="line-clamp-1 text-sm font-medium">{p.name}</span>
                         <span className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs text-muted">
                           <span className="font-mono">{p.sku || p.itemId}</span>
                           <span>{fmtMoney(p.price)}</span>

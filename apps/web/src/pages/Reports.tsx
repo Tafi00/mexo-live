@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip as RTooltip, XAxis, YAxis } from 'recharts';
-import { BarChart3, CircleDollarSign, Clock, Eye, FileDown, FileSpreadsheet, Heart, Lock, Radio, ShoppingBag, Store, Trophy } from 'lucide-react';
+import { BarChart3, FileDown, FileSpreadsheet, Lock, Radio, Store, Trophy } from 'lucide-react';
 import { api, download } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { addDaysStr, fmtCompact, fmtDate, fmtDuration, fmtMoney, fmtNumber, fmtTime, todayVn } from '@/lib/format';
@@ -64,6 +64,13 @@ interface ReportResp {
   byShop: { shopId: number; shopName: string; sessions: number; hours: number; orders: number; gmv: number; peakViewers: number }[];
   from: string;
   to: string;
+}
+
+/** 3725 → "1:02" (giờ:phút); dưới 1 giờ → "45 phút" */
+function hm(sec: number): string {
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  return h ? `${h}:${String(m).padStart(2, '0')}` : `${m} phút`;
 }
 
 function presetRange(p: Preset, custom: { from: string; to: string }): { from: string; to: string } {
@@ -151,8 +158,9 @@ export default function Reports() {
   const sortTh = (key: ShopSort) => ({ sort: shopSort === key ? ('desc' as const) : null, onSort: () => setShopSort(key) });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <PageHeader
+        className="mb-0"
         title="Lịch sử & báo cáo"
         description="Thống kê phiên livestream theo ngày tạo phiên, giờ Việt Nam"
         actions={
@@ -167,8 +175,8 @@ export default function Reports() {
         }
       />
 
-      <Card className="flex flex-wrap items-center gap-2 p-3">
-        <Select inputSize="sm" value={preset} onChange={(e) => setPreset(e.target.value as Preset)} className="w-36">
+      <Card className="flex flex-wrap items-center gap-2 px-3 py-2.5">
+        <Select inputSize="sm" value={preset} onChange={(e) => setPreset(e.target.value as Preset)} className="w-[calc(50%-0.25rem)] sm:w-36">
           {PRESETS.map((p) => (
             <option key={p.value} value={p.value}>
               {p.label}
@@ -186,7 +194,7 @@ export default function Reports() {
             {from === to ? fmtDate(from) : `${fmtDate(from)} – ${fmtDate(to)}`}
           </span>
         )}
-        <Select inputSize="sm" value={shopId} onChange={(e) => setShopId(e.target.value)} className="w-52">
+        <Select inputSize="sm" value={shopId} onChange={(e) => setShopId(e.target.value)} className="w-[calc(50%-0.25rem)] sm:w-52">
           <option value="">Tất cả shop</option>
           {(shops.data ?? []).map((sh) => (
             <option key={sh.id} value={sh.id}>
@@ -194,7 +202,7 @@ export default function Reports() {
             </option>
           ))}
         </Select>
-        <Select inputSize="sm" value={origin} onChange={(e) => setOrigin(e.target.value)} className="w-40">
+        <Select inputSize="sm" value={origin} onChange={(e) => setOrigin(e.target.value)} className="w-[calc(50%-0.25rem)] sm:w-40">
           <option value="">Mọi nguồn phiên</option>
           <option value="manual">Thủ công</option>
           <option value="schedule">Lịch phát</option>
@@ -213,22 +221,23 @@ export default function Reports() {
           {!s ? (
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
               {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-[86px] rounded-xl" />
+                <Skeleton key={i} className="h-[72px] rounded-xl" />
               ))}
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-              <StatCard label="Số phiên" value={fmtNumber(s.count)} hint={`${fmtNumber(s.started)} lên sóng · ${fmtNumber(s.failed)} thất bại`} icon={<Radio className="size-4" />} tone="brand" />
-              <StatCard label="Tổng giờ phát" value={fmtNumber(s.totalSeconds / 3600, 1)} hint={s.started ? `TB ${fmtDuration(s.totalSeconds / s.started)}/phiên` : 'giờ'} icon={<Clock className="size-4" />} tone="info" />
-              <StatCard label="Người xem cao nhất" value={fmtNumber(s.peakViewers)} hint="Đỉnh trong một phiên" icon={<Eye className="size-4" />} tone="violet" />
-              <StatCard label="Đơn hàng" value={fmtNumber(s.orders)} hint={s.started ? `${fmtNumber(s.orders / s.started, 1)} đơn/phiên` : undefined} icon={<ShoppingBag className="size-4" />} tone="success" />
-              <StatCard label="Doanh thu" value={`${fmtCompact(s.gmv)} ₫`} hint={fmtMoney(s.gmv)} icon={<CircleDollarSign className="size-4" />} tone="warning" />
-              <StatCard label="Lượt thích" value={fmtCompact(s.likes)} hint={fmtNumber(s.likes)} icon={<Heart className="size-4" />} tone="danger" />
+              {/* 6 chỉ số trên một hàng: bỏ icon để nhãn và gợi ý không bị cắt */}
+              <StatCard label="Số phiên" value={fmtNumber(s.count)} hint={`${fmtNumber(s.started)} lên sóng · ${fmtNumber(s.failed)} lỗi`} />
+              <StatCard label="Giờ phát" value={fmtNumber(s.totalSeconds / 3600, 1)} hint={s.started ? `TB ${hm(s.totalSeconds / s.started)}/phiên` : 'giờ'} />
+              <StatCard label="Người xem cao nhất" value={fmtNumber(s.peakViewers)} hint="Đỉnh trong 1 phiên" />
+              <StatCard label="Đơn hàng" value={fmtNumber(s.orders)} hint={s.started ? `${fmtNumber(s.orders / s.started, 1)} đơn/phiên` : undefined} />
+              <StatCard label="Doanh thu" value={`${fmtCompact(s.gmv)} ₫`} hint={fmtMoney(s.gmv)} />
+              <StatCard label="Lượt thích" value={fmtCompact(s.likes)} hint={fmtNumber(s.likes)} />
             </div>
           )}
 
-          <div className="grid gap-5 xl:grid-cols-5">
-            <Card className="xl:col-span-3">
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <Card className="min-w-0">
               <CardHeader
                 title={`${METRIC_LABEL[metric]} theo ngày`}
                 icon={<BarChart3 className="size-4" />}
@@ -246,10 +255,10 @@ export default function Reports() {
                   />
                 }
               />
-              <div className="px-3 pb-3 pt-4">{d ? <DailyChart data={d.byDay} metric={metric} from={d.from ?? from} to={d.to ?? to} /> : <Skeleton className="h-[240px]" />}</div>
+              <div className="px-2 pb-2 pt-3">{d ? <DailyChart data={d.byDay} metric={metric} from={d.from ?? from} to={d.to ?? to} /> : <Skeleton className="h-[240px]" />}</div>
             </Card>
 
-            <Card className="xl:col-span-2">
+            <Card className="min-w-0">
               <CardHeader title="Shop nổi bật" icon={<Trophy className="size-4" />} description="Bấm tiêu đề cột để sắp xếp" />
               {!d ? (
                 <div className="space-y-2 p-4">
@@ -261,8 +270,8 @@ export default function Reports() {
                 <EmptyState compact icon={Store} title="Chưa có dữ liệu" />
               ) : (
                 <>
-                  <div className="max-h-[300px] overflow-y-auto">
-                    <Table minWidth={480}>
+                  <div className="max-h-[264px] overflow-y-auto">
+                    <Table minWidth={460}>
                       <THead>
                         <tr>
                           <Th>Shop</Th>
@@ -270,7 +279,7 @@ export default function Reports() {
                           <Th align="right" {...sortTh('hours')}>Giờ</Th>
                           <Th align="right" {...sortTh('orders')}>Đơn</Th>
                           <Th align="right" {...sortTh('gmv')}>Doanh thu</Th>
-                          <Th align="right" {...sortTh('peakViewers')}>Xem cao nhất</Th>
+                          <Th align="right" {...sortTh('peakViewers')}>Xem max</Th>
                         </tr>
                       </THead>
                       <tbody>
@@ -278,7 +287,7 @@ export default function Reports() {
                           <Tr key={r.shopId}>
                             <Td className="max-w-[180px]">
                               <div className="flex min-w-0 items-center gap-2">
-                                <span className="w-4 shrink-0 text-right text-[11px] tabular text-subtle">{i + 1}</span>
+                                <span className="w-4 shrink-0 text-right text-2xs tabular text-subtle">{i + 1}</span>
                                 <Link to={`/shops/${r.shopId}/history`} className="truncate font-medium hover:text-brand-600">
                                   {r.shopName}
                                 </Link>
@@ -317,16 +326,15 @@ export default function Reports() {
             ) : !d.items.length ? (
               <EmptyState icon={Radio} title="Không có phiên nào" description="Thử đổi khoảng thời gian hoặc bỏ bớt bộ lọc." />
             ) : (
-              <Table minWidth={1080}>
+              <Table minWidth={980}>
                 <THead>
                   <tr>
                     <Th>Phiên</Th>
                     <Th>Shop</Th>
                     <Th>Nguồn</Th>
                     <Th>Thời gian</Th>
-                    <Th align="right">Thời lượng</Th>
                     <Th>Trạng thái</Th>
-                    <Th align="right">Xem cao nhất</Th>
+                    <Th align="right">Xem max</Th>
                     <Th align="right">Đơn</Th>
                     <Th align="right">Doanh thu</Th>
                   </tr>
@@ -337,15 +345,15 @@ export default function Reports() {
                     const failed = !r.startedAt && r.state === 'ended';
                     return (
                       <Tr key={r.id} onClick={() => nav(`/sessions/${r.id}`)}>
-                        <Td className="max-w-[280px]">
-                          <p className="truncate font-medium">{r.title}</p>
+                        <Td className="max-w-[240px]">
+                          <p className="truncate font-medium" title={r.title}>{r.title}</p>
                           <p className="truncate text-xs text-muted">
                             {r.shopeeSessionId ? `Session ${r.shopeeSessionId}` : 'Chưa có Session ID'}
                             {r.templateName && ` · ${r.templateName}`}
                           </p>
                         </Td>
-                        <Td className="max-w-[180px]">
-                          <p className="truncate">{r.shopName}</p>
+                        <Td className="max-w-[160px]">
+                          <p className="truncate" title={r.shopName}>{r.shopName}</p>
                           {r.createdByName && <p className="truncate text-xs text-muted">{r.createdByName}</p>}
                         </Td>
                         <Td>
@@ -354,19 +362,16 @@ export default function Reports() {
                           </Badge>
                         </Td>
                         <Td className="whitespace-nowrap">
-                          <p className="tabular">{fmtDate(r.createdAt)}</p>
-                          <p className="text-xs tabular text-muted">
-                            {r.startedAt ? `${fmtTime(r.startedAt)} → ${r.endedAt ? fmtTime(r.endedAt) : 'nay'}` : `Tạo ${fmtTime(r.createdAt)}`}
+                          <p className="tabular">
+                            {fmtDate(r.createdAt)} <span className="text-muted">{r.startedAt ? `${fmtTime(r.startedAt)}–${r.endedAt ? fmtTime(r.endedAt) : 'nay'}` : fmtTime(r.createdAt)}</span>
                           </p>
-                        </Td>
-                        <Td align="right" className="whitespace-nowrap tabular">
-                          {r.durationSec ? fmtDuration(r.durationSec) : '—'}
+                          <p className="text-xs tabular text-muted">{r.durationSec ? fmtDuration(r.durationSec) : 'Chưa lên sóng'}</p>
                         </Td>
                         <Td>
                           <div className="flex flex-col items-start gap-0.5">
                             <SessionStateBadge state={r.state} size="sm" />
                             {failed && (
-                              <span className="max-w-[180px] truncate text-[11px] text-rose-600 dark:text-rose-400" title={r.lastError ?? undefined}>
+                              <span className="max-w-[180px] truncate text-2xs text-rose-600 dark:text-rose-400" title={r.lastError ?? undefined}>
                                 Không lên sóng{r.lastError ? `: ${r.lastError}` : ''}
                               </span>
                             )}

@@ -305,8 +305,8 @@ export function ConsoleReconcile() {
 
   return (
     <div className="space-y-4 p-4">
-      <div className="grid gap-4 lg:grid-cols-5">
-        <div className="space-y-2 text-[13px] leading-relaxed text-muted lg:col-span-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+        <div className="space-y-2 text-sm text-muted lg:col-span-3">
           <p className="font-medium text-fg">Đối chiếu số liệu MEXO với Shopee Open Platform Console</p>
           <ol className="list-decimal space-y-1 pl-5">
             <li>Trên Console Shopee, mở thống kê lệnh gọi API của App và xuất file CSV theo ngày và API.</li>
@@ -330,7 +330,7 @@ export function ConsoleReconcile() {
             className="flex h-full min-h-[120px] w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-line-strong bg-surface-2/40 p-4 text-center transition-colors hover:border-brand-400 hover:bg-brand-50/40 dark:hover:bg-brand-950/20"
           >
             {loading ? <Spinner className="size-5" /> : <FileUp className="size-6 text-muted" />}
-            <span className="text-[13px] font-medium">{loading ? 'Đang đọc và đối chiếu…' : fileName ? 'Chọn file khác' : 'Chọn hoặc kéo thả file CSV từ Console Shopee'}</span>
+            <span className="text-sm font-medium">{loading ? 'Đang đọc và đối chiếu…' : fileName ? 'Chọn file khác' : 'Chọn hoặc kéo thả file CSV từ Console Shopee'}</span>
             {fileName && !loading && (
               <span className="inline-flex items-center gap-1 text-xs text-muted">
                 <FileSpreadsheet className="size-3.5" />
@@ -371,16 +371,16 @@ export function ConsoleReconcile() {
             <StatCard label="Chỉ một bên có" value={counts.only_ours + counts.only_shopee} icon={<MinusCircle className="size-4" />} tone={counts.only_ours + counts.only_shopee ? 'warning' : 'neutral'} hint={`${counts.only_ours} chỉ MEXO · ${counts.only_shopee} chỉ Shopee`} />
             <StatCard
               label="Tổng lệnh gọi MEXO / Shopee"
-              value={<span className="text-[18px]">{fmtNumber(totals.ours.total)} / {fmtNumber(totals.theirs.total)}</span>}
+              value={<span className="text-lg">{fmtNumber(totals.ours.total)} / {fmtNumber(totals.theirs.total)}</span>}
               hint={totalDiffPct !== null ? `Chênh ${totalDiffPct >= 0 ? '+' : ''}${(totalDiffPct * 100).toFixed(2)}% · tỷ lệ ${fmtPercent(rate(totals.ours), 2)} vs ${fmtPercent(rate(totals.theirs), 2)}` : undefined}
               icon={<Scale className="size-4" />}
             />
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Segmented<'mismatch' | 'all'> size="sm" value={view} onChange={(v) => (setView(v), setPage(1))} options={[{ value: 'mismatch', label: 'Chỉ dòng chênh lệch', count: rows.length - counts.match }, { value: 'all', label: 'Tất cả', count: rows.length }]} />
-            <Segmented<'api' | 'day'> size="sm" value={group} onChange={(v) => (setGroup(v), setPage(1))} options={[{ value: 'api', label: 'Theo ngày + API' }, { value: 'day', label: 'Tổng theo ngày' }]} />
-            {group === 'api' && <SearchInput value={q} onChange={(v) => (setQ(v), setPage(1))} placeholder="Lọc theo API hoặc ngày…" inputSize="sm" className="w-full sm:w-64" />}
+            <Segmented<'mismatch' | 'all'> value={view} onChange={(v) => (setView(v), setPage(1))} options={[{ value: 'mismatch', label: 'Chỉ dòng chênh lệch', count: rows.length - counts.match }, { value: 'all', label: 'Tất cả', count: rows.length }]} />
+            <Segmented<'api' | 'day'> value={group} onChange={(v) => (setGroup(v), setPage(1))} options={[{ value: 'api', label: 'Theo ngày + API' }, { value: 'day', label: 'Tổng theo ngày' }]} />
+            {group === 'api' && <SearchInput value={q} onChange={(v) => (setQ(v), setPage(1))} placeholder="Lọc theo API hoặc ngày…" className="w-full sm:w-64" />}
           </div>
 
           <div className="overflow-hidden rounded-lg border border-line">
@@ -413,7 +413,7 @@ export function ConsoleReconcile() {
                         <Td align="right" className={cn('tabular', bad && Math.abs(r.diffPct) > 0.01 && 'font-semibold text-rose-600 dark:text-rose-400')}>
                           {r.diff > 0 ? '+' : ''}
                           {fmtNumber(r.diff)}
-                          <span className="ml-1 text-[11px] font-normal text-muted">({(r.diffPct * 100).toFixed(1)}%)</span>
+                          <span className="ml-1 text-2xs font-normal text-muted">({(r.diffPct * 100).toFixed(1)}%)</span>
                         </Td>
                         <Td align="right" className="tabular">{fmtPercent(rate(r.ours), 2)}</Td>
                         <Td align="right" className="tabular">{fmtPercent(rate(r.theirs), 2)}</Td>
@@ -437,8 +437,12 @@ export function ConsoleReconcile() {
                 {view === 'mismatch' ? 'Không có dòng chênh lệch — số liệu khớp với Console Shopee.' : 'Không có dòng phù hợp.'}
               </div>
             )}
+            {filtered.length > 0 && (
+              <div className="border-t border-line px-4 py-2.5">
+                <Pagination page={page} pageSize={pageSize} total={filtered.length} onChange={setPage} />
+              </div>
+            )}
           </div>
-          <Pagination page={page} pageSize={pageSize} total={filtered.length} onChange={setPage} />
           <Callout tone="neutral">
             MEXO tính theo ngày giờ Việt Nam (UTC+7). Nếu Console Shopee dùng múi giờ khác (ví dụ UTC+8), số liệu từng ngày có thể lệch nhẹ ở ranh giới ngày trong khi tổng cả kỳ vẫn khớp — xem chế độ <Badge size="sm" tone="neutral">Tổng theo ngày</Badge> và tổng ở trên để phân biệt.
           </Callout>

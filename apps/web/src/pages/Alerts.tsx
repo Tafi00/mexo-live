@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Bell, BellRing, Check, CheckCheck, CheckCircle2, Clock, Radio, Server, Store } from 'lucide-react';
@@ -13,7 +13,7 @@ import { SeverityBadge } from '@/components/admin/common';
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/dialog';
 import { SearchInput, Select } from '@/components/ui/form';
-import { Badge, Callout, Card, EmptyState, ErrorState, PageHeader, Skeleton, Tabs, Tooltip } from '@/components/ui/misc';
+import { Badge, Callout, Card, EmptyState, ErrorState, PageHeader, Pagination, Skeleton, Tabs, Tooltip } from '@/components/ui/misc';
 
 type Status = 'open' | 'acknowledged' | 'resolved' | 'all';
 interface AlertsResponse {
@@ -27,12 +27,12 @@ function AlertItem({ a, isStaff, onAck, acking }: { a: AlertRow; isStaff: boolea
   const resolved = Boolean(a.resolvedAt);
   const acked = Boolean(a.acknowledgedAt);
   return (
-    <li className={cn('relative flex flex-col gap-3 py-3.5 pl-5 pr-4 sm:flex-row sm:items-start', resolved && 'opacity-75')}>
+    <li className={cn('relative flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-start sm:gap-4', resolved && 'opacity-75')}>
       <span className={cn('absolute inset-y-3 left-0 w-1 rounded-r-full', SEVERITY_BAR[a.severity] ?? 'bg-slate-400', resolved && 'opacity-40')} />
-      <div className="min-w-0 flex-1 space-y-1.5">
+      <div className="min-w-0 flex-1 space-y-1">
         <div className="flex flex-wrap items-center gap-2">
           <SeverityBadge severity={a.severity} size="sm" />
-          <span className="text-[11px] font-medium uppercase tracking-wide text-subtle">{ALERT_TYPE_LABELS[a.type] ?? a.type}</span>
+          <span className="text-2xs font-medium uppercase tracking-wide text-subtle">{ALERT_TYPE_LABELS[a.type] ?? a.type}</span>
           {resolved ? (
             <Badge tone="success" size="sm" icon={<CheckCircle2 className="size-3" />}>
               Đã xử lý
@@ -43,16 +43,16 @@ function AlertItem({ a, isStaff, onAck, acking }: { a: AlertRow; isStaff: boolea
             </Badge>
           ) : null}
         </div>
-        <p className="text-[14px] font-semibold leading-snug">
+        <p className="text-sm font-semibold">
           {a.title}
           {a.count > 1 && (
             <Tooltip content={`Sự cố lặp lại ${a.count} lần, đã được gộp thành một cảnh báo`}>
-              <span className="ml-2 rounded-md bg-surface-2 px-1.5 py-px text-xs font-medium text-muted ring-1 ring-inset ring-line tabular">×{a.count.toLocaleString('vi-VN')}</span>
+              <span className="ml-1.5 rounded-md bg-surface-2 px-1.5 py-px text-2xs font-medium text-muted ring-1 ring-inset ring-line tabular">×{a.count.toLocaleString('vi-VN')}</span>
             </Tooltip>
           )}
         </p>
-        {a.message && <p className="text-[13px] leading-relaxed text-muted">{a.message}</p>}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-0.5 text-xs">
+        {a.message && <p className="text-sm text-muted">{a.message}</p>}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
           {a.shopId && (
             <Link to={`/shops/${a.shopId}`} className="inline-flex items-center gap-1 font-medium text-brand-600 hover:underline dark:text-brand-400">
               <Store className="size-3.5" />
@@ -79,7 +79,7 @@ function AlertItem({ a, isStaff, onAck, acking }: { a: AlertRow; isStaff: boolea
           )}
         </div>
       </div>
-      <div className="flex shrink-0 flex-row items-center justify-between gap-3 sm:w-56 sm:flex-col sm:items-end sm:justify-start">
+      <div className="flex shrink-0 flex-row items-center justify-between gap-3 sm:w-52 sm:flex-col sm:items-end sm:justify-start sm:gap-2">
         <div className="space-y-0.5 text-xs text-muted sm:text-right">
           <p className="inline-flex items-center gap-1" title={fmtDateTime(a.lastAt, { seconds: true })}>
             <Clock className="size-3" />
@@ -111,6 +111,9 @@ export default function Alerts() {
   const severity = params.get('severity') ?? '';
   const type = params.get('type') ?? '';
   const [q, setQ] = useState('');
+  const [page, setPage] = useState(1);
+  const pageSize = 50;
+  useEffect(() => setPage(1), [status, severity, type, q]);
 
   const setParam = (k: string, v: string, def = '') => {
     const p = new URLSearchParams(params);
@@ -163,7 +166,7 @@ export default function Alerts() {
       />
 
       <Card>
-        <div className="px-3 pt-1">
+        <div className="px-2 pt-0.5">
           <Tabs<Status>
             value={status}
             onChange={(v) => setParam('status', v, 'open')}
@@ -176,14 +179,14 @@ export default function Alerts() {
           />
         </div>
         <div className="flex flex-wrap items-center gap-2 border-b border-line p-3">
-          <SearchInput value={q} onChange={setQ} placeholder="Tìm theo nội dung, shop, máy chủ…" className="w-full sm:w-72" inputSize="sm" />
-          <Select inputSize="sm" className="w-full sm:w-44" value={severity} onChange={(e) => setParam('severity', e.target.value)} aria-label="Mức độ">
+          <SearchInput value={q} onChange={setQ} placeholder="Tìm nội dung, shop, máy chủ…" className="w-full sm:w-64" />
+          <Select className="w-full sm:w-40" value={severity} onChange={(e) => setParam('severity', e.target.value)} aria-label="Mức độ">
             <option value="">Mọi mức độ</option>
             <option value="critical">Nghiêm trọng</option>
             <option value="warning">Cần xử lý</option>
             <option value="info">Thông tin</option>
           </Select>
-          <Select inputSize="sm" className="w-full sm:w-72" value={type} onChange={(e) => setParam('type', e.target.value)} aria-label="Loại cảnh báo">
+          <Select className="w-full sm:w-64" value={type} onChange={(e) => setParam('type', e.target.value)} aria-label="Loại cảnh báo">
             <option value="">Mọi loại cảnh báo</option>
             {typeOptions.map(([k, label]) => (
               <option key={k} value={k}>
@@ -193,7 +196,6 @@ export default function Alerts() {
           </Select>
           {(severity || type || q) && (
             <Button
-              size="sm"
               variant="ghost"
               onClick={() => {
                 setQ('');
@@ -206,20 +208,19 @@ export default function Alerts() {
               Xóa bộ lọc
             </Button>
           )}
-          <span className="ml-auto text-xs text-muted">{list.data ? `${items.length} cảnh báo${list.data.items.length >= 500 ? ' (500 gần nhất)' : ''}` : ''}</span>
         </div>
 
         {list.isError ? (
           <ErrorState error={list.error} onRetry={() => list.refetch()} />
         ) : !list.data ? (
-          <div className="space-y-3 p-4">
+          <div className="space-y-2 p-4">
             {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-20" />
+              <Skeleton key={i} className="h-16" />
             ))}
           </div>
         ) : items.length ? (
           <ul className={cn('divide-y divide-line', list.isFetching && list.isPlaceholderData && 'opacity-60')}>
-            {items.map((a) => (
+            {items.slice((page - 1) * pageSize, page * pageSize).map((a) => (
               <AlertItem key={a.id} a={a} isStaff={isStaff} acking={ack.isPending && ack.variables === a.id} onAck={() => ack.mutate(a.id)} />
             ))}
           </ul>
@@ -229,6 +230,12 @@ export default function Alerts() {
             title={status === 'open' && !severity && !type && !q ? 'Không có cảnh báo đang mở' : 'Không có cảnh báo phù hợp'}
             description={status === 'open' ? 'Mọi thứ đang hoạt động bình thường.' : 'Thử đổi bộ lọc hoặc chọn thẻ khác.'}
           />
+        )}
+        {items.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-2.5">
+            <Pagination className="flex-1" page={page} pageSize={pageSize} total={items.length} onChange={setPage} />
+            {(list.data?.items.length ?? 0) >= 500 && <span className="text-xs text-muted">Hiển thị 500 cảnh báo gần nhất</span>}
+          </div>
         )}
       </Card>
 

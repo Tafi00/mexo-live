@@ -16,12 +16,12 @@ const variants: Record<Variant, string> = {
   success: 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm shadow-emerald-600/20',
 };
 const sizes: Record<Size, string> = {
-  xs: 'h-7 px-2 text-xs gap-1 rounded-md',
-  sm: 'h-8 px-3 text-[13px] gap-1.5 rounded-md',
-  md: 'h-9 px-3.5 text-sm gap-2 rounded-lg',
-  lg: 'h-11 px-5 text-[15px] gap-2 rounded-lg',
+  xs: 'h-6 px-2 text-xs gap-1 rounded-md',
+  sm: 'h-7 px-2.5 text-xs gap-1.5 rounded-md',
+  md: 'h-8 px-3 text-sm gap-1.5 rounded-md',
+  lg: 'h-10 px-4 text-base gap-2 rounded-lg',
 };
-const iconSizes: Record<Size, string> = { xs: 'h-7 w-7 rounded-md', sm: 'h-8 w-8 rounded-md', md: 'h-9 w-9 rounded-lg', lg: 'h-11 w-11 rounded-lg' };
+const iconSizes: Record<Size, string> = { xs: 'h-6 w-6 rounded-md', sm: 'h-7 w-7 rounded-md', md: 'h-8 w-8 rounded-md', lg: 'h-10 w-10 rounded-lg' };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;

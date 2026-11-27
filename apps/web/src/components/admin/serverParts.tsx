@@ -95,12 +95,12 @@ export function ServerKeyDialog({ data, apiUrl, onClose }: { data: { name: strin
       {data && (
         <div className="space-y-4">
           <SecretBox label="Khóa máy chủ (MEXO_SERVER_KEY)" value={data.key} />
-          <div className="space-y-2 rounded-lg border border-line p-4">
-            <p className="flex items-center gap-2 text-[13px] font-semibold">
+          <div className="space-y-2 rounded-lg border border-line p-3">
+            <p className="flex items-center gap-2 text-sm font-semibold">
               <Terminal className="size-4" />
               Cài đặt MexoStreamer trên máy phát
             </p>
-            <ol className="list-decimal space-y-2 pl-5 text-[13px] leading-relaxed text-muted">
+            <ol className="list-decimal space-y-2 pl-5 text-sm text-muted">
               <li>
                 Cài <b className="text-fg">Node.js 20+</b> và <b className="text-fg">FFmpeg</b> (bắt buộc ở chế độ <code className="font-mono text-xs">ffmpeg</code>; kiểm tra bằng <code className="font-mono text-xs">ffmpeg -version</code>).
               </li>
@@ -222,8 +222,8 @@ export function JobsDrawer({ server, onClose }: { server: ServerRow | null; onCl
   const running = (q.data?.items ?? []).filter((j) => j.desired === 'run').length;
   return (
     <Sheet open={Boolean(server)} onClose={onClose} title={server ? `Luồng phát — ${server.name}` : ''} description={server ? `${SERVER_STATE_LABELS[server.state] ?? server.state} · ${server.runningStreams}/${server.maxStreams} luồng` : ''} width="max-w-2xl">
-      <div className="-mx-5 -my-4">
-        <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3">
+      <div className="-mx-4 -my-4">
+        <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
           <Segmented<'run' | 'all'>
             size="sm"
             value={filter}
@@ -240,9 +240,9 @@ export function JobsDrawer({ server, onClose }: { server: ServerRow | null; onCl
         ) : items.length ? (
           <ul className="divide-y divide-line">
             {items.map((j) => (
-              <li key={j.id} className="space-y-1.5 px-5 py-3">
+              <li key={j.id} className="space-y-1 px-4 py-2.5">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Link to={`/sessions/${j.sessionId}`} className="min-w-0 truncate text-[13px] font-medium hover:text-brand-600" onClick={onClose}>
+                  <Link to={`/sessions/${j.sessionId}`} className="min-w-0 truncate text-sm font-medium hover:text-brand-600" onClick={onClose}>
                     {j.sessionTitle || `Phiên #${j.sessionId}`}
                   </Link>
                   <span className="text-xs text-subtle">#{j.id}</span>

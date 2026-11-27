@@ -101,7 +101,7 @@ export function ImportRulesDialog({ open, onClose, shopId }: { open: boolean; on
     >
       <div className="space-y-4">
         <div className="overflow-hidden rounded-lg border border-line">
-          <div className="grid grid-cols-4 bg-surface-2/70 text-[11px] font-semibold uppercase tracking-wide text-muted">
+          <div className="grid grid-cols-4 bg-surface-2/70 text-2xs font-semibold uppercase tracking-wide text-muted">
             {['A · Chủ đề', 'B · Từ khóa', 'C · Câu hỏi mẫu', 'D · Câu trả lời'].map((h) => (
               <div key={h} className="border-r border-line px-2.5 py-1.5 last:border-r-0">
                 {h}
@@ -116,7 +116,7 @@ export function ImportRulesDialog({ open, onClose, shopId }: { open: boolean; on
             ))}
           </div>
         </div>
-        <ul className="list-disc space-y-1 pl-5 text-[13px] text-muted">
+        <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
           <li>Từ khóa ngăn cách bằng dấu phẩy, tối đa 20 từ khóa mỗi dòng.</li>
           <li>
             <b className="text-fg">Trùng chủ đề</b> với kịch bản đã có thì cập nhật kịch bản đó; chủ đề mới thì thêm mới.

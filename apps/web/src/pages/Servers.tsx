@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, CheckCircle2, Cpu, Gauge, HardDrive, HelpCircle, KeyRound, ListVideo, MemoryStick, MoreHorizontal, Network, PauseCircle, PencilLine, PlayCircle, Plus, RotateCcw, Server, ShieldOff, Trash2, Wifi, WifiOff } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Cpu, HardDrive, HelpCircle, KeyRound, ListVideo, MemoryStick, MoreHorizontal, Network, PauseCircle, PencilLine, PlayCircle, Plus, RotateCcw, Server, ShieldOff, Trash2, Wifi, WifiOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { api, errorMessage } from '@/lib/api';
 import { cn } from '@/lib/cn';
@@ -37,13 +37,13 @@ function ServerCard({ s, data, onAction }: { s: ServerRow; data: ServersResponse
   const stale = s.state !== 'online';
   return (
     <Card className={cn('flex flex-col', ['lost', 'rejected', 'key_expired'].includes(s.state) && 'border-rose-200 dark:border-rose-900/60')}>
-      <div className="flex items-start gap-3 border-b border-line px-4 py-3">
-        <div className={cn('grid size-9 shrink-0 place-items-center rounded-lg', s.state === 'online' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400' : 'bg-surface-2 text-muted')}>
+      <div className="flex items-center gap-2.5 border-b border-line px-4 py-2.5">
+        <div className={cn('grid size-8 shrink-0 place-items-center rounded-lg', s.state === 'online' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400' : 'bg-surface-2 text-muted')}>
           <Server className="size-4" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[14px] font-semibold">{s.name}</p>
-          <p className="truncate font-mono text-[11px] text-muted">
+          <p className="truncate text-base font-semibold">{s.name}</p>
+          <p className="truncate font-mono text-2xs text-muted">
             {s.host || '—'}
             {s.ip ? ` · ${s.ip}` : ''}
           </p>
@@ -67,7 +67,7 @@ function ServerCard({ s, data, onAction }: { s: ServerRow; data: ServersResponse
         )}
       </div>
 
-      <div className="flex-1 space-y-3.5 px-4 py-3.5">
+      <div className="flex-1 space-y-3 p-4">
         <div>
           <div className="mb-1 flex items-center justify-between text-xs">
             <span className="text-muted">Luồng đang phát</span>
@@ -79,27 +79,12 @@ function ServerCard({ s, data, onAction }: { s: ServerRow; data: ServersResponse
           <Progress value={s.runningStreams} max={Math.max(1, s.maxStreams)} tone={loadTone} />
         </div>
         <div className={cn('grid grid-cols-2 gap-x-4 gap-y-3', stale && 'opacity-60')}>
-          <MetricBar label="CPU" icon={<Cpu className="size-3" />} pct={m.cpu} text={m.cpu !== undefined ? `${Math.round(m.cpu)}%` : '—'} />
+          <MetricBar label="CPU" icon={<Cpu className="size-3" />} pct={m.cpu} text={m.cpu !== undefined ? `${Math.round(m.cpu)}%${m.load !== undefined ? ` · tải ${fmtNumber(m.load, 2)}` : ''}` : '—'} />
           <MetricBar label="RAM" icon={<MemoryStick className="size-3" />} pct={ramPct} text={m.ram !== undefined && m.ramTotal ? `${fmtBytes(m.ram)} / ${fmtBytes(m.ramTotal)}` : '—'} />
           <MetricBar label="Ổ đĩa" icon={<HardDrive className="size-3" />} pct={diskPct} text={m.diskUsed !== undefined && m.diskTotal ? `${fmtBytes(m.diskUsed)} / ${fmtBytes(m.diskTotal)}` : '—'} />
-          <div className="min-w-0 text-xs">
-            <div className="mb-1 flex items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-1.5 text-muted">
-                <Network className="size-3" />
-                Mạng ra
-              </span>
-              <span className="tabular">{m.netOutMbps !== undefined ? `${fmtNumber(m.netOutMbps, 1)} Mbps` : '—'}</span>
-            </div>
-            <div className="flex items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-1.5 text-muted">
-                <Gauge className="size-3" />
-                Tải (1 phút)
-              </span>
-              <span className="tabular">{m.load !== undefined ? fmtNumber(m.load, 2) : '—'}</span>
-            </div>
-          </div>
+          <MetricBar label="Mạng ra" icon={<Network className="size-3" />} pct={null} text={m.netOutMbps !== undefined ? `${fmtNumber(m.netOutMbps, 1)} Mbps` : '—'} />
         </div>
-        {stale && s.metrics && <p className="text-[11px] text-muted">Số liệu từ lần tín hiệu cuối, có thể đã cũ.</p>}
+        {stale && s.metrics && <p className="text-2xs text-muted">Số liệu từ lần tín hiệu cuối, có thể đã cũ.</p>}
       </div>
 
       <div className="space-y-1.5 border-t border-line bg-surface-2/40 px-4 py-2.5 text-xs">
@@ -224,10 +209,10 @@ export default function Servers() {
   const capPct = d && d.capacity.total ? (d.capacity.used / d.capacity.total) * 100 : 0;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <PageHeader
         title="Máy chủ phát"
-        description="Các máy chạy MexoStreamer đẩy video lên Shopee Live. Tự cập nhật mỗi 5 giây."
+        description="Các máy chạy MexoStreamer đẩy video lên Shopee Live · tự cập nhật mỗi 5 giây"
         className="mb-0"
         actions={
           <>
@@ -253,23 +238,23 @@ export default function Servers() {
       {!d ? (
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-[86px] rounded-xl" />
+            <Skeleton key={i} className="h-[72px] rounded-xl" />
           ))}
         </div>
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <StatCard label="Đang kết nối" value={`${d.counts.online}/${d.counts.all}`} hint="máy đang nhận việc" icon={<Wifi className="size-4" />} tone={d.counts.online ? 'success' : 'warning'} />
-            <StatCard label="Cần chú ý" value={d.counts.attention} hint="mất kết nối, bị từ chối, khóa hết hạn" icon={<AlertTriangle className="size-4" />} tone={d.counts.attention ? 'danger' : 'neutral'} />
-            <StatCard label="Không hoạt động" value={d.counts.inactive} hint="chưa chạy, tạm ngưng, đã thu hồi" icon={<PauseCircle className="size-4" />} tone="muted" />
-            <div className="rounded-xl border border-line bg-surface p-4 shadow-card">
+            <StatCard label="Đang kết nối" value={`${d.counts.online}/${d.counts.all}`} hint="đang nhận việc" icon={<Wifi className="size-4" />} tone={d.counts.online ? 'success' : 'warning'} />
+            <StatCard label="Cần chú ý" value={d.counts.attention} hint="mất kết nối · từ chối · hết khóa" icon={<AlertTriangle className="size-4" />} tone={d.counts.attention ? 'danger' : 'neutral'} />
+            <StatCard label="Không hoạt động" value={d.counts.inactive} hint="chưa chạy · tạm ngưng · thu hồi" icon={<PauseCircle className="size-4" />} tone="muted" />
+            <div className="min-w-0 rounded-xl border border-line bg-surface px-3.5 py-3 shadow-card">
               <p className="text-xs font-medium text-muted">Công suất đang dùng</p>
-              <p className="mt-0.5 text-[22px] font-semibold leading-tight tracking-tight tabular">
+              <p className="mt-0.5 text-xl font-semibold leading-tight tracking-tight tabular">
                 {d.capacity.used}
-                <span className="text-base font-normal text-muted"> / {d.capacity.total} luồng</span>
+                <span className="text-sm font-normal text-muted"> / {d.capacity.total} luồng</span>
               </p>
-              <Progress className="mt-2" value={d.capacity.used} max={Math.max(1, d.capacity.total)} tone={capPct >= 90 ? 'danger' : capPct >= 75 ? 'warning' : 'brand'} />
-              <p className="mt-1.5 text-xs text-muted">{capPct >= 90 ? 'Sắp hết chỗ — cân nhắc thêm máy' : `Trên ${d.capacity.online} máy đang kết nối`}</p>
+              <Progress className="mt-1.5" size="sm" value={d.capacity.used} max={Math.max(1, d.capacity.total)} tone={capPct >= 90 ? 'danger' : capPct >= 75 ? 'warning' : 'brand'} />
+              <p className="mt-1 truncate text-xs text-muted">{capPct >= 90 ? 'Sắp hết chỗ — cân nhắc thêm máy' : `trên ${d.capacity.online} máy đang kết nối`}</p>
             </div>
           </div>
 
@@ -278,13 +263,13 @@ export default function Servers() {
           {showHelp && (
             <Card>
               <CardHeader title="Trạng thái máy chủ" description={`Phiên bản tối thiểu: ${d.minVersion} · coi là mất kết nối sau ${d.lostAfterSeconds} giây không có tín hiệu`} />
-              <div className="grid gap-x-6 gap-y-3 p-5 md:grid-cols-2">
+              <div className="grid gap-x-6 gap-y-3 p-4 md:grid-cols-2">
                 {serverStateHelp(d.lostAfterSeconds, d.minVersion).map((h) => (
                   <div key={h.state} className="flex items-start gap-3">
-                    <span className="w-36 shrink-0">
+                    <span className="w-32 shrink-0 pt-px">
                       <ServerStateBadge state={h.state} size="sm" />
                     </span>
-                    <p className="text-[13px] leading-relaxed text-muted">{h.text}</p>
+                    <p className="text-sm text-muted">{h.text}</p>
                   </div>
                 ))}
               </div>
@@ -292,7 +277,7 @@ export default function Servers() {
           )}
 
           {d.items.length ? (
-            <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               {[...d.items]
                 .sort((a, b) => {
                   const rank = (s: ServerRow) => (['lost', 'rejected', 'key_expired'].includes(s.state) ? 0 : s.state === 'online' ? 1 : 2);

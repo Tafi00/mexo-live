@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { fmtClock, fmtDuration } from '@/lib/format';
 import type { LiveSession, Signal, TemplateSummary } from '@/lib/types';
 import { Badge, type Tone } from '@/components/ui/misc';
 
@@ -65,6 +66,12 @@ export function liveSeconds(startedAt: string | null | undefined, endedAt: strin
   if (!startedAt) return null;
   const end = endedAt ? Date.parse(endedAt) : now;
   return Math.max(0, Math.round((end - Date.parse(startedAt)) / 1000));
+}
+
+/** Thời lượng live gọn: "1:02:05", hoặc "2 ngày 3 giờ" khi quá 24 giờ */
+export function fmtLive(sec: number | null | undefined): string {
+  if (sec === null || sec === undefined) return '—';
+  return sec >= 86400 ? fmtDuration(sec) : fmtClock(sec);
 }
 
 /** Danh sách mẫu phát của shop (dùng chung queryKey với các trang shop) */

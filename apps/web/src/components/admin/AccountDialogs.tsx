@@ -60,7 +60,8 @@ export function CreateAccountDialog({ open, onClose, canCreate, onCreated }: { o
   const [quotaGb, setQuotaGb] = useState('');
   const [perms, setPerms] = useState<Set<Permission>>(new Set(['shop.view', 'session.create', 'session.control', 'product.pin', 'comment.reply', 'report.view']));
   const [shopIds, setShopIds] = useState<Set<number>>(new Set());
-  const ownerCreatesMember = role === 'member' && myRole === 'owner';
+  // Nhân viên luôn do chủ shop tạo (máy chủ không cho quản trị tạo nhân viên)
+  const ownerCreatesMember = role === 'member';
   const shops = useAllShops(open && ownerCreatesMember);
 
   useEffect(() => {
@@ -134,10 +135,10 @@ export function CreateAccountDialog({ open, onClose, canCreate, onCreated }: { o
         </>
       }
     >
-      <div className="space-y-5">
+      <div className="space-y-3">
         {canCreate.length > 1 ? (
           <Field label="Vai trò" required>
-            <RadioCards<Role> className="sm:grid-cols-2" value={role} onChange={setRole} options={canCreate.map((r) => ({ value: r, label: ROLE_LABELS[r], description: ROLE_DESCRIPTIONS[r] }))} />
+            <RadioCards<Role> className={canCreate.length >= 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} value={role} onChange={setRole} options={canCreate.map((r) => ({ value: r, label: ROLE_LABELS[r], description: ROLE_DESCRIPTIONS[r] }))} />
           </Field>
         ) : (
           <div className="flex items-start gap-3 rounded-lg border border-line bg-surface-2/60 p-3">
@@ -146,7 +147,7 @@ export function CreateAccountDialog({ open, onClose, canCreate, onCreated }: { o
           </div>
         )}
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label="Tên đăng nhập" required className="sm:col-span-2" error={touchedUser ? userErr : null} hint="3–64 ký tự: chữ không dấu, số và . _ @ -. Không phân biệt hoa thường và không đổi được sau khi tạo.">
             <Input value={username} onChange={(e) => setUsername(e.target.value)} onBlur={() => setTouchedUser(true)} maxLength={64} autoComplete="off" spellCheck={false} placeholder="vd: nhanvien.lan" className="font-mono" invalid={touchedUser && Boolean(userErr)} />
           </Field>
@@ -154,9 +155,9 @@ export function CreateAccountDialog({ open, onClose, canCreate, onCreated }: { o
         </div>
 
         {role === 'owner' && (
-          <div className="space-y-4 rounded-lg border border-line p-4">
-            <p className="text-[13px] font-semibold">Gói dịch vụ chủ shop</p>
-            <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-3 rounded-lg border border-line p-3">
+            <p className="text-sm font-semibold">Gói dịch vụ chủ shop</p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field label="Hạn dùng dịch vụ" required error={expiryErr} hint="Áp dụng cho mọi shop gắn vào tài khoản này">
                 <Input type="date" value={unlimited ? '' : expiry} min={today} disabled={unlimited} onChange={(e) => setExpiry(e.target.value)} />
               </Field>
@@ -184,12 +185,7 @@ export function CreateAccountDialog({ open, onClose, canCreate, onCreated }: { o
         )}
 
         {role === 'member' && (
-          <div className="space-y-4">
-            {!ownerCreatesMember && (
-              <Callout tone="warning" title="Nhân viên do quản trị tạo không thuộc chủ shop nào">
-                Tài khoản sẽ không được giao shop. Nên để chủ shop tự tạo nhân viên trong trang “Nhân viên & phân quyền” của họ.
-              </Callout>
-            )}
+          <div className="space-y-3">
             <Field label="Quyền chi tiết">
               <PermissionChecklist value={perms} onChange={setPerms} />
             </Field>
@@ -268,14 +264,14 @@ export function EditAccountDialog({ account, onClose }: { account: Account | nul
       }
     >
       {a && (
-        <div className="space-y-5">
-          <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <ContactFields name={name} setName={setName} email={email} setEmail={setEmail} phone={phone} setPhone={setPhone} note={note} setNote={setNote} />
           </div>
           {editLimits && (
-            <div className="space-y-3 rounded-lg border border-line p-4">
-              <p className="text-[13px] font-semibold">Giới hạn gói dịch vụ</p>
-              <div className="grid gap-4 sm:grid-cols-3">
+            <div className="space-y-3 rounded-lg border border-line p-3">
+              <p className="text-sm font-semibold">Giới hạn gói dịch vụ</p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <Field label="Số shop tối đa" hint={`Đang gắn ${a.shopCount} shop · trống = không giới hạn`}>
                   <Input type="number" min={0} max={10000} value={shopLimit} onChange={(e) => setShopLimit(e.target.value)} trailing={<span className="text-xs">shop</span>} />
                 </Field>
@@ -335,8 +331,8 @@ export function RoleDialog({ account, onClose }: { account: Account | null; onCl
       }
     >
       {a && (
-        <div className="space-y-4">
-          <p className="flex items-center gap-2 text-[13px]">
+        <div className="space-y-3">
+          <p className="flex items-center gap-2 text-sm">
             Vai trò hiện tại: <RoleBadge role={a.role} />
           </p>
           <RadioCards<Role> value={role} onChange={setRole} options={options.map((r) => ({ value: r, label: ROLE_LABELS[r], description: ROLE_DESCRIPTIONS[r] }))} />
@@ -397,7 +393,7 @@ export function ExpiryDialog({ account, onClose }: { account: Account | null; on
       }
     >
       {a && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           <Callout tone="warning" title={`Áp dụng cho TẤT CẢ ${a.shopCount} shop đang gắn`}>
             Hạn dùng của từng shop thuộc tài khoản này sẽ bị ghi đè bằng hạn mới. Shop gắn thêm sau này cũng nhận hạn này.
           </Callout>
@@ -460,7 +456,6 @@ export function AssignShopsDialog({ account, onClose }: { account: Account | nul
     onSuccess: onClose,
   });
 
-  const noMemberParent = a && !isOwnerTarget && !a.parentId;
 
   return (
     <Dialog
@@ -489,19 +484,15 @@ export function AssignShopsDialog({ account, onClose }: { account: Account | nul
           <Button variant="ghost" onClick={onClose}>
             Hủy
           </Button>
-          <Button variant="primary" disabled={!initial || Boolean(noMemberParent) || overLimit || (needVerify && verification.trim().length < 5) || (!added.length && !removed.length)} loading={save.isPending} onClick={() => save.mutate()}>
+          <Button variant="primary" disabled={!initial || overLimit || (needVerify && verification.trim().length < 5) || (!added.length && !removed.length)} loading={save.isPending} onClick={() => save.mutate()}>
             Lưu
           </Button>
         </>
       }
     >
       {a && (
-        <div className="space-y-4">
-          {noMemberParent ? (
-            <Callout tone="warning">Nhân viên này không thuộc chủ shop nào nên không giao được shop.</Callout>
-          ) : (
-            <ShopChecklist shops={candidates} loading={shops.isLoading} selected={sel} onChange={setSel} disabledReason={disabledReason} />
-          )}
+        <div className="space-y-3">
+          <ShopChecklist shops={candidates} loading={shops.isLoading} selected={sel} onChange={setSel} disabledReason={disabledReason} />
           {overLimit && <Callout tone="danger">Vượt số shop tối đa của tài khoản ({a.shopLimit}). Tăng giới hạn trong “Sửa thông tin” trước.</Callout>}
           {needVerify && (
             <Field label="Cách xác minh chủ shop" required hint="Bắt buộc khi gắn shop thủ công. Ghi lại để đối chiếu khi có tranh chấp." error={verification.trim() && verification.trim().length < 5 ? 'Ghi rõ hơn cách xác minh' : null}>

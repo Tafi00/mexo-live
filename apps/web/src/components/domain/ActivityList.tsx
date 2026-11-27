@@ -61,9 +61,9 @@ export function ActivityList({ items, showShop }: { items: ActivityRow[]; showSh
         const detail = describeActivity(a);
         return (
           <li key={a.id} className="flex items-start gap-3 px-5 py-3">
-            <Avatar name={a.actorName} className="mt-0.5 size-7 text-[10px]" />
+            <Avatar name={a.actorName} className="mt-0.5 size-7 text-2xs" />
             <div className="min-w-0 flex-1">
-              <p className="text-[13px]">
+              <p className="text-sm">
                 <b className="font-semibold">{a.actorName}</b> <span className="text-muted">·</span> {ACTIVITY_LABELS[a.code] ?? a.label ?? a.code}
                 {detail && <span className="text-muted"> — {detail}</span>}
               </p>
@@ -76,7 +76,7 @@ export function ActivityList({ items, showShop }: { items: ActivityRow[]; showSh
                     Hệ thống cũ
                   </Badge>
                 )}
-                {a.ip && <span className="font-mono text-[11px] text-subtle">{a.ip}</span>}
+                {a.ip && <span className="font-mono text-2xs text-subtle">{a.ip}</span>}
               </p>
             </div>
           </li>

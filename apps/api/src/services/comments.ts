@@ -128,6 +128,9 @@ async function drainQueue(shopId: number, sessionId: number): Promise<void> {
 
 async function autoReplyEnabled(shop: ShopRow, s: SessionRow): Promise<boolean> {
   if (await isFrozen()) return false;
+  // Ưu tiên: cài đặt riêng của phiên → của mẫu phát → của shop
+  if (s.replyMode === 'off') return false;
+  if (s.replyMode === 'on') return !shop.replyDisabledReason;
   if (s.templateId) {
     const [t] = await db.select({ mode: templates.replyMode }).from(templates).where(eq(templates.id, s.templateId));
     if (t?.mode === 'off') return false;

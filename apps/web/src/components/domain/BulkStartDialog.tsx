@@ -110,7 +110,7 @@ export function BulkStartDialog({ open, onClose, shops }: { open: boolean; onClo
       {results ? (
         <div className="divide-y divide-line rounded-lg border border-line">
           {results.map((r) => (
-            <div key={r.shopId} className="flex items-start gap-3 px-3 py-2.5 text-[13px]">
+            <div key={r.shopId} className="flex items-start gap-3 px-3 py-2.5 text-sm">
               {r.ok ? <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-500" /> : <XCircle className="mt-0.5 size-4 shrink-0 text-rose-500" />}
               <div className="min-w-0 flex-1">
                 <p className="font-medium">{nameOf(r.shopId)}</p>
@@ -132,7 +132,7 @@ export function BulkStartDialog({ open, onClose, shops }: { open: boolean; onClo
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto]">
             <Field label="Tiêu đề phiên (tùy chọn)" hint="Để trống: dùng tiêu đề live của từng mẫu phát">
               <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} placeholder="VD: LIVE SĂN DEAL CUỐI TUẦN" />
             </Field>

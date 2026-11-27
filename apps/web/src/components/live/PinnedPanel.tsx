@@ -46,7 +46,7 @@ function ManualPinDialog({ open, onClose, cart, loading, pinnedItemId, onPick, b
                   <span className="w-6 text-right text-xs tabular text-subtle">{it.position}</span>
                   <ProductThumb url={p?.imageUrl} />
                   <div className="min-w-0 flex-1">
-                    <p className="line-clamp-1 text-[13px] font-medium">{p?.name ?? `Sản phẩm ${it.itemId}`}</p>
+                    <p className="line-clamp-2 text-sm font-medium leading-snug" title={p?.name}>{p?.name ?? `Sản phẩm ${it.itemId}`}</p>
                     <p className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs text-muted">
                       <span className="font-mono">{p?.sku || it.itemId}</span>
                       {p && <span>{fmtMoney(p.price)}</span>}
@@ -98,12 +98,12 @@ export function PinnedPanel({ session, pinned, cart, cartLoading, canPin }: { se
           </Badge>
         }
       />
-      <div className="space-y-3 p-5">
+      <div className="space-y-3 p-4">
         {pinned ? (
           <div className="flex items-center gap-3">
             <ProductThumb url={pinned.imageUrl} className="size-14" />
             <div className="min-w-0 flex-1">
-              <p className="line-clamp-2 text-[13px] font-medium">{pinned.name}</p>
+              <p className="line-clamp-2 text-sm font-medium">{pinned.name}</p>
               <p className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs text-muted">
                 <span className="font-mono">{pinned.sku || pinned.itemId}</span>
                 {pinned.price !== undefined && pinned.price !== null && <span>{fmtMoney(pinned.price)}</span>}
@@ -112,7 +112,7 @@ export function PinnedPanel({ session, pinned, cart, cartLoading, canPin }: { se
             </div>
           </div>
         ) : (
-          <p className="rounded-lg bg-surface-2 px-3 py-3 text-center text-xs text-muted">Chưa ghim sản phẩm nào.</p>
+          <p className="rounded-lg bg-surface-2 px-3 py-2.5 text-center text-xs text-muted">Chưa ghim sản phẩm nào.</p>
         )}
         {session.pinError && (
           <Callout tone="danger" title="Ghim lỗi">

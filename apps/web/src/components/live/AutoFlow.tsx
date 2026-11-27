@@ -32,7 +32,7 @@ const statusText: Record<StepStatus, string> = { done: 'Xong', active: 'Đang th
 
 function StepIcon({ st, n }: { st: StepStatus | null; n: number }) {
   if (st === null)
-    return <span className="grid size-5 shrink-0 place-items-center rounded-full bg-surface-2 text-[11px] font-semibold text-muted ring-1 ring-line">{n}</span>;
+    return <span className="grid size-5 shrink-0 place-items-center rounded-full bg-surface-2 text-2xs font-semibold text-muted ring-1 ring-line">{n}</span>;
   if (st === 'done') return <CheckCircle2 className="size-5 shrink-0 text-emerald-500" />;
   if (st === 'active') return <Loader2 className="size-5 shrink-0 animate-spin text-brand-500" />;
   if (st === 'run')
@@ -46,34 +46,50 @@ function StepIcon({ st, n }: { st: StepStatus | null; n: number }) {
   return <Circle className="size-5 shrink-0 text-subtle" />;
 }
 
+const statusTone: Record<StepStatus, string> = {
+  error: 'text-rose-600 dark:text-rose-400',
+  active: 'text-brand-600 dark:text-brand-400',
+  off: 'text-subtle',
+  done: 'text-emerald-700 dark:text-emerald-400',
+  run: 'text-emerald-700 dark:text-emerald-400',
+  todo: 'text-subtle',
+};
+
 /**
  * Các bước phát tự động. Không truyền `status` → hiển thị như hướng dẫn (đánh số).
+ * `compact` → lưới 2 cột gọn (dùng trong thẻ trạng thái máy chủ).
  */
 export function AutoFlowSteps({ status, compact, className }: { status?: StepStatus[] | null; compact?: boolean; className?: string }) {
+  if (compact)
+    return (
+      <ol className={cn('grid gap-x-4 gap-y-1.5 sm:grid-cols-2', className)}>
+        {AUTO_FLOW_STEPS.map((step, i) => {
+          const st = status ? status[i] : null;
+          return (
+            <li key={step.key} className="flex min-w-0 items-center gap-2" title={step.desc}>
+              <StepIcon st={st} n={i + 1} />
+              <span className={cn('min-w-0 flex-1 text-xs', st === 'todo' ? 'text-muted' : st === 'error' ? 'font-medium text-rose-700 dark:text-rose-400' : 'text-fg')}>{step.label}</span>
+              {st && st !== 'todo' && <span className={cn('shrink-0 text-2xs', statusTone[st])}>{statusText[st]}</span>}
+            </li>
+          );
+        })}
+      </ol>
+    );
   return (
     <ol className={cn('space-y-0', className)}>
       {AUTO_FLOW_STEPS.map((step, i) => {
         const st = status ? status[i] : null;
         const last = i === AUTO_FLOW_STEPS.length - 1;
         return (
-          <li key={step.key} className="relative flex gap-3 pb-3 last:pb-0">
-            {!last && <span className={cn('absolute left-[9.5px] top-6 bottom-1 w-px', st === 'done' ? 'bg-emerald-300 dark:bg-emerald-800' : 'bg-line')} />}
+          <li key={step.key} className="relative flex gap-2.5 pb-2.5 last:pb-0">
+            {!last && <span className={cn('absolute bottom-0.5 left-[9.5px] top-[22px] w-px', st === 'done' ? 'bg-emerald-300 dark:bg-emerald-800' : 'bg-line')} />}
             <StepIcon st={st} n={i + 1} />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-x-2">
-                <p className={cn('text-[13px] font-medium', st === 'todo' && 'text-muted', st === 'error' && 'text-rose-700 dark:text-rose-400')}>{step.label}</p>
-                {st && st !== 'todo' && (
-                  <span
-                    className={cn(
-                      'text-[11px]',
-                      st === 'error' ? 'text-rose-600 dark:text-rose-400' : st === 'active' ? 'text-brand-600 dark:text-brand-400' : st === 'off' ? 'text-subtle' : 'text-emerald-700 dark:text-emerald-400',
-                    )}
-                  >
-                    {statusText[st]}
-                  </span>
-                )}
+                <p className={cn('text-sm font-medium', st === 'todo' && 'text-muted', st === 'error' && 'text-rose-700 dark:text-rose-400')}>{step.label}</p>
+                {st && st !== 'todo' && <span className={cn('text-2xs', statusTone[st])}>{statusText[st]}</span>}
               </div>
-              {!compact && <p className="mt-0.5 text-xs leading-relaxed text-muted">{step.desc}</p>}
+              <p className="mt-0.5 text-xs leading-relaxed text-muted">{step.desc}</p>
             </div>
           </li>
         );

@@ -82,7 +82,7 @@ const LIMIT_GROUPS: { title: string; items: LimitField[] }[] = [
   {
     title: 'Lịch phát',
     items: [
-      { key: 'maxActiveSchedulesPerShop', label: 'Số lịch đang hoạt động tối đa mỗi shop', unit: 'lịch', min: 1, max: 100, int: true, help: 'Không cho tạo thêm lịch khi shop đã có đủ số lịch đang bật.' },
+      { key: 'maxActiveSchedulesPerShop', label: 'Số lịch đang bật tối đa mỗi shop', unit: 'lịch', min: 1, max: 100, int: true, help: 'Không cho tạo thêm lịch khi shop đã có đủ số lịch đang bật.' },
       { key: 'scheduleDaysAhead', label: 'Hẹn lịch trước tối đa', unit: 'ngày', min: 1, max: 60, int: true, help: 'Ngày bắt đầu của lịch không được xa hơn; các lượt phát được tạo sẵn trong khoảng này.' },
       { key: 'scheduleStartGraceMin', label: 'Cho phép bật lịch muộn tối đa', unit: 'phút', min: 1, max: 120, int: true, help: 'Tới giờ mà hệ thống chưa bật được (vd vừa khởi động lại) thì vẫn bật nếu chưa trễ quá mức này; trễ hơn ghi “Bỏ lỡ”.' },
     ],
@@ -98,9 +98,9 @@ const LIMIT_GROUPS: { title: string; items: LimitField[] }[] = [
   {
     title: 'Phiên live',
     items: [
-      { key: 'feedStartDelaySec', label: 'Chờ hình ổn định trước khi bắt đầu phiên', unit: 'giây', min: 0, max: 120, int: true, help: 'Sau khi Shopee nhận được hình, chờ thêm rồi mới bắt đầu phiên để người xem không thấy màn hình đen.' },
+      { key: 'feedStartDelaySec', label: 'Chờ hình ổn định trước khi bắt đầu', unit: 'giây', min: 0, max: 120, int: true, help: 'Sau khi Shopee nhận được hình, chờ thêm rồi mới bắt đầu phiên để người xem không thấy màn hình đen.' },
       { key: 'stuckAfterMin', label: 'Cảnh báo “Có vẻ treo” sau', unit: 'phút', min: 2, max: 120, int: true, help: 'Không xác minh được trạng thái phiên với Shopee quá thời gian này thì cảnh báo.' },
-      { key: 'liveCutGraceMin', label: 'Ân hạn trước khi tự ngắt phiên của shop hết hạn', unit: 'phút', min: 0, max: 1440, int: true, help: 'Shop hết hạn dùng hoặc bị ngưng khi đang live: báo trước rồi tự kết thúc phiên sau thời gian này.' },
+      { key: 'liveCutGraceMin', label: 'Ân hạn trước khi tự ngắt phiên hết hạn', unit: 'phút', min: 0, max: 1440, int: true, help: 'Shop hết hạn dùng hoặc bị ngưng khi đang live: báo trước rồi tự kết thúc phiên sau thời gian này.' },
     ],
   },
   {
@@ -151,15 +151,15 @@ export function SystemLimitsTab() {
     <Card>
       <CardHeader title="Giới hạn & thông số vận hành" icon={<SlidersHorizontal className="size-4" />} description={`Phiên bản hệ thống ${d.version}. Thay đổi có hiệu lực ngay, không cần khởi động lại.`} />
       {!d.canEdit && (
-        <div className="px-5 pt-4">
+        <div className="px-4 pt-3">
           <Callout tone="neutral">Bạn đang xem ở chế độ chỉ đọc — chỉ Quản trị hệ thống được thay đổi các thông số này.</Callout>
         </div>
       )}
       <div className="divide-y divide-line">
         {LIMIT_GROUPS.map((g) => (
-          <div key={g.title} className="grid gap-4 px-5 py-5 lg:grid-cols-4">
-            <p className="text-[13px] font-semibold lg:pt-1.5">{g.title}</p>
-            <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2 lg:col-span-3">
+          <div key={g.title} className="grid gap-3 px-4 py-4 lg:grid-cols-[200px_minmax(0,1fr)]">
+            <p className="text-sm font-semibold lg:pt-1.5">{g.title}</p>
+            <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2 xl:grid-cols-3">
               {g.items.map((f) => {
                 const isChanged = changed.includes(f);
                 return (
@@ -197,7 +197,7 @@ export function SystemLimitsTab() {
         ))}
       </div>
       {d.canEdit && (
-        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line bg-surface-2/50 px-5 py-3">
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line bg-surface-2/50 px-4 py-2.5">
           {changed.length > 0 && <span className="mr-auto text-xs text-amber-700 dark:text-amber-400">{changed.length} thông số đã thay đổi</span>}
           {changed.length > 0 && (
             <Button variant="ghost" icon={<RotateCcw className="size-4" />} onClick={() => setForm(Object.fromEntries(Object.entries(d.limits).map(([k, v]) => [k, String(v)])))}>
@@ -262,15 +262,15 @@ export function FreezeTab() {
   const f = d.freeze;
 
   return (
-    <div className="space-y-5">
-      <div className={cn('flex flex-col gap-4 rounded-xl border p-5 sm:flex-row sm:items-center', f.frozen ? 'border-sky-300 bg-sky-50 dark:border-sky-800 dark:bg-sky-950/30' : 'border-emerald-200 bg-emerald-50/60 dark:border-emerald-900/60 dark:bg-emerald-950/20')}>
-        <span className={cn('grid size-14 shrink-0 place-items-center rounded-2xl', f.frozen ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300')}>
-          {f.frozen ? <Snowflake className="size-7" /> : <PlayCircle className="size-7" />}
+    <div className="space-y-4">
+      <div className={cn('flex flex-col gap-4 rounded-xl border p-4 sm:flex-row sm:items-center', f.frozen ? 'border-sky-300 bg-sky-50 dark:border-sky-800 dark:bg-sky-950/30' : 'border-emerald-200 bg-emerald-50/60 dark:border-emerald-900/60 dark:bg-emerald-950/20')}>
+        <span className={cn('grid size-11 shrink-0 place-items-center rounded-xl', f.frozen ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300')}>
+          {f.frozen ? <Snowflake className="size-5" /> : <PlayCircle className="size-5" />}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-lg font-semibold">{f.frozen ? 'Hệ thống đang đóng băng' : 'Hệ thống đang hoạt động bình thường'}</p>
+          <p className="text-base font-semibold">{f.frozen ? 'Hệ thống đang đóng băng' : 'Hệ thống đang hoạt động bình thường'}</p>
           {f.frozen ? (
-            <div className="mt-1 space-y-0.5 text-[13px]">
+            <div className="mt-0.5 space-y-0.5 text-sm">
               <p>
                 Lý do: <b>{f.reason || '—'}</b>
               </p>
@@ -279,16 +279,16 @@ export function FreezeTab() {
               </p>
             </div>
           ) : (
-            <p className="mt-1 text-[13px] text-muted">Mọi tự động hóa đang chạy. Đóng băng là “phanh khẩn cấp” cho toàn hệ thống.</p>
+            <p className="mt-0.5 text-sm text-muted">Mọi tự động hóa đang chạy. Đóng băng là “phanh khẩn cấp” cho toàn hệ thống.</p>
           )}
         </div>
         {isSysadmin ? (
           f.frozen ? (
-            <Button size="lg" variant="success" icon={<PlayCircle className="size-5" />} loading={unfreeze.isPending} onClick={() => void onUnfreeze()}>
+            <Button variant="success" icon={<PlayCircle className="size-4" />} loading={unfreeze.isPending} onClick={() => void onUnfreeze()}>
               Mở băng
             </Button>
           ) : (
-            <Button size="lg" variant="danger" icon={<Snowflake className="size-5" />} loading={freeze.isPending} onClick={() => void onFreeze()}>
+            <Button variant="danger" icon={<Snowflake className="size-4" />} loading={freeze.isPending} onClick={() => void onFreeze()}>
               Đóng băng hệ thống
             </Button>
           )
@@ -297,10 +297,10 @@ export function FreezeTab() {
         )}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card>
           <CardHeader title="Dừng khi đóng băng" icon={<PauseCircle className="size-4 text-rose-500" />} />
-          <ul className="space-y-2 p-5 text-[13px]">
+          <ul className="space-y-2 p-4 text-sm">
             {FREEZE_STOPS.map((t) => (
               <li key={t} className="flex items-start gap-2">
                 <XCircle className="mt-0.5 size-4 shrink-0 text-rose-500" />
@@ -311,7 +311,7 @@ export function FreezeTab() {
         </Card>
         <Card>
           <CardHeader title="Vẫn giữ nguyên" icon={<ShieldCheck className="size-4 text-emerald-500" />} />
-          <ul className="space-y-2 p-5 text-[13px]">
+          <ul className="space-y-2 p-4 text-sm">
             {FREEZE_KEEPS.map((t) => (
               <li key={t} className="flex items-start gap-2">
                 <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-500" />
@@ -322,7 +322,7 @@ export function FreezeTab() {
         </Card>
         <Card>
           <CardHeader title="Khi mở băng" icon={<PlayCircle className="size-4 text-sky-500" />} />
-          <ul className="space-y-2 p-5 text-[13px]">
+          <ul className="space-y-2 p-4 text-sm">
             {UNFREEZE.map((t) => (
               <li key={t} className="flex items-start gap-2">
                 <CircleDot className="mt-0.5 size-4 shrink-0 text-sky-500" />
@@ -422,11 +422,11 @@ export function InfraTab() {
   const freePct = pct !== null ? 100 - pct : null;
 
   return (
-    <div className="space-y-5">
-      <div className="grid gap-5 lg:grid-cols-2">
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader title="Kết nối Shopee Open Platform" icon={<Plug className="size-4" />} actions={<Badge tone={mode.tone} dot>{mode.label}</Badge>} />
-          <div className="space-y-4 p-5">
+          <div className="space-y-4 p-4">
             {mode.hint && <Callout tone={d.shopee.mode === 'mock' ? 'warning' : 'neutral'}>{mode.hint}</Callout>}
             <KV
               items={[
@@ -450,7 +450,7 @@ export function InfraTab() {
             <div className="space-y-1.5">
               <p className="text-xs text-muted">Redirect URL (đăng ký trong Shopee Open Platform Console)</p>
               <div className="flex gap-2">
-                <code className="min-w-0 flex-1 truncate rounded-lg border border-line bg-surface-2 px-3 py-2 font-mono text-xs">{d.shopee.redirectUrl}</code>
+                <code className="block h-8 min-w-0 flex-1 truncate rounded-lg border border-line bg-surface-2 px-2.5 font-mono text-xs leading-[30px]">{d.shopee.redirectUrl}</code>
                 <Button size="md" icon={<Copy className="size-4" />} onClick={() => void copy(d.shopee.redirectUrl, 'Đã sao chép Redirect URL')}>
                   Sao chép
                 </Button>
@@ -461,23 +461,23 @@ export function InfraTab() {
               <p className="text-xs text-muted">IP ra Internet dự kiến</p>
               {d.shopee.expectedEgressIp ? (
                 <div className="flex gap-2">
-                  <code className="flex-1 rounded-lg border border-line bg-surface-2 px-3 py-2 font-mono text-xs">{d.shopee.expectedEgressIp}</code>
+                  <code className="flex h-8 min-w-0 flex-1 items-center rounded-lg border border-line bg-surface-2 px-2.5 font-mono text-xs">{d.shopee.expectedEgressIp}</code>
                   <Button icon={<Copy className="size-4" />} onClick={() => void copy(d.shopee.expectedEgressIp!, 'Đã sao chép IP')}>
                     Sao chép
                   </Button>
                 </div>
               ) : (
-                <p className="text-[13px] text-muted">Chưa khai báo — hệ thống không kiểm tra IP ra.</p>
+                <p className="text-sm text-muted">Chưa khai báo — hệ thống không kiểm tra IP ra.</p>
               )}
               <p className="text-xs text-muted">Khai báo IP này trong danh sách IP được phép của App trên Console (nếu bật). Hệ thống kiểm tra mỗi 10 phút và cảnh báo nếu IP ra thực tế khác.</p>
             </div>
           </div>
         </Card>
 
-        <div className="space-y-5">
+        <div className="space-y-4">
           <Card>
             <CardHeader title="Máy chủ phát (MexoStreamer)" icon={<Server className="size-4" />} actions={<Link to="/servers" className="text-xs font-medium text-brand-600 hover:underline dark:text-brand-400">Quản lý máy chủ</Link>} />
-            <div className="space-y-3 p-5">
+            <div className="space-y-3 p-4">
               <KV
                 cols={2}
                 items={[
@@ -488,7 +488,7 @@ export function InfraTab() {
               <div className="space-y-1.5">
                 <p className="text-xs text-muted">MEXO_API_URL (địa chỉ máy phát kết nối tới)</p>
                 <div className="flex gap-2">
-                  <code className="min-w-0 flex-1 truncate rounded-lg border border-line bg-surface-2 px-3 py-2 font-mono text-xs">{d.streamer.apiUrl}</code>
+                  <code className="block h-8 min-w-0 flex-1 truncate rounded-lg border border-line bg-surface-2 px-2.5 font-mono text-xs leading-[30px]">{d.streamer.apiUrl}</code>
                   <Button icon={<Copy className="size-4" />} onClick={() => void copy(d.streamer.apiUrl, 'Đã sao chép địa chỉ')}>
                     Sao chép
                   </Button>
@@ -498,15 +498,15 @@ export function InfraTab() {
           </Card>
           <Card>
             <CardHeader title="Kho lưu trữ" icon={<HardDrive className="size-4" />} description="Video, ảnh bìa và tệp tải lên — trên ổ đĩa của máy chủ API" />
-            <div className="space-y-3 p-5">
+            <div className="space-y-3 p-4">
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                 <div>
                   <p className="text-xs text-muted">Còn trống</p>
-                  <p className="text-[22px] font-semibold tracking-tight tabular">{st.freeBytes !== null ? fmtBytes(st.freeBytes) : '—'}</p>
+                  <p className="text-xl font-semibold tracking-tight tabular">{st.freeBytes !== null ? fmtBytes(st.freeBytes) : '—'}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted">Dữ liệu MEXO</p>
-                  <p className="text-[15px] font-semibold tabular">{fmtBytes(st.usedBytes)}</p>
+                  <p className="text-sm font-semibold tabular">{fmtBytes(st.usedBytes)}</p>
                 </div>
               </div>
               {pct !== null ? (
@@ -548,7 +548,7 @@ export function InfraTab() {
               <Tr key={j.name}>
                 <Td>
                   <p className="font-medium">{JOB_LABELS[j.name] ?? j.name}</p>
-                  <p className="font-mono text-[11px] text-subtle">{j.name}</p>
+                  <p className="font-mono text-2xs text-subtle">{j.name}</p>
                 </Td>
                 <Td className="text-xs">mỗi {fmtEvery(j.everyMs)}</Td>
                 <Td>
@@ -592,7 +592,7 @@ export function InfraTab() {
             )
           }
         />
-        <div className="flex flex-wrap gap-2 p-5">
+        <div className="flex flex-wrap gap-2 p-4">
           {d.breakers.length ? (
             [...d.breakers]
               .sort((a, b) => Number(b.open) - Number(a.open) || a.api.localeCompare(b.api))
@@ -613,7 +613,7 @@ export function InfraTab() {
                 ),
               )
           ) : (
-            <p className="inline-flex items-center gap-1.5 text-[13px] text-muted">
+            <p className="inline-flex items-center gap-1.5 text-sm text-muted">
               <Database className="size-4" />
               Chưa có API nào được gọi từ khi máy chủ khởi động.
             </p>

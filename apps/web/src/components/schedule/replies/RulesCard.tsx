@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/dialog';
 import { SearchInput, Segmented, Switch } from '@/components/ui/form';
 import { Card, CardHeader, EmptyState, ErrorState, Menu, Skeleton } from '@/components/ui/misc';
-import { Table, Td, Th, THead, Tr } from '@/components/ui/table';
 import { downloadRuleTemplate, ImportRulesDialog } from './ImportRulesDialog';
 import { RuleDialog } from './RuleDialog';
 import type { ReplyRule, RulesResp } from './types';
@@ -92,7 +91,7 @@ export function RulesCard({ shopId, canWrite }: { shopId: number; canWrite: bool
             { value: 'off', label: 'Đang tắt', count: counts.off },
           ]}
         />
-        <p className="ml-auto hidden text-xs text-muted lg:block">Khớp nhiều từ khóa nhất sẽ được dùng · có dấu hay không dấu đều khớp</p>
+        <p className="ml-auto hidden text-xs text-muted lg:block">Khớp cả có dấu và không dấu</p>
       </div>
       {q.isError ? (
         <ErrorState error={q.error} onRetry={() => q.refetch()} />
@@ -122,51 +121,47 @@ export function RulesCard({ shopId, canWrite }: { shopId: number; canWrite: bool
           }
         />
       ) : (
-        <Table minWidth={860}>
-          <THead>
-            <tr>
-              <Th className="w-[22%]">Chủ đề</Th>
-              <Th className="w-[26%]">Từ khóa</Th>
-              <Th>Câu trả lời</Th>
-              <Th align="right">Lượt dùng</Th>
-              <Th align="center">Bật</Th>
-              <Th className="w-10" />
-            </tr>
-          </THead>
-          <tbody>
+        <>
+          <div className="hidden grid-cols-[44px_minmax(0,2fr)_minmax(0,3fr)_80px_28px] gap-x-3 border-b border-line bg-surface-2/80 px-4 py-1.5 text-2xs font-semibold uppercase tracking-wide text-muted lg:grid">
+            <span>Bật</span>
+            <span>Chủ đề & từ khóa</span>
+            <span>Câu trả lời</span>
+            <span className="whitespace-nowrap text-right">Lượt dùng</span>
+            <span />
+          </div>
+          <ul className="divide-y divide-line">
             {list.map((r) => (
-              <Tr key={r.id} className={cn(!r.enabled && 'bg-surface-2/30')}>
-                <Td className="max-w-0 align-top">
-                  <button type="button" disabled={!canWrite} onClick={() => setEditing(r)} className="block max-w-full truncate text-left font-medium enabled:hover:text-brand-600">
+              <li key={r.id} className={cn('grid grid-cols-[44px_minmax(0,1fr)_auto] gap-x-3 px-4 py-2.5 transition-colors hover:bg-surface-2/40 lg:grid-cols-[44px_minmax(0,2fr)_minmax(0,3fr)_80px_28px]', !r.enabled && 'bg-surface-2/30')}>
+                <div className="pt-0.5">
+                  <Switch size="sm" checked={r.enabled} disabled={!canWrite || (toggle.isPending && toggle.variables?.id === r.id)} onChange={() => toggle.mutate(r)} />
+                </div>
+                <div className="min-w-0">
+                  <button type="button" disabled={!canWrite} onClick={() => setEditing(r)} className={cn('block max-w-full truncate text-left font-medium enabled:hover:text-brand-600', !r.enabled && 'text-muted')} title={r.sample ? `Câu hỏi mẫu: ${r.sample}` : r.topic}>
                     {r.topic}
                   </button>
-                  {r.sample && <p className="truncate text-xs text-muted">“{r.sample}”</p>}
-                  {r.disabledReason && <p className="mt-0.5 text-xs font-medium text-rose-600 dark:text-rose-400">Tự tắt: {r.disabledReason}</p>}
-                </Td>
-                <Td className="align-top">
-                  <div className="flex flex-wrap gap-1">
-                    {r.keywords.slice(0, 5).map((k, i) => (
-                      <span key={i} className="rounded bg-surface-2 px-1.5 py-px text-[11px] text-fg ring-1 ring-inset ring-line">
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {r.keywords.slice(0, 6).map((k, i) => (
+                      <span key={i} className="rounded bg-surface-2 px-1.5 text-2xs leading-5 text-fg ring-1 ring-inset ring-line">
                         {k}
                       </span>
                     ))}
-                    {r.keywords.length > 5 && <span className="px-1 text-[11px] text-muted" title={r.keywords.slice(5).join(', ')}>+{r.keywords.length - 5}</span>}
+                    {r.keywords.length > 6 && (
+                      <span className="px-1 text-2xs leading-5 text-muted" title={r.keywords.slice(6).join(', ')}>
+                        +{r.keywords.length - 6}
+                      </span>
+                    )}
                   </div>
-                </Td>
-                <Td className="max-w-0 align-top">
-                  <p className="line-clamp-2 text-[13px] text-fg/90" title={r.answer}>
+                  {r.disabledReason && <p className="mt-1 text-xs font-medium text-rose-600 dark:text-rose-400">Tự tắt: {r.disabledReason}</p>}
+                  {/* Màn hình hẹp: câu trả lời nằm dưới chủ đề */}
+                  <p className="mt-1 line-clamp-2 text-sm text-muted lg:hidden" title={r.answer}>
                     {r.answer}
                   </p>
-                </Td>
-                <Td align="right" className="align-top tabular">
-                  {fmtNumber(r.hits)}
-                </Td>
-                <Td align="center" className="align-top">
-                  <span className="inline-flex" onClick={(e) => e.stopPropagation()}>
-                    <Switch size="sm" checked={r.enabled} disabled={!canWrite || (toggle.isPending && toggle.variables?.id === r.id)} onChange={() => toggle.mutate(r)} />
-                  </span>
-                </Td>
-                <Td align="right" className="align-top">
+                </div>
+                <p className="hidden line-clamp-2 text-sm text-fg/90 lg:block" title={r.answer}>
+                  {r.answer}
+                </p>
+                <p className="hidden pt-0.5 text-right text-sm tabular lg:block">{fmtNumber(r.hits)}</p>
+                <div className="flex flex-col items-end gap-1 lg:block">
                   {canWrite && (
                     <Menu
                       trigger={({ toggle: t }) => <Button size="xs" variant="ghost" iconOnly icon={<MoreHorizontal className="size-4" />} onClick={t} aria-label="Thao tác" />}
@@ -176,11 +171,12 @@ export function RulesCard({ shopId, canWrite }: { shopId: number; canWrite: bool
                       ]}
                     />
                   )}
-                </Td>
-              </Tr>
+                  <span className="whitespace-nowrap text-2xs tabular text-muted lg:hidden">{fmtNumber(r.hits)} lượt</span>
+                </div>
+              </li>
             ))}
-          </tbody>
-        </Table>
+          </ul>
+        </>
       )}
       <RuleDialog open={editing !== null} onClose={() => setEditing(null)} shopId={shopId} rule={editing === 'new' ? null : editing} />
       <ImportRulesDialog open={importing} onClose={() => setImporting(false)} shopId={shopId} />

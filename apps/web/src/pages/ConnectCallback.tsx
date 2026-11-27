@@ -48,14 +48,14 @@ export default function ConnectCallback() {
           <>
             <Loader2 className="mx-auto size-10 animate-spin text-brand-500" />
             <h1 className="mt-4 text-lg font-semibold">Đang hoàn tất kết nối…</h1>
-            <p className="mt-1 text-[13px] text-muted">Đang xác nhận quyền với Shopee, vui lòng không đóng trang.</p>
+            <p className="mt-1 text-sm text-muted">Đang xác nhận quyền với Shopee, vui lòng không đóng trang.</p>
           </>
         )}
         {state === 'ok' && result && (
           <>
             <CheckCircle2 className="mx-auto size-12 text-emerald-500" />
             <h1 className="mt-4 text-lg font-semibold">{result.created ? 'Đã kết nối shop' : 'Đã cấp quyền lại'}</h1>
-            <p className="mt-1 text-[13px] text-muted">
+            <p className="mt-1 text-sm text-muted">
               <b className="text-fg">{result.shopName}</b> đã được cấp quyền cho MEXO Live. Hệ thống đang tải danh mục sản phẩm.
             </p>
             {me ? (
@@ -63,7 +63,7 @@ export default function ConnectCallback() {
                 Mở shop
               </ButtonLink>
             ) : (
-              <p className="mt-6 rounded-lg bg-surface-2 px-4 py-3 text-[13px] text-muted">Bạn có thể đóng trang này.</p>
+              <p className="mt-6 rounded-lg bg-surface-2 px-4 py-3 text-sm text-muted">Bạn có thể đóng trang này.</p>
             )}
           </>
         )}
@@ -71,7 +71,7 @@ export default function ConnectCallback() {
           <>
             <XCircle className="mx-auto size-12 text-rose-500" />
             <h1 className="mt-4 text-lg font-semibold">Chưa kết nối được</h1>
-            <p className="mt-2 text-[13px] text-muted">{error}</p>
+            <p className="mt-2 text-sm text-muted">{error}</p>
             <div className="mt-5 rounded-lg border border-line bg-surface-2 p-3 text-left text-xs text-muted">
               Nếu đã đồng ý trên Shopee nhưng vẫn lỗi, hãy sao chép địa chỉ trang này gửi cho quản trị viên để dùng chức năng "Dán địa chỉ" (mã chỉ dùng được khoảng 10 phút).
               <Button size="xs" className="mt-2 w-full" icon={<Copy className="size-3.5" />} onClick={() => copy(window.location.href, 'Đã sao chép địa chỉ')}>
@@ -79,7 +79,7 @@ export default function ConnectCallback() {
               </Button>
             </div>
             {me && (
-              <Link to="/shops" className="mt-4 inline-block text-[13px] font-medium text-brand-600 hover:underline">
+              <Link to="/shops" className="mt-4 inline-block text-sm font-medium text-brand-600 hover:underline">
                 Về danh sách shop
               </Link>
             )}

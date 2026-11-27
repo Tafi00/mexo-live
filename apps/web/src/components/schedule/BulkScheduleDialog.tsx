@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useQueries } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { CheckCircle2, Layers, Plus, RotateCcw, Store, X, XCircle } from 'lucide-react';
 import { api } from '@/lib/api';
@@ -7,7 +8,7 @@ import { ShopPicker, useShopOptions } from '@/components/domain/ShopPicker';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Badge, Callout, EmptyState } from '@/components/ui/misc';
-import { emptyScheduleForm, formToPayload, ScheduleFields, TemplateSelect, validateScheduleForm, type ScheduleErrors, type ScheduleFormValue } from './ScheduleForm';
+import { emptyScheduleForm, formToPayload, ScheduleFields, TemplateSelect, templatesQuery, validateScheduleForm, type ScheduleErrors, type ScheduleFormValue } from './ScheduleForm';
 import { parseScheduleError, type ParsedError } from './utils';
 
 interface BulkResult {
@@ -19,12 +20,14 @@ interface BulkResult {
 function ShopTemplateRow({ shopId, name, number, value, onChange, onRemove, missing }: { shopId: number; name: string; number?: number; value: number | null; onChange: (shopId: number, id: number | null) => void; onRemove: () => void; missing: boolean }) {
   const handle = useCallback((id: number | null) => onChange(shopId, id), [onChange, shopId]);
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1.5 px-3 py-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)_auto]">
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1.5 px-3 py-2">
       <div className="flex min-w-0 items-center gap-2">
-        {number !== undefined && <span className="w-8 shrink-0 text-xs tabular text-subtle">#{number}</span>}
-        <span className="truncate text-[13px] font-medium">{name}</span>
+        {number !== undefined && <span className="shrink-0 text-xs tabular text-subtle">#{number}</span>}
+        <span className="truncate text-sm font-medium" title={name}>
+          {name}
+        </span>
       </div>
-      <div className="order-3 col-span-2 sm:order-none sm:col-span-1">
+      <div className="order-3 col-span-2">
         <TemplateSelect shopId={shopId} value={value} onChange={handle} inputSize="sm" autoPickSingle invalid={missing} />
       </div>
       <button type="button" onClick={onRemove} className="grid size-7 place-items-center rounded-md text-subtle hover:bg-surface-2 hover:text-fg" aria-label="Bỏ shop">
@@ -61,6 +64,12 @@ export function BulkScheduleDialog({ open, onClose }: { open: boolean; onClose: 
   const shopMap = useMemo(() => new Map((shops.data ?? []).map((s) => [s.id, s])), [shops.data]);
   const setTemplate = useCallback((shopId: number, id: number | null) => setTpl((t) => (t[shopId] === id ? t : { ...t, [shopId]: id })), []);
   const missing = shopIds.filter((id) => !tpl[id]);
+  // Mẫu phát của từng shop (dùng chung cache với ô chọn mẫu) → biết shop nào có mẫu chưa có ảnh bìa
+  const tplQueries = useQueries({ queries: shopIds.map((id) => ({ ...templatesQuery(id), enabled: open })) });
+  const noCover = shopIds.filter((id, i) => {
+    const t = tplQueries[i]?.data?.items.find((x) => x.id === tpl[id]);
+    return Boolean(t && !t.coverKey);
+  });
 
   const submit = useAction(
     () =>
@@ -71,7 +80,11 @@ export function BulkScheduleDialog({ open, onClose }: { open: boolean; onClose: 
     {
       silentError: true,
       invalidate: [['schedule-runs'], ['shop']],
-      onError: (e) => setApiError(parseScheduleError(e)),
+      onError: (e) => {
+        const p = parseScheduleError(e);
+        if (p.field !== 'general') setErrors({ [p.field]: p.message });
+        else setApiError(p);
+      },
       onSuccess: (r) => {
         setResult(r);
         topRef.current?.scrollIntoView({ block: 'start' });
@@ -80,7 +93,7 @@ export function BulkScheduleDialog({ open, onClose }: { open: boolean; onClose: 
   );
 
   function go() {
-    const e = validateScheduleForm(form, { requireTemplate: false });
+    const e = validateScheduleForm(form, { requireTemplate: false, coverError: noCover.length ? `${noCover.length} shop có mẫu phát chưa có ảnh bìa — cần tải ảnh bìa chung` : null });
     setErrors(e);
     setMissingTpl(missing.length > 0);
     setApiError(null);
@@ -104,7 +117,7 @@ export function BulkScheduleDialog({ open, onClose }: { open: boolean; onClose: 
         onClose={onClose}
         size="xl"
         title="Tạo lịch hàng loạt"
-        description="Cùng tiêu đề, ảnh bìa và khung giờ cho nhiều shop. Mỗi shop phát mẫu phát riêng của shop đó."
+        description="Cùng khung giờ cho nhiều shop. Mỗi shop phát mẫu phát của shop đó; tiêu đề, ảnh bìa mặc định theo mẫu."
         footer={
           result ? (
             <>
@@ -126,7 +139,7 @@ export function BulkScheduleDialog({ open, onClose }: { open: boolean; onClose: 
                 Hủy
               </Button>
               <Button variant="primary" icon={<Layers className="size-4" />} loading={submit.isPending} disabled={!shopIds.length} onClick={go}>
-                Tạo lịch cho {shopIds.length || ''} shop
+                {shopIds.length ? `Tạo lịch cho ${shopIds.length} shop` : 'Tạo lịch'}
               </Button>
             </>
           )
@@ -136,20 +149,20 @@ export function BulkScheduleDialog({ open, onClose }: { open: boolean; onClose: 
         {result ? (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 p-3 dark:border-emerald-900/60 dark:bg-emerald-950/30">
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 px-3 py-2.5 dark:border-emerald-900/60 dark:bg-emerald-950/30">
                 <p className="text-xs font-medium text-emerald-800 dark:text-emerald-300">Tạo thành công</p>
-                <p className="text-2xl font-semibold tabular text-emerald-900 dark:text-emerald-100">{result.ok}</p>
+                <p className="text-xl font-semibold tabular text-emerald-900 dark:text-emerald-100">{result.ok}</p>
               </div>
-              <div className={result.failed ? 'rounded-lg border border-rose-200 bg-rose-50/70 p-3 dark:border-rose-900/60 dark:bg-rose-950/30' : 'rounded-lg border border-line bg-surface-2 p-3'}>
+              <div className={result.failed ? 'rounded-lg border border-rose-200 bg-rose-50/70 px-3 py-2.5 dark:border-rose-900/60 dark:bg-rose-950/30' : 'rounded-lg border border-line bg-surface-2 px-3 py-2.5'}>
                 <p className={result.failed ? 'text-xs font-medium text-rose-800 dark:text-rose-300' : 'text-xs font-medium text-muted'}>Không tạo được</p>
-                <p className="text-2xl font-semibold tabular">{result.failed}</p>
+                <p className="text-xl font-semibold tabular">{result.failed}</p>
               </div>
             </div>
             <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line">
               {[...result.results]
                 .sort((a, b) => Number(a.ok) - Number(b.ok))
                 .map((r) => (
-                  <li key={r.shopId} className="flex items-start gap-3 px-3 py-2.5 text-[13px]">
+                  <li key={r.shopId} className="flex items-start gap-3 px-3 py-2.5 text-sm">
                     {r.ok ? <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-500" /> : <XCircle className="mt-0.5 size-4 shrink-0 text-rose-500" />}
                     <div className="min-w-0 flex-1">
                       <Link to={`/shops/${r.shopId}/schedules`} className="font-medium hover:text-brand-600">
@@ -165,11 +178,11 @@ export function BulkScheduleDialog({ open, onClose }: { open: boolean; onClose: 
             </ul>
           </div>
         ) : (
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-2">
                 <div>
-                  <p className="text-[13px] font-medium">
+                  <p className="text-sm font-medium">
                     Shop & mẫu phát<span className="ml-0.5 text-rose-500">*</span>
                   </p>
                   <p className="text-xs text-muted">Shop chỉ có một mẫu sẽ được chọn sẵn.</p>
@@ -199,10 +212,10 @@ export function BulkScheduleDialog({ open, onClose }: { open: boolean; onClose: 
                 </div>
               )}
               {missingTpl && missing.length > 0 && <p className="text-xs text-rose-600 dark:text-rose-400">Còn {missing.length} shop chưa chọn mẫu phát.</p>}
-              <Callout tone="neutral">Mỗi shop được kiểm tra riêng (trùng khung giờ, số lịch tối đa, hạn dùng). Shop lỗi không ảnh hưởng các shop khác.</Callout>
+              <p className="text-xs text-muted">Mỗi shop được kiểm tra riêng (trùng khung giờ, số lịch tối đa, hạn dùng) — shop lỗi không ảnh hưởng các shop khác.</p>
             </div>
             <div className="space-y-4">
-              <ScheduleFields value={form} onChange={setForm} errors={errors} />
+              <ScheduleFields value={form} onChange={setForm} errors={errors} bulk={{ missing: noCover.map(name) }} />
               {apiError && (
                 <Callout tone="danger" title="Không tạo được lịch">
                   {apiError.message}

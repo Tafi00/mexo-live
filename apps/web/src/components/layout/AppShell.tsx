@@ -59,8 +59,8 @@ function Logo({ collapsed }: { collapsed?: boolean }) {
       </span>
       {!collapsed && (
         <span className="leading-tight">
-          <span className="block text-[15px] font-bold tracking-tight">MEXO Live</span>
-          <span className="block text-[10px] font-medium uppercase tracking-wider text-muted">Shopee Livestream</span>
+          <span className="block text-base font-bold tracking-tight">MEXO Live</span>
+          <span className="block text-2xs font-medium uppercase tracking-wider text-muted">Shopee Livestream</span>
         </span>
       )}
     </Link>
@@ -98,16 +98,16 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const cap = shell.data?.capacity;
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-14 items-center px-4">
+      <div className="flex h-12 items-center px-4">
         <Logo />
       </div>
-      <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-3">
+      <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-3">
         {groups.map((g) => {
           const items = g.items.filter((i) => i.show);
           if (!items.length) return null;
           return (
             <div key={g.title}>
-              <p className="mb-1.5 px-2.5 text-[11px] font-semibold uppercase tracking-wider text-subtle">{g.title}</p>
+              <p className="mb-1.5 px-2.5 text-2xs font-semibold uppercase tracking-wider text-subtle">{g.title}</p>
               <div className="space-y-0.5">
                 {items.map((it) => (
                   <NavLink
@@ -117,7 +117,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                     onClick={onNavigate}
                     className={({ isActive }) =>
                       cn(
-                        'group flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] font-medium transition-colors',
+                        'group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors',
                         isActive ? 'bg-surface text-fg shadow-card ring-1 ring-line' : 'text-muted hover:bg-surface/70 hover:text-fg',
                       )
                     }
@@ -126,7 +126,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                       <>
                         <it.icon className={cn('size-[17px] shrink-0', isActive ? 'text-brand-500' : 'text-subtle group-hover:text-muted')} />
                         <span className="flex-1 truncate">{it.label}</span>
-                        {it.badge ? <span className="rounded-full bg-rose-500 px-1.5 py-px text-[10px] font-semibold text-white tabular">{it.badge > 99 ? '99+' : it.badge}</span> : null}
+                        {it.badge ? <span className="rounded-full bg-rose-500 px-1.5 py-px text-2xs font-semibold text-white tabular">{it.badge > 99 ? '99+' : it.badge}</span> : null}
                       </>
                     )}
                   </NavLink>
@@ -147,7 +147,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-3">
             <div className={cn('h-full rounded-full', cap.total && cap.used / cap.total > 0.9 ? 'bg-rose-500' : 'bg-emerald-500')} style={{ width: `${cap.total ? Math.min(100, (cap.used / cap.total) * 100) : 0}%` }} />
           </div>
-          <p className="mt-1.5 text-[11px] text-subtle">{cap.online} máy chủ đang kết nối</p>
+          <p className="mt-1.5 text-2xs text-subtle">{cap.online} máy chủ đang kết nối</p>
         </div>
       )}
       {me && me.user.role === 'owner' && me.user.owner?.serviceExpiresOn && (
@@ -205,7 +205,7 @@ function ShopSearch() {
           else if (e.key === 'Escape') setOpen(false);
         }}
         placeholder="Tìm shop theo tên hoặc ID (gõ không dấu được)…"
-        className="h-9 w-full rounded-lg border border-line bg-surface-2 pl-9 pr-14 text-[13px] placeholder:text-subtle focus:border-brand-400 focus:bg-surface focus:outline-none focus:ring-3 focus:ring-[var(--ring)]"
+        className="h-9 w-full rounded-lg border border-line bg-surface-2 pl-9 pr-14 text-sm placeholder:text-subtle focus:border-brand-400 focus:bg-surface focus:outline-none focus:ring-3 focus:ring-[var(--ring)]"
       />
       <span className="pointer-events-none absolute right-2.5 top-1/2 hidden -translate-y-1/2 sm:block">
         <Kbd>Ctrl K</Kbd>
@@ -224,10 +224,10 @@ function ShopSearch() {
               >
                 <span className="w-9 text-xs tabular text-subtle">#{s.number}</span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] font-medium">{s.name}</span>
+                  <span className="block truncate text-sm font-medium">{s.name}</span>
                   {s.shopeeName && s.shopeeName !== s.name && <span className="block truncate text-xs text-muted">{s.shopeeName}</span>}
                 </span>
-                <span className="font-mono text-[11px] text-subtle">{s.shopeeShopId}</span>
+                <span className="font-mono text-2xs text-subtle">{s.shopeeShopId}</span>
               </button>
             ))
           )}
@@ -252,7 +252,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
     nav('/login');
   }
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-line bg-surface/85 px-4 backdrop-blur-md lg:px-6">
+    <header className="sticky top-0 z-30 flex h-12 items-center gap-3 border-b border-line bg-surface/85 px-4 backdrop-blur-md lg:px-5">
       <button onClick={onMenu} className="-ml-1 rounded-md p-1.5 text-muted hover:bg-surface-2 lg:hidden" aria-label="Mở menu">
         <MenuIcon className="size-5" />
       </button>
@@ -274,7 +274,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
         )}
         <Link to="/alerts" className="relative rounded-lg p-2 text-muted hover:bg-surface-2 hover:text-fg" aria-label="Cảnh báo">
           <Bell className="size-[18px]" />
-          {alerts > 0 && <span className={cn('absolute right-1 top-1 grid min-w-4 place-items-center rounded-full px-1 text-[9px] font-bold leading-4 text-white', critical ? 'bg-rose-500' : 'bg-amber-500')}>{alerts > 99 ? '99+' : alerts}</span>}
+          {alerts > 0 && <span className={cn('absolute right-1 top-1 grid min-w-4 place-items-center rounded-full px-1 text-2xs font-bold leading-4 text-white', critical ? 'bg-rose-500' : 'bg-amber-500')}>{alerts > 99 ? '99+' : alerts}</span>}
         </Link>
         <button onClick={toggleTheme} className="rounded-lg p-2 text-muted hover:bg-surface-2 hover:text-fg" aria-label="Đổi giao diện sáng/tối">
           {theme === 'dark' ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
@@ -286,8 +286,8 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
               <button onClick={toggle} className="ml-1 flex items-center gap-2 rounded-lg py-1 pl-1 pr-2 hover:bg-surface-2">
                 <Avatar name={me.user.name} />
                 <span className="hidden text-left leading-tight sm:block">
-                  <span className="block max-w-[140px] truncate text-[13px] font-medium">{me.user.name}</span>
-                  <span className="block text-[11px] text-muted">{ROLE_LABELS[me.user.role]}</span>
+                  <span className="block max-w-[140px] truncate text-sm font-medium">{me.user.name}</span>
+                  <span className="block text-2xs text-muted">{ROLE_LABELS[me.user.role]}</span>
                 </span>
                 <ChevronsUpDown className="hidden size-3.5 text-subtle sm:block" />
               </button>
@@ -313,7 +313,7 @@ function FreezeBanner() {
   const f = shell.data?.freeze;
   if (!f?.frozen) return null;
   return (
-    <div className="flex items-center gap-2.5 border-b border-sky-300 bg-sky-600 px-4 py-2 text-[13px] text-white lg:px-6">
+    <div className="flex items-center gap-2.5 border-b border-sky-300 bg-sky-600 px-4 py-1.5 text-sm text-white lg:px-5">
       <Snowflake className="size-4 shrink-0" />
       {isStaff ? (
         <span>
@@ -341,7 +341,7 @@ export function AppShell() {
   useEffect(() => setMobileOpen(false), [loc.pathname]);
   return (
     <div className="flex min-h-screen">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[248px] border-r border-line bg-bg lg:block">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[232px] border-r border-line bg-bg lg:block">
         <Sidebar />
       </aside>
       {mobileOpen && (
@@ -355,10 +355,10 @@ export function AppShell() {
           </aside>
         </div>
       )}
-      <div className="flex min-w-0 flex-1 flex-col lg:pl-[248px]">
+      <div className="flex min-w-0 flex-1 flex-col lg:pl-[232px]">
         <Topbar onMenu={() => setMobileOpen(true)} />
         <FreezeBanner />
-        <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-5 lg:px-6 lg:py-6">
+        <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-4 lg:px-5 lg:py-5">
           <Outlet />
         </main>
       </div>

@@ -127,7 +127,7 @@ export function ConnectShopDialog({ open, onClose, reauthShopId, reauthName }: {
         <div className="py-6 text-center">
           <CheckCircle2 className="mx-auto size-12 text-emerald-500" />
           <p className="mt-3 font-semibold">{done.created ? 'Đã kết nối shop mới' : 'Đã cấp quyền lại'}</p>
-          <p className="mt-1 text-[13px] text-muted">Hệ thống đang tải danh mục sản phẩm từ Shopee.</p>
+          <p className="mt-1 text-sm text-muted">Hệ thống đang tải danh mục sản phẩm từ Shopee.</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -193,7 +193,7 @@ export function ConnectShopDialog({ open, onClose, reauthShopId, reauthName }: {
                     Tạo liên kết mới
                   </Button>
                 </div>
-                <div className="flex items-center gap-2 rounded-lg bg-surface-2 px-3 py-2.5 text-[13px] text-muted">
+                <div className="flex items-center gap-2 rounded-lg bg-surface-2 px-3 py-2.5 text-sm text-muted">
                   <span className="relative flex size-2.5">
                     <span className="absolute inline-flex size-full animate-ping rounded-full bg-brand-400 opacity-60" />
                     <span className="relative inline-flex size-2.5 rounded-full bg-brand-500" />

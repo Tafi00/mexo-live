@@ -98,8 +98,8 @@ export function StartStreamDialog({ session, open, onClose }: { session: LiveSes
         </>
       }
     >
-      <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
-        <div className="min-w-0 space-y-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="min-w-0 space-y-3">
           <Field label="Mẫu phát" required hint={selected ? `${selected.videoCount} video · ${fmtDuration(selected.durationSec)} · ${selected.productCount} sản phẩm ghim · ${selected.loop ? 'lặp vòng' : 'phát 1 lượt'}` : undefined}>
             <Select value={templateId ?? ''} onChange={(e) => setTemplateId(e.target.value ? Number(e.target.value) : null)} disabled={tpl.isLoading || !templates.length}>
               {!templates.length && <option value="">{tpl.isLoading ? 'Đang tải mẫu phát…' : 'Shop chưa có mẫu phát'}</option>}
@@ -140,13 +140,13 @@ export function StartStreamDialog({ session, open, onClose }: { session: LiveSes
                 ))}
               </Select>
             ) : (
-              <p className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-[13px] text-muted">Hệ thống tự chọn máy chủ phát đang kết nối và còn luồng trống.</p>
+              <p className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-muted">Hệ thống tự chọn máy chủ phát đang kết nối và còn luồng trống.</p>
             )}
           </Field>
 
           <div>
             <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-[13px] font-medium">Kiểm tra trước khi phát</p>
+              <p className="text-sm font-medium">Kiểm tra trước khi phát</p>
               {pf.isFetching && (
                 <span className="inline-flex items-center gap-1.5 text-xs text-muted">
                   <Loader2 className="size-3.5 animate-spin" />
@@ -164,14 +164,14 @@ export function StartStreamDialog({ session, open, onClose }: { session: LiveSes
                   <li key={c.key} className="flex items-start gap-2.5 px-3 py-2">
                     {c.ok ? <CheckCircle2 className="mt-px size-4 shrink-0 text-emerald-500" /> : <XCircle className="mt-px size-4 shrink-0 text-rose-500" />}
                     <div className="min-w-0">
-                      <p className={c.ok ? 'text-[13px]' : 'text-[13px] font-medium text-rose-700 dark:text-rose-400'}>{c.label}</p>
+                      <p className={c.ok ? 'text-sm' : 'text-sm font-medium text-rose-700 dark:text-rose-400'}>{c.label}</p>
                       {c.detail && <p className="text-xs text-muted">{c.detail}</p>}
                     </div>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="rounded-lg border border-dashed border-line-strong px-3 py-4 text-center text-xs text-muted">{templateId === null ? 'Chọn mẫu phát để kiểm tra.' : 'Đang chuẩn bị kiểm tra…'}</p>
+              <p className="rounded-lg border border-dashed border-line-strong px-3 py-3 text-center text-xs text-muted">{templateId === null ? 'Chọn mẫu phát để kiểm tra.' : 'Đang chuẩn bị kiểm tra…'}</p>
             )}
           </div>
 

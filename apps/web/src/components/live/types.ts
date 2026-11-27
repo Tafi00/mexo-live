@@ -30,9 +30,11 @@ export interface PinnedProduct {
   price?: number | null;
 }
 
+export type SessionReplyMode = 'inherit' | 'on' | 'off';
+
 /** GET /api/sessions/:sid */
 export interface SessionDetailResponse {
-  session: LiveSession;
+  session: LiveSession & { replyMode?: SessionReplyMode };
   shop: { id: number; name: string; shopeeShopId: number; connection: string; cartLimit: number; replyEnabled: boolean };
   job: { id: number; state: string; restarts: number; lastReportAt: string | null; error: string | null } | null;
   server: { id: number; name: string } | null;

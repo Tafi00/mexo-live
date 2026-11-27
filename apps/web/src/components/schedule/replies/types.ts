@@ -67,12 +67,15 @@ export interface ReplyLogsResp {
   last24h: { posted: number; blocked: number; skipped: number; failed: number; avgLatencyMs: number | null };
 }
 
-export const CONFIG_FIELDS: { key: keyof ReplyConfig; label: string; hint: string; unit: string; min: number; max: number }[] = [
-  { key: 'maxPerMinute', label: 'Tối đa mỗi phút', hint: 'Số câu trả lời tối đa trong 1 phút của một phiên', unit: 'câu', min: 1, max: 30 },
-  { key: 'minGapSec', label: 'Giãn cách giữa 2 câu', hint: 'Khoảng nghỉ tối thiểu giữa hai câu liên tiếp', unit: 'giây', min: 0, max: 120 },
-  { key: 'perViewerCooldownSec', label: 'Mỗi người xem cách nhau', hint: 'Không trả lời lại cùng một người trong khoảng này', unit: 'giây', min: 0, max: 3600 },
-  { key: 'maxCommentAgeSec', label: 'Bỏ qua bình luận cũ hơn', hint: 'Bình luận quá cũ sẽ không được trả lời nữa', unit: 'giây', min: 10, max: 1800 },
-  { key: 'aiDailyBudget', label: 'Lượt AI mỗi ngày', hint: 'Hết lượt thì chỉ trả lời câu khớp kịch bản', unit: 'lượt', min: 0, max: 10000 },
+/** Giá trị mặc định của hệ thống (khớp mặc định trong cơ sở dữ liệu) */
+export const DEFAULT_REPLY_CONFIG: ReplyConfig = { maxPerMinute: 6, perViewerCooldownSec: 60, minGapSec: 5, aiDailyBudget: 300, maxCommentAgeSec: 120 };
+
+export const CONFIG_FIELDS: { key: keyof ReplyConfig; label: string; hint: string; unit: string; min: number; max: number; short: (v: number) => string }[] = [
+  { key: 'maxPerMinute', label: 'Tối đa mỗi phút', hint: 'Số câu trả lời tối đa trong 1 phút của một phiên', unit: 'câu', min: 1, max: 30, short: (v) => `${v} câu/phút` },
+  { key: 'minGapSec', label: 'Giãn cách giữa 2 câu', hint: 'Khoảng nghỉ tối thiểu giữa hai câu liên tiếp', unit: 'giây', min: 0, max: 120, short: (v) => `cách ${v} giây` },
+  { key: 'perViewerCooldownSec', label: 'Mỗi người xem cách nhau', hint: 'Không trả lời lại cùng một người trong khoảng này', unit: 'giây', min: 0, max: 3600, short: (v) => `mỗi người ${v} giây` },
+  { key: 'maxCommentAgeSec', label: 'Bỏ qua bình luận cũ hơn', hint: 'Bình luận quá cũ sẽ không được trả lời nữa', unit: 'giây', min: 10, max: 1800, short: (v) => `bỏ qua sau ${v} giây` },
+  { key: 'aiDailyBudget', label: 'Lượt AI mỗi ngày', hint: 'Hết lượt thì chỉ trả lời câu khớp kịch bản', unit: 'lượt', min: 0, max: 10000, short: (v) => `${v} lượt AI/ngày` },
 ];
 
 export const POLL_STATE: Record<string, { label: string; tone: Tone; description: string }> = {

@@ -144,9 +144,9 @@ export function WeekView({ days, runs, onOpen, onMore }: { days: string[]; runs:
             const n = layouts[i].segs.filter((s) => !s.contBefore).length;
             return (
               <div key={d} className="border-l border-line px-2 py-2 text-center">
-                <p className={cn('text-[11px] font-semibold uppercase tracking-wide', isToday ? 'text-brand-600 dark:text-brand-400' : 'text-muted')}>{WEEKDAY_LABELS[weekdayOfStr(d)]}</p>
-                <p className={cn('mx-auto mt-0.5 grid h-7 min-w-7 place-items-center rounded-full px-1.5 text-[15px] font-semibold tabular', isToday && 'bg-brand-500 text-white')}>{Number(d.slice(8, 10))}</p>
-                <p className="mt-0.5 text-[11px] text-subtle">{n ? `${n} lần phát` : '—'}</p>
+                <p className={cn('text-2xs font-semibold uppercase tracking-wide', isToday ? 'text-brand-600 dark:text-brand-400' : 'text-muted')}>{WEEKDAY_LABELS[weekdayOfStr(d)]}</p>
+                <p className={cn('mx-auto mt-0.5 grid h-7 min-w-7 place-items-center rounded-full px-1.5 text-base font-semibold tabular', isToday && 'bg-brand-500 text-white')}>{Number(d.slice(8, 10))}</p>
+                <p className="mt-0.5 text-2xs text-subtle">{n ? `${n} lần phát` : '—'}</p>
               </div>
             );
           })}
@@ -157,7 +157,7 @@ export function WeekView({ days, runs, onOpen, onMore }: { days: string[]; runs:
           <div className="sticky left-0 z-10 bg-surface">
             {Array.from({ length: 24 }).map((_, h) => (
               <div key={h} className="relative" style={{ height: HOUR_PX }}>
-                {h > 0 && <span className="absolute -top-2 right-2 text-[10px] tabular text-subtle">{String(h).padStart(2, '0')}:00</span>}
+                {h > 0 && <span className="absolute -top-2 right-2 text-2xs tabular text-subtle">{String(h).padStart(2, '0')}:00</span>}
               </div>
             ))}
           </div>
@@ -184,7 +184,7 @@ export function WeekView({ days, runs, onOpen, onMore }: { days: string[]; runs:
                       title={runTooltip(s.run)}
                       onClick={() => onOpen(s.run)}
                       className={cn(
-                        'absolute z-[1] flex flex-col overflow-hidden rounded-md border px-1.5 py-0.5 text-left text-[11px] leading-tight shadow-sm transition-colors',
+                        'absolute z-[1] flex flex-col overflow-hidden rounded-md border px-1.5 py-0.5 text-left text-2xs leading-tight shadow-sm transition-colors',
                         c.block,
                         s.contBefore && 'rounded-t-none border-t-2 [border-top-style:dashed]',
                         s.contAfter && 'rounded-b-none border-b-2 [border-bottom-style:dashed]',
@@ -197,7 +197,7 @@ export function WeekView({ days, runs, onOpen, onMore }: { days: string[]; runs:
                       </span>
                       {h >= 34 && <span className={cn('truncate font-medium', c.text)}>{s.run.shopName}</span>}
                       {h >= 50 && <span className="truncate text-muted">{s.run.title}</span>}
-                      {h >= 66 && <span className={cn('truncate text-[10px] font-medium', c.text)}>{runStatusLabel(s.run.status)}</span>}
+                      {h >= 66 && <span className={cn('truncate text-2xs font-medium', c.text)}>{runStatusLabel(s.run.status)}</span>}
                     </button>
                   );
                 })}
@@ -210,7 +210,7 @@ export function WeekView({ days, runs, onOpen, onMore }: { days: string[]; runs:
                         key={`more-${c.id}`}
                         type="button"
                         onClick={() => onMore(`${WEEKDAY_FULL[weekdayOfStr(d)]}, ${fmtDate(d)} · từ ${String(Math.floor(c.top / 60)).padStart(2, '0')}:${String(Math.floor(c.top % 60)).padStart(2, '0')}`, c.runs)}
-                        className="absolute z-[2] rounded-md border border-line-strong bg-surface px-1 py-0.5 text-[11px] font-semibold text-fg shadow-sm hover:bg-surface-2"
+                        className="absolute z-[2] rounded-md border border-line-strong bg-surface px-1 py-0.5 text-2xs font-semibold text-fg shadow-sm hover:bg-surface-2"
                         style={{ top: (c.top * HOUR_PX) / 60 + 1, left: `calc(${((MAX_LANES - 1) / MAX_LANES) * 100}% + 2px)`, width: `calc(${100 / MAX_LANES}% - 4px)` }}
                         title={`${c.runs.length} lần phát cùng khung giờ`}
                       >
@@ -253,7 +253,7 @@ export function MonthView({ days, month, runs, onOpen, onMore, onPickDay }: { da
       <div className="min-w-[720px]">
         <div className="grid grid-cols-7 border-b border-line bg-surface-2/60">
           {WEEK_ORDER.map((d) => (
-            <div key={d} className="px-2 py-1.5 text-center text-[11px] font-semibold uppercase tracking-wide text-muted">
+            <div key={d} className="px-2 py-1.5 text-center text-2xs font-semibold uppercase tracking-wide text-muted">
               {WEEKDAY_LABELS[d]}
             </div>
           ))}
@@ -274,13 +274,13 @@ export function MonthView({ days, month, runs, onOpen, onMore, onPickDay }: { da
                   >
                     {Number(d.slice(8, 10))}
                   </button>
-                  {list.length > 0 && <span className="text-[10px] tabular text-subtle">{list.length}</span>}
+                  {list.length > 0 && <span className="text-2xs tabular text-subtle">{list.length}</span>}
                 </div>
                 <div className="space-y-0.5">
                   {list.slice(0, MAX).map((r) => {
                     const c = runColor(r.status);
                     return (
-                      <button key={r.id} type="button" title={runTooltip(r)} onClick={() => onOpen(r)} className={cn('flex w-full min-w-0 items-center gap-1 rounded border px-1 py-px text-left text-[11px] leading-[16px] transition-colors', c.block, c.text)}>
+                      <button key={r.id} type="button" title={runTooltip(r)} onClick={() => onOpen(r)} className={cn('flex w-full min-w-0 items-center gap-1 rounded border px-1 py-px text-left text-2xs leading-[16px] transition-colors', c.block, c.text)}>
                         <RunStatusIcon status={r.status} className="size-2.5" />
                         <span className="shrink-0 font-semibold tabular">{vnHm(r.startAt)}</span>
                         <span className="truncate">{r.shopName}</span>
@@ -288,7 +288,7 @@ export function MonthView({ days, month, runs, onOpen, onMore, onPickDay }: { da
                     );
                   })}
                   {list.length > MAX && (
-                    <button type="button" onClick={() => onMore(`${WEEKDAY_FULL[weekdayOfStr(d)]}, ${fmtDate(d)}`, list)} className="w-full rounded px-1 py-px text-left text-[11px] font-medium text-muted hover:bg-surface-2 hover:text-fg">
+                    <button type="button" onClick={() => onMore(`${WEEKDAY_FULL[weekdayOfStr(d)]}, ${fmtDate(d)}`, list)} className="w-full rounded px-1 py-px text-left text-2xs font-medium text-muted hover:bg-surface-2 hover:text-fg">
                       +{list.length - MAX} lần phát khác
                     </button>
                   )}
@@ -327,24 +327,68 @@ export function ListView({ runs, onOpen, empty }: { runs: CalRun[]; onOpen: (r: 
   }, [runs]);
   if (!groups.length) return <>{empty}</>;
   return (
-    <Table minWidth={900}>
-      <THead>
-        <tr>
-          <Th className="w-32">Giờ</Th>
-          <Th>Shop</Th>
-          <Th>Tiêu đề phiên</Th>
-          <Th>Lặp lại</Th>
-          <Th>Trạng thái</Th>
-          <Th>Vấn đề</Th>
-          <Th align="right">Phiên</Th>
-        </tr>
-      </THead>
-      <tbody>
+    <>
+      {/* Mobile: mỗi lần phát một hàng gọn */}
+      <div className="md:hidden">
         {groups.map(([date, list]) => (
-          <GroupRows key={date} date={date} list={list} onOpen={onOpen} />
+          <div key={date}>
+            <div className="border-b border-line bg-surface-2/60 px-4 py-1.5 text-xs">
+              <span className="font-semibold">
+                {WEEKDAY_FULL[weekdayOfStr(date)]}, {fmtDate(date)}
+              </span>
+              {relativeDay(date) && <span className="ml-1.5 text-brand-600 dark:text-brand-400">{relativeDay(date)}</span>}
+              <span className="ml-1.5 text-muted">· {list.length} lần phát</span>
+            </div>
+            <ul className="divide-y divide-line border-b border-line">
+              {list.map((r) => {
+                const c = runColor(r.status);
+                const issue = runIssueLabel(r.issue);
+                return (
+                  <li key={r.id}>
+                    <button type="button" onClick={() => onOpen(r)} className="flex w-full items-start gap-3 px-4 py-2.5 text-left hover:bg-surface-2/60">
+                      <span className={cn('mt-0.5 grid size-6 shrink-0 place-items-center rounded-md border', c.block, c.text)}>
+                        <RunStatusIcon status={r.status} className="animate-none" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium">{r.shopName}</span>
+                        <span className="block truncate text-xs text-muted">
+                          <span className="tabular">
+                            {vnHm(r.startAt)}–{vnHm(r.endAt)}
+                          </span>{' '}
+                          · {r.title}
+                        </span>
+                        {issue && <span className="block truncate text-xs text-rose-600 dark:text-rose-400">{issue}</span>}
+                      </span>
+                      <RunStatusBadge status={r.status} size="sm" />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         ))}
-      </tbody>
-    </Table>
+      </div>
+      <div className="hidden md:block">
+        <Table minWidth={900}>
+          <THead>
+            <tr>
+              <Th className="w-32">Giờ</Th>
+              <Th>Shop</Th>
+              <Th>Tiêu đề phiên</Th>
+              <Th>Lặp lại</Th>
+              <Th>Trạng thái</Th>
+              <Th>Vấn đề</Th>
+              <Th align="right">Phiên</Th>
+            </tr>
+          </THead>
+          <tbody>
+            {groups.map(([date, list]) => (
+              <GroupRows key={date} date={date} list={list} onOpen={onOpen} />
+            ))}
+          </tbody>
+        </Table>
+      </div>
+    </>
   );
 }
 
@@ -358,7 +402,7 @@ function GroupRows({ date, list, onOpen }: { date: string; list: CalRun[]; onOpe
           <span className="font-semibold text-fg">
             {WEEKDAY_FULL[weekdayOfStr(date)]}, {fmtDate(date)}
           </span>
-          {rel && <span className="ml-2 rounded bg-brand-50 px-1.5 py-px text-[11px] font-medium text-brand-700 dark:bg-brand-950/50 dark:text-brand-300">{rel}</span>}
+          {rel && <span className="ml-2 rounded bg-brand-50 px-1.5 py-px text-2xs font-medium text-brand-700 dark:bg-brand-950/50 dark:text-brand-300">{rel}</span>}
           <span className="ml-2 text-muted">
             {list.length} lần phát{missed ? ` · ${missed} bỏ lỡ/thất bại` : ''}
           </span>

@@ -4,7 +4,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { AlertTriangle, CalendarRange, Clock, Download, Eye, FileSpreadsheet, Heart, History, Radio, RefreshCw, ShoppingBag } from 'lucide-react';
 import { api, download } from '@/lib/api';
 import { cn } from '@/lib/cn';
-import { addDaysStr, fmtClock, fmtDate, fmtDateTime, fmtMoney, fmtNumber, todayVn } from '@/lib/format';
+import { addDaysStr, fmtClock, fmtDate, fmtDateTime, fmtMoney, fmtNumber, fmtTime, todayVn } from '@/lib/format';
 import { endedReasonLabel, OriginBadge } from '@/components/live/helpers';
 import type { ReportSessionsResponse } from '@/components/live/types';
 import { Button } from '@/components/ui/button';
@@ -46,11 +46,11 @@ export default function ShopHistory() {
   const sum = d?.summary;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-[15px] font-semibold">Lịch sử phiên live</h2>
-          <p className="text-[13px] text-muted">
+          <h2 className="text-base font-semibold">Lịch sử phiên live</h2>
+          <p className="text-sm text-muted">
             Các phiên đã kết thúc từ {fmtDate(range.from)} đến {fmtDate(range.to)} (theo ngày tạo phiên, giờ Việt Nam).
           </p>
         </div>
@@ -95,13 +95,13 @@ export default function ShopHistory() {
       ) : (
         <>
           {!sum ? (
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} className="h-[86px] rounded-xl" />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
               <StatCard label="Số phiên" value={fmtNumber(sum.count)} hint={`${fmtNumber(sum.started)} lên sóng${sum.failed ? ` · ${fmtNumber(sum.failed)} không lên sóng` : ''}`} icon={<Radio className="size-4" />} tone="brand" />
               <StatCard label="Tổng giờ phát" value={fmtNumber(sum.totalSeconds / 3600, 1)} hint={sum.started ? `TB ${fmtClock(sum.totalSeconds / sum.started)} / phiên` : undefined} icon={<Clock className="size-4" />} tone="info" />
               <StatCard label="Người xem cao nhất" value={fmtNumber(sum.peakViewers)} icon={<Eye className="size-4" />} tone="violet" />
@@ -121,41 +121,69 @@ export default function ShopHistory() {
               <EmptyState icon={History} title="Không có phiên nào trong khoảng thời gian này" description="Thử chọn khoảng thời gian dài hơn." />
             ) : (
               <>
-                <Table minWidth={1480}>
+                <Table minWidth={1150}>
                   <THead>
                     <tr>
-                      <Th>Tiêu đề</Th>
-                      <Th>Session ID</Th>
-                      <Th>Nguồn</Th>
-                      <Th>Mẫu phát</Th>
-                      <Th>Người thực hiện</Th>
-                      <Th>Bắt đầu</Th>
-                      <Th>Kết thúc</Th>
+                      <Th className="w-full">Tiêu đề</Th>
+                      <Th>
+                        <span className="flex flex-col leading-tight">
+                          <span>Session ID</span>
+                          <span>Nguồn</span>
+                        </span>
+                      </Th>
+                      <Th>
+                        <span className="flex flex-col leading-tight">
+                          <span>Mẫu phát</span>
+                          <span>Người thực hiện</span>
+                        </span>
+                      </Th>
+                      <Th>
+                        <span className="flex flex-col leading-tight">
+                          <span>Bắt đầu</span>
+                          <span>Kết thúc</span>
+                        </span>
+                      </Th>
                       <Th align="right">Thời lượng</Th>
-                      <Th align="right">Xem cao nhất</Th>
+                      <Th align="right" title="Người xem cao nhất">Đỉnh xem</Th>
                       <Th align="right">Thích</Th>
                       <Th align="right">Đơn</Th>
-                      <Th>Lý do kết thúc</Th>
+                      <Th>Kết thúc do</Th>
                       <Th>Lỗi gần nhất</Th>
                     </tr>
                   </THead>
                   <tbody>
                     {d.items.map((r) => (
                       <Tr key={r.id} onClick={() => nav(`/sessions/${r.id}`)}>
-                        <Td className="max-w-[260px]">
+                        <Td className="max-w-0">
                           <p className="truncate font-medium" title={r.title}>
                             {r.title}
                           </p>
-                          <p className="text-xs text-muted">Tạo {fmtDateTime(r.createdAt)}</p>
+                          <p className="truncate text-xs tabular text-muted">Tạo {fmtDateTime(r.createdAt)}</p>
                         </Td>
-                        <Td className="font-mono text-xs text-muted">{r.shopeeSessionId ?? '—'}</Td>
                         <Td>
+                          <p className="font-mono text-xs text-muted">{r.shopeeSessionId ?? '—'}</p>
                           <OriginBadge origin={r.origin} />
                         </Td>
-                        <Td className="max-w-[160px] truncate text-muted">{r.templateName ?? '—'}</Td>
-                        <Td className="max-w-[140px] truncate text-muted">{r.createdByName ?? '—'}</Td>
-                        <Td className="whitespace-nowrap tabular text-muted">{r.startedAt ? fmtDateTime(r.startedAt) : <span className="text-amber-700 dark:text-amber-400">Không lên sóng</span>}</Td>
-                        <Td className="whitespace-nowrap tabular text-muted">{fmtDateTime(r.endedAt)}</Td>
+                        <Td>
+                          <div className="w-[150px]">
+                            <p className="truncate" title={r.templateName ?? undefined}>
+                              {r.templateName ?? <span className="text-subtle">Không dùng mẫu</span>}
+                            </p>
+                            <p className="truncate text-xs text-muted" title={r.createdByName ?? undefined}>
+                              {r.createdByName ?? '—'}
+                            </p>
+                          </div>
+                        </Td>
+                        <Td className="whitespace-nowrap tabular text-muted">
+                          {r.startedAt ? (
+                            <>
+                              <p className="text-fg">{fmtDateTime(r.startedAt)}</p>
+                              <p className="text-xs">→ {r.endedAt ? (fmtDate(r.endedAt) === fmtDate(r.startedAt) ? fmtTime(r.endedAt) : fmtDateTime(r.endedAt)) : '—'}</p>
+                            </>
+                          ) : (
+                            <span className="text-amber-700 dark:text-amber-400">Không lên sóng</span>
+                          )}
+                        </Td>
                         <Td align="right" className="tabular">
                           {r.startedAt ? fmtClock(r.durationSec) : '—'}
                         </Td>
@@ -169,11 +197,11 @@ export default function ShopHistory() {
                           {fmtNumber(r.orders)}
                         </Td>
                         <Td className="whitespace-nowrap text-muted">{endedReasonLabel(r.endedReason)}</Td>
-                        <Td className="max-w-[220px]">
+                        <Td>
                           {r.lastError ? (
-                            <span className="flex min-w-0 items-center gap-1 text-xs text-amber-700 dark:text-amber-400" title={r.lastError}>
-                              <AlertTriangle className="size-3.5 shrink-0" />
-                              <span className="truncate">{r.lastError}</span>
+                            <span className="flex w-[200px] items-start gap-1 text-xs text-amber-700 dark:text-amber-400" title={r.lastError}>
+                              <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+                              <span className="line-clamp-2">{r.lastError}</span>
                             </span>
                           ) : (
                             <span className="text-subtle">—</span>

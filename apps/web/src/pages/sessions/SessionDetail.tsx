@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
+  CheckCircle2,
   Copy,
   ExternalLink,
   Hash,
@@ -11,7 +12,6 @@ import {
   MoreHorizontal,
   Pencil,
   Play,
-  Plus,
   RefreshCw,
   Server,
   ShieldAlert,
@@ -21,12 +21,13 @@ import {
   Unlock,
   UserRound,
   XOctagon,
+  Zap,
 } from 'lucide-react';
-import { SHOPEE_STATUS_LABELS } from '@mexo/shared';
+import { SHOPEE_STATUS_LABELS, STREAM_STATE_LABELS } from '@mexo/shared';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/cn';
-import { fmtClock, fmtDateTime, fmtDuration, fmtNumber, fmtRelative } from '@/lib/format';
+import { fmtClock, fmtDateTime, fmtDuration, fmtNumber, fmtRelative, fmtTime } from '@/lib/format';
 import { useAction, useCopy, useNow } from '@/lib/hooks';
 import type { LiveSession } from '@/lib/types';
 import { SessionStateBadge, StreamStateBadge } from '@/components/domain/status';
@@ -46,6 +47,7 @@ import { useConfirm } from '@/components/ui/dialog';
 import { Callout, Card, CardHeader, Dot, ErrorState, KV, Menu, PageLoading, type MenuItem, type Tone } from '@/components/ui/misc';
 
 const shopeeTone: Record<string, Tone> = { ongoing: 'brand', not_started: 'neutral', ended: 'muted', unknown: 'warning' };
+const streamTone: Record<string, Tone> = { idle: 'muted', waiting_server: 'info', preparing: 'info', pushing: 'success', error: 'danger', lost: 'danger', stopped: 'muted' };
 
 function LiveTimer({ s }: { s: LiveSession }) {
   const now = useNow();
@@ -198,30 +200,32 @@ export default function SessionDetail() {
   ];
 
   const status = flowStatus(s, hasJob);
+  // Đã lên sóng và mọi bước đều xong/đang chạy → chỉ cần 1 dòng tóm tắt
+  const flowSteady = hasJob && status.every((st) => st === 'done' || st === 'run' || st === 'off');
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* ───── Tiêu đề ───── */}
       <div>
         <Link to={`/shops/${shop.id}/sessions`} className="inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-fg">
           <ArrowLeft className="size-3.5" /> {shop.name}
         </Link>
-        <div className="mt-2 flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+        <div className="mt-1.5 flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
           <div className="min-w-0 flex-1 basis-80">
-            <h1 className="text-[22px] font-semibold leading-tight tracking-tight">{s.title}</h1>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-semibold leading-tight tracking-tight">{s.title}</h1>
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
               <SessionStateBadge state={s.state} stuck={s.stuck} />
               {!external && <StreamStateBadge state={s.streamState} />}
               <OriginBadge origin={s.origin} size="md" />
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px] text-muted">
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
               <MetaItem icon={<Store />}>
                 <Link to={`/shops/${shop.id}`} className="truncate font-medium text-fg hover:text-brand-600">
                   {shop.name}
                 </Link>
               </MetaItem>
               {s.shopeeSessionId && (
-                <button type="button" onClick={() => copy(String(s.shopeeSessionId), 'Đã chép Session ID')} className="inline-flex items-center gap-1 font-mono text-xs hover:text-fg" title="Sao chép Session ID">
+                <button type="button" onClick={() => copy(String(s.shopeeSessionId), 'Đã chép Session ID')} className="inline-flex items-center gap-1 font-mono hover:text-fg" title="Sao chép Session ID">
                   Session ID {s.shopeeSessionId} <Copy className="size-3" />
                 </button>
               )}
@@ -247,8 +251,8 @@ export default function SessionDetail() {
               </Button>
             )}
             {!ended && s.shopeeSessionId && (
-              <Button icon={<RefreshCw className={cn('size-4', sync.isPending && 'animate-spin')} />} disabled={sync.isPending} onClick={() => sync.mutate()}>
-                Đồng bộ trạng thái
+              <Button icon={<RefreshCw className={cn('size-4', sync.isPending && 'animate-spin')} />} disabled={sync.isPending} onClick={() => sync.mutate()} title="Hỏi lại Shopee trạng thái và số liệu mới nhất">
+                Đồng bộ
               </Button>
             )}
             {showEnd && (
@@ -270,13 +274,13 @@ export default function SessionDetail() {
           title={`Phiên đã kết thúc${s.endedAt ? ` lúc ${fmtDateTime(s.endedAt)}` : ''}`}
           action={
             can('session.create') && (
-              <ButtonLink to={`/shops/${shop.id}/sessions?new=1`} size="sm" icon={<Plus className="size-3.5" />}>
-                Tạo phiên mới
+              <ButtonLink to={`/shops/${shop.id}/sessions?new=1`} size="sm" icon={<Zap className="size-3.5" />}>
+                Phát phiên mới
               </ButtonLink>
             )
           }
         >
-          Lý do: {endedReasonLabel(s.endedReason)}. Phiên đã kết thúc không thể mở lại — muốn live tiếp hãy tạo phiên mới.
+          Lý do: {endedReasonLabel(s.endedReason)}. Phiên đã kết thúc không thể mở lại — muốn live tiếp hãy phát phiên mới.
         </Callout>
       )}
       {external && !ended && (
@@ -326,28 +330,29 @@ export default function SessionDetail() {
       {s.lastError && !ended && !needsRelease && <Callout tone="warning" title="Lỗi gần nhất">{s.lastError}</Callout>}
 
       {/* ───── Hai lớp trạng thái: Shopee vs máy chủ nội bộ ───── */}
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader title="Trạng thái trên Shopee" icon={<Store className="size-4" />} description="Trạng thái thật do Shopee báo về — quyết định người xem có thấy phiên hay không." />
-          <div className="space-y-4 p-5">
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          <CardHeader title="Trạng thái trên Shopee" icon={<Store className="size-4" />} description="Trạng thái thật do Shopee báo — quyết định người xem có thấy phiên." />
+          <div className="space-y-3 p-4">
+            <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
               <div>
-                <p className="text-xs text-muted">Shopee báo</p>
-                <p className="mt-0.5 flex items-center gap-2 text-lg font-semibold">
+                <p className="text-2xs font-medium uppercase tracking-wide text-muted">Shopee báo</p>
+                <p className="flex items-center gap-2 text-lg font-semibold">
                   <Dot tone={shopeeTone[s.shopeeStatus] ?? 'neutral'} pulse={s.shopeeStatus === 'ongoing'} className="size-2.5" />
                   {SHOPEE_STATUS_LABELS[s.shopeeStatus] ?? s.shopeeStatus}
                 </p>
               </div>
-              <div>
-                <p className="mb-1 text-xs text-muted">Trạng thái phiên trong MEXO</p>
+              <div className="text-right">
+                <p className="mb-0.5 text-2xs font-medium uppercase tracking-wide text-muted">Trong MEXO</p>
                 <SessionStateBadge state={s.state} stuck={s.stuck} />
               </div>
             </div>
             <KV
+              className="grid-cols-2 gap-y-2.5 border-t border-line pt-3"
               items={[
                 { label: 'Lên sóng lúc', value: s.startedAt ? fmtDateTime(s.startedAt, { seconds: true }) : 'Chưa lên sóng' },
                 { label: 'Kết thúc lúc', value: fmtDateTime(s.endedAt), hidden: !s.endedAt },
-                { label: 'Đồng bộ gần nhất', value: s.lastShopeeSyncAt ? `${fmtRelative(s.lastShopeeSyncAt)} (${fmtDateTime(s.lastShopeeSyncAt, { seconds: true })})` : 'Chưa đồng bộ' },
+                { label: 'Đồng bộ gần nhất', value: s.lastShopeeSyncAt ? <span title={fmtDateTime(s.lastShopeeSyncAt, { seconds: true })}>{fmtRelative(s.lastShopeeSyncAt)}</span> : 'Chưa đồng bộ' },
                 {
                   label: 'Đồng bộ lỗi liên tiếp',
                   value: <span className={s.syncFailures ? 'text-rose-600 dark:text-rose-400' : undefined}>{fmtNumber(s.syncFailures)} lần</span>,
@@ -361,24 +366,32 @@ export default function SessionDetail() {
         </Card>
 
         <Card>
-          <CardHeader
-            title="Máy chủ phát nội bộ"
-            icon={<Server className="size-4" />}
-            description="Máy chủ MEXO đẩy video lên Shopee. Máy dừng hoặc lỗi không tự kết thúc phiên trên Shopee."
-            actions={!external && <StreamStateBadge state={s.streamState} />}
-          />
-          <div className="space-y-4 p-5">
+          <CardHeader title="Máy chủ phát nội bộ" icon={<Server className="size-4" />} description="Máy chủ MEXO đẩy video lên Shopee — dừng hay lỗi không tự kết thúc phiên." />
+          <div className="space-y-3 p-4">
             {external ? (
-              <p className="text-[13px] text-muted">Phiên này không dùng máy chủ phát của MEXO.</p>
+              <p className="text-sm text-muted">Phiên này không dùng máy chủ phát của MEXO.</p>
             ) : (
               <>
+                <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
+                  <div>
+                    <p className="text-2xs font-medium uppercase tracking-wide text-muted">Máy chủ báo</p>
+                    <p className="flex items-center gap-2 text-lg font-semibold">
+                      <Dot tone={streamTone[s.streamState] ?? 'neutral'} pulse={s.streamState === 'pushing'} className="size-2.5" />
+                      {STREAM_STATE_LABELS[s.streamState as keyof typeof STREAM_STATE_LABELS] ?? s.streamState}
+                    </p>
+                  </div>
+                  <div className="min-w-0 text-right">
+                    <p className="mb-0.5 text-2xs font-medium uppercase tracking-wide text-muted">Máy chủ</p>
+                    <p className="truncate text-sm font-medium">{server?.name ?? (s.serverId ? `#${s.serverId}` : 'Chưa giao')}</p>
+                  </div>
+                </div>
                 <KV
+                  className="grid-cols-2 gap-y-2.5 border-t border-line pt-3"
                   items={[
-                    { label: 'Máy chủ', value: server?.name ?? (s.serverId ? `#${s.serverId}` : 'Chưa giao') },
                     { label: 'Việc phát', value: job ? `#${job.id} · ${job.state}` : 'Không có việc đang chạy' },
                     { label: 'Báo cáo gần nhất', value: job?.lastReportAt ? fmtRelative(job.lastReportAt) : '—', hidden: !job },
+                    { label: 'Có hình từ', value: s.feedSince ? <span title={fmtDateTime(s.feedSince, { seconds: true })}>{fmtTime(s.feedSince)} ({fmtRelative(s.feedSince)})</span> : '—', hidden: !s.feedSince },
                     { label: 'Tự chạy lại', value: `${fmtNumber(job?.restarts ?? 0)} lần`, hidden: !job },
-                    { label: 'Có hình từ', value: s.feedSince ? `${fmtDateTime(s.feedSince)} (${fmtRelative(s.feedSince)})` : '—', hidden: !s.feedSince },
                     { label: 'Mất hình từ', value: <span className="text-rose-600 dark:text-rose-400">{fmtDateTime(s.feedLostAt, { seconds: true })}</span>, hidden: !s.feedLostAt },
                   ]}
                 />
@@ -388,13 +401,23 @@ export default function SessionDetail() {
                   </Callout>
                 )}
                 {hasJob ? (
-                  <div className="rounded-lg border border-line bg-surface-2/40 p-3.5">
-                    <p className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-muted">Tiến trình phát tự động</p>
-                    <AutoFlowSteps status={status} compact />
-                  </div>
+                  flowSteady ? (
+                    <p className="flex items-start gap-2 rounded-lg bg-emerald-50/70 px-3 py-2 text-xs text-emerald-800 dark:bg-emerald-950/25 dark:text-emerald-300">
+                      <CheckCircle2 className="mt-px size-3.5 shrink-0" />
+                      <span>
+                        Phát tự động đang chạy ổn định · ghim theo video: <b className="font-medium">{status[4] === 'run' ? 'đang chạy' : 'đang tắt'}</b> · trả lời bình luận:{' '}
+                        <b className="font-medium">{status[5] === 'run' ? 'đang chạy' : 'đang tắt'}</b>
+                      </span>
+                    </p>
+                  ) : (
+                    <div className="rounded-lg border border-line bg-surface-2/40 px-3 py-2.5">
+                      <p className="mb-2 text-2xs font-semibold uppercase tracking-wide text-muted">Tiến trình phát tự động</p>
+                      <AutoFlowSteps status={status} compact />
+                    </div>
+                  )
                 ) : (
                   !ended && (
-                    <p className="rounded-lg bg-surface-2 px-3 py-2.5 text-xs text-muted">
+                    <p className="rounded-lg bg-surface-2 px-3 py-2 text-xs text-muted">
                       {s.streamState === 'stopped' ? 'Đã dừng đẩy hình. Người xem thấy hình đứng cho tới khi bạn phát lại hoặc kết thúc phiên.' : 'Chưa có việc phát nào. Bấm “Bắt đầu phát tự động” để máy chủ nhận việc.'}
                     </p>
                   )
@@ -406,15 +429,15 @@ export default function SessionDetail() {
       </div>
 
       {/* ───── Điều khiển chi tiết ───── */}
-      <div className="grid gap-5 xl:grid-cols-3">
-        <div className="min-w-0 space-y-5 xl:col-span-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <div className="min-w-0 space-y-4 xl:col-span-2">
           {!external && <NowPlayingPanel session={s} hasJob={hasJob} canControl={canControl} dataUpdatedAt={q.dataUpdatedAt} onStart={showStart ? () => setStartOpen(true) : undefined} />}
           <MetricsPanel session={s} samples={d.samples} />
           <CartPanel session={s} cartQ={cartQ} canManage={can('product.manage') && !external} canPin={can('product.pin') && !external} />
         </div>
-        <div className="min-w-0 space-y-5">
+        <div className="min-w-0 space-y-4">
           <PinnedPanel session={s} pinned={d.pinned} cart={cartQ.data} cartLoading={cartQ.isLoading} canPin={can('product.pin')} />
-          <CommentsPanel session={s} canReply={can('comment.reply')} />
+          <CommentsPanel session={s} canReply={can('comment.reply')} shopReplyEnabled={shop.replyEnabled} />
           <EventTimeline events={d.events} />
         </div>
       </div>

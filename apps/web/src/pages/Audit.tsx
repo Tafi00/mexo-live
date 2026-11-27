@@ -5,7 +5,6 @@ import { ScrollText, X } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/cn';
-import { fmtNumber } from '@/lib/format';
 import { useDebounced } from '@/lib/hooks';
 import type { ActivityRow } from '@/lib/types';
 import { DateRangeBar } from '@/components/admin/common';
@@ -97,11 +96,11 @@ export default function Audit() {
     <div>
       <PageHeader
         title="Nhật ký hệ thống"
-        description={isStaff ? 'Mọi thao tác quan trọng của người dùng và hệ thống: đăng nhập, tài khoản, shop, phiên live, cấu hình.' : role === 'owner' ? 'Hoạt động trên các shop của bạn và của nhân viên bạn quản lý.' : 'Hoạt động trong phạm vi được phép xem.'}
+        description={isStaff ? 'Mọi thao tác quan trọng: đăng nhập, tài khoản, shop, phiên live, cấu hình hệ thống' : role === 'owner' ? 'Hoạt động trên các shop của bạn và của nhân viên bạn quản lý' : 'Hoạt động trong phạm vi được phép xem'}
       />
       <Card>
         <div className="flex flex-wrap items-center gap-2 border-b border-line p-3">
-          <Select inputSize="sm" className="w-full sm:w-64" value={code} onChange={(e) => setCode(e.target.value)} aria-label="Loại hành động">
+          <Select className="w-full sm:w-60" value={code} onChange={(e) => setCode(e.target.value)} aria-label="Loại hành động">
             <option value="">Mọi loại hành động</option>
             {groups.map(([g, arr]) => (
               <optgroup key={g} label={g}>
@@ -113,7 +112,7 @@ export default function Audit() {
               </optgroup>
             ))}
           </Select>
-          <SearchInput value={q} onChange={setQ} placeholder="Tên người thực hiện…" inputSize="sm" className="w-full sm:w-56" />
+          <SearchInput value={q} onChange={setQ} placeholder="Tên người thực hiện…" className="w-full sm:w-52" />
           <DateRangeBar
             from={from}
             to={to}
@@ -128,17 +127,16 @@ export default function Audit() {
           {shopId !== undefined && <Chip label={`Shop: ${sample?.shopId === shopId && sample?.shopName ? sample.shopName : `#${shopId}`}`} onClear={() => clearParam('shopId')} />}
           {actorId !== undefined && <Chip label={`Người thực hiện: ${sample?.actorId === actorId ? sample.actorName : `#${actorId}`}`} onClear={() => clearParam('actorId')} />}
           {hasFilter && (
-            <Button size="sm" variant="ghost" onClick={clearAll}>
+            <Button variant="ghost" onClick={clearAll}>
               Xóa bộ lọc
             </Button>
           )}
-          <span className="ml-auto text-xs text-muted">{list.data ? `${fmtNumber(list.data.total)} mục` : ''}</span>
         </div>
 
         {list.isError ? (
           <ErrorState error={list.error} onRetry={() => list.refetch()} />
         ) : !list.data ? (
-          <div className="space-y-3 p-5">
+          <div className="space-y-2 p-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <Skeleton key={i} className="h-10" />
             ))}
@@ -150,9 +148,13 @@ export default function Audit() {
         ) : (
           <EmptyState icon={ScrollText} title={hasFilter ? 'Không có nhật ký phù hợp' : 'Chưa có nhật ký'} description={hasFilter ? 'Thử đổi bộ lọc hoặc mở rộng khoảng ngày.' : undefined} />
         )}
-        {list.data && list.data.total > 0 && <Pagination className="border-t border-line px-4 py-3" page={page} pageSize={pageSize} total={list.data.total} onChange={setPage} />}
+        {list.data && list.data.total > 0 && (
+          <div className="border-t border-line px-4 py-2.5">
+            <Pagination page={page} pageSize={pageSize} total={list.data.total} onChange={setPage} />
+          </div>
+        )}
       </Card>
-      <p className="mt-3 text-xs text-muted">Thời gian theo giờ Việt Nam. Nhật ký không ghi mật khẩu, token hay khóa bí mật.</p>
+      <p className="mt-2 text-xs text-muted">Thời gian theo giờ Việt Nam. Nhật ký không ghi mật khẩu, token hay khóa bí mật.</p>
     </div>
   );
 }

@@ -28,9 +28,9 @@ export function SecretBox({ label, value, mono = true, maskable = false }: { lab
   const [shown, setShown] = useState(!maskable);
   return (
     <div className="space-y-1.5">
-      {label && <p className="text-[13px] font-medium">{label}</p>}
+      {label && <p className="text-xs font-medium">{label}</p>}
       <div className="flex items-stretch gap-2">
-        <div className={cn('flex min-w-0 flex-1 items-center rounded-lg border border-line-strong bg-surface-2 px-3 py-2 text-sm', mono && 'font-mono')}>
+        <div className={cn('flex min-h-8 min-w-0 flex-1 items-center rounded-lg border border-line-strong bg-surface-2 px-3 py-1.5 text-sm', mono && 'font-mono')}>
           <span className="min-w-0 flex-1 select-all break-all">{shown ? value : '•'.repeat(Math.min(24, value.length))}</span>
         </div>
         {maskable && (
@@ -118,7 +118,7 @@ export function RateValue({ rate, dangerBelow, digits = 2, className, label = fa
     <span className={cn('inline-flex items-center gap-1 font-medium tabular', LEVEL_CLS[lv], className)} title={LEVEL_LABEL[lv]}>
       <Icon className="size-3.5 shrink-0" />
       {fmtPercent(rate ?? null, digits)}
-      {label && lv !== 'none' && <span className="text-[11px] font-normal">· {LEVEL_LABEL[lv]}</span>}
+      {label && lv !== 'none' && <span className="text-2xs font-normal">· {LEVEL_LABEL[lv]}</span>}
     </span>
   );
 }
@@ -152,11 +152,11 @@ export function MetricBar({ label, pct, text, icon }: { label: ReactNode; pct: n
   return (
     <div className="min-w-0">
       <div className="mb-1 flex items-center justify-between gap-2 text-xs">
-        <span className="inline-flex items-center gap-1.5 text-muted">
+        <span className="inline-flex shrink-0 items-center gap-1.5 text-muted">
           {icon}
           {label}
         </span>
-        <span className={cn('inline-flex items-center gap-1 tabular', has && pct! >= 90 ? 'font-semibold text-rose-600 dark:text-rose-400' : 'text-fg')}>
+        <span className={cn('inline-flex min-w-0 items-center gap-1 truncate tabular', has && pct! >= 90 ? 'font-semibold text-rose-600 dark:text-rose-400' : 'text-fg')}>
           {has && pct! >= 90 && <AlertTriangle className="size-3" />}
           {text}
         </span>
@@ -189,15 +189,14 @@ export function DateRangeBar({ from, to, onChange, presets = [1, 7, 30, 90], max
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Segmented<string>
-        size="sm"
         value={active ? String(active) : ''}
         onChange={(v) => set(addDaysStr(today, -(Number(v) - 1)), today)}
         options={presets.map((n) => ({ value: String(n), label: n === 1 ? 'Hôm nay' : `${n} ngày` }))}
       />
-      <div className="flex items-center gap-1.5">
-        <Input type="date" inputSize="sm" className="w-[150px]" value={from} max={today} onChange={(e) => set(e.target.value, to)} aria-label="Từ ngày" />
+      <div className="flex w-full items-center gap-1.5 sm:w-auto">
+        <Input type="date" className="min-w-0 flex-1 sm:w-36 sm:flex-none" value={from} max={today} onChange={(e) => set(e.target.value, to)} aria-label="Từ ngày" />
         <span className="text-xs text-muted">→</span>
-        <Input type="date" inputSize="sm" className="w-[150px]" value={to} max={today} onChange={(e) => set(from, e.target.value)} aria-label="Đến ngày" />
+        <Input type="date" className="min-w-0 flex-1 sm:w-36 sm:flex-none" value={to} max={today} onChange={(e) => set(from, e.target.value)} aria-label="Đến ngày" />
       </div>
     </div>
   );

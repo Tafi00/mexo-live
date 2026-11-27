@@ -61,7 +61,7 @@ function Row({ it }: { it: UploadItem }) {
   const pct = it.size ? Math.floor((it.uploaded / it.size) * 100) : 0;
   const tone = it.phase === 'done' ? 'success' : it.phase === 'failed' || it.phase === 'error' ? 'danger' : it.phase === 'paused' || it.retryIn ? 'warning' : 'brand';
   return (
-    <div className="px-3.5 py-2.5">
+    <div className="px-3 py-2.5">
       <div className="flex items-start gap-2.5">
         <span
           className={cn(
@@ -77,13 +77,13 @@ function Row({ it }: { it: UploadItem }) {
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <p className="min-w-0 flex-1 truncate text-[13px] font-medium" title={it.fileName}>
+            <p className="min-w-0 flex-1 truncate text-sm font-medium" title={it.fileName}>
               {it.fileName}
             </p>
             {active && <span className="shrink-0 text-xs font-medium tabular text-muted">{pct}%</span>}
           </div>
           <div className="mt-0.5 flex flex-wrap items-center gap-1">
-            {it.shopName && <span className="max-w-[140px] truncate text-[11px] text-subtle">{it.shopName}</span>}
+            {it.shopName && <span className="max-w-[140px] truncate text-2xs text-subtle">{it.shopName}</span>}
             {it.relinked && (
               <Badge tone="violet" size="sm" icon={<Link2 className="size-3" />}>
                 Gắn lại video cũ
@@ -96,9 +96,9 @@ function Row({ it }: { it: UploadItem }) {
             )}
           </div>
           {(active || it.phase === 'paused') && <Progress value={it.uploaded} max={it.size} tone={tone} size="sm" className="mt-1.5" />}
-          <p className={cn('mt-1 text-[11px] leading-snug', it.phase === 'failed' || it.phase === 'error' ? 'text-rose-600 dark:text-rose-400' : 'text-muted')}>{phaseText(it)}</p>
+          <p className={cn('mt-1 text-2xs leading-snug', it.phase === 'failed' || it.phase === 'error' ? 'text-rose-600 dark:text-rose-400' : 'text-muted')}>{phaseText(it)}</p>
           {askCancel && (
-            <div className="mt-1.5 flex flex-wrap items-center gap-2 rounded-md bg-rose-50 px-2 py-1.5 text-[11px] text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
+            <div className="mt-1.5 flex flex-wrap items-center gap-2 rounded-md bg-rose-50 px-2 py-1.5 text-2xs text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
               <span className="flex-1">{it.relinked || it.resumed ? 'Dừng tải? Phần đã tải được giữ để tiếp tục sau.' : 'Hủy tải lên và xóa phần đã tải?'}</span>
               <button className="font-semibold hover:underline" onClick={() => cancelUpload(it.id)}>
                 Hủy tải
@@ -168,22 +168,22 @@ export function UploadPanel() {
 
   return (
     <div className="fixed bottom-4 right-4 z-40 w-[min(380px,calc(100vw-2rem))] animate-slide-up overflow-hidden rounded-xl border border-line bg-surface text-fg shadow-pop">
-      <div className="flex items-center gap-2 border-b border-line bg-surface-2/60 px-3.5 py-2.5">
+      <div className="flex items-center gap-2 border-b border-line bg-surface-2/60 px-3 py-2.5">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-semibold">{title}</p>
+          <p className="truncate text-sm font-semibold">{title}</p>
           {stats.active > 0 ? (
-            <p className="text-[11px] tabular text-muted">
+            <p className="text-2xs tabular text-muted">
               {fmtBytes(stats.up)} / {fmtBytes(stats.total)}
               {stats.speed > 0 && ` · ${fmtBytes(stats.speed)}/giây`}
             </p>
           ) : (
-            <p className="text-[11px] text-muted">
+            <p className="text-2xs text-muted">
               {stats.done} hoàn tất{stats.bad ? ` · ${stats.bad} lỗi` : ''}
             </p>
           )}
         </div>
         {!stats.active && stats.done > 0 && (
-          <button className="rounded px-1.5 py-1 text-[11px] font-medium text-muted hover:bg-surface-3 hover:text-fg" onClick={clearFinishedUploads}>
+          <button className="rounded px-1.5 py-1 text-2xs font-medium text-muted hover:bg-surface-3 hover:text-fg" onClick={clearFinishedUploads}>
             Xóa mục đã xong
           </button>
         )}
@@ -202,7 +202,7 @@ export function UploadPanel() {
                 <Row key={it.id} it={it} />
               ))}
           </div>
-          {stats.active > 0 && <p className="border-t border-line bg-surface-2/40 px-3.5 py-2 text-[11px] text-muted">Có thể chuyển sang trang khác trong ứng dụng, việc tải vẫn tiếp tục. Đừng đóng hoặc tải lại tab này.</p>}
+          {stats.active > 0 && <p className="border-t border-line bg-surface-2/40 px-3 py-2 text-2xs text-muted">Có thể chuyển sang trang khác trong ứng dụng, việc tải vẫn tiếp tục. Đừng đóng hoặc tải lại tab này.</p>}
         </>
       )}
     </div>
