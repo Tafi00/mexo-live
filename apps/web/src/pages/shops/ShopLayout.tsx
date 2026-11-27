@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { Link, NavLink, Outlet, useOutletContext, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -160,7 +160,10 @@ export default function ShopLayout() {
         ))}
       </nav>
 
-      <Outlet context={{ shop, refetch: () => void q.refetch() } satisfies ShopCtx} />
+      {/* Đổi tab trong shop: đầu trang shop giữ nguyên, chỉ phần tab chờ tải */}
+      <Suspense fallback={<PageLoading />}>
+        <Outlet context={{ shop, refetch: () => void q.refetch() } satisfies ShopCtx} />
+      </Suspense>
       <ConnectShopDialog open={reauth} onClose={() => setReauth(false)} reauthShopId={shop.id} reauthName={shop.name} />
       <GoLiveDialog open={goLive} onClose={() => setGoLive(false)} shopId={shop.id} shopName={shop.name} />
     </div>

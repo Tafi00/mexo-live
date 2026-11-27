@@ -70,8 +70,9 @@ export function Skeleton({ className }: { className?: string }) {
 }
 
 export function PageLoading({ label = 'Đang tải…' }: { label?: string }) {
+  // Chỉ hiện nếu tải lâu hơn ~300ms — tải nhanh thì không chớp vòng xoay
   return (
-    <div className="flex min-h-[240px] items-center justify-center gap-2 text-sm text-muted">
+    <div className="flex min-h-[240px] animate-fade-in items-center justify-center gap-2 text-sm text-muted [animation-delay:300ms] [animation-fill-mode:both]">
       <Spinner />
       {label}
     </div>

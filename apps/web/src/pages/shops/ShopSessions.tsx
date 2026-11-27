@@ -58,7 +58,8 @@ function CurrentSession({ s, shop }: { s: LiveSession; shop: ShopDetail }) {
         }
       />
       <div className="flex flex-col gap-4 p-4 sm:flex-row">
-        <Link to={`/sessions/${s.id}`} className="relative block aspect-[3/4] w-20 shrink-0 overflow-hidden rounded-lg bg-surface-2 ring-1 ring-line">
+        {/* self-start: giữ đúng tỉ lệ 3:4 của ảnh bìa, không bị kéo cao theo nội dung bên cạnh */}
+        <Link to={`/sessions/${s.id}`} className="relative block aspect-[3/4] w-20 shrink-0 self-start overflow-hidden rounded-lg bg-surface-2 ring-1 ring-line">
           {s.coverKey ? (
             <img src={`/api/files/cover?key=${encodeURIComponent(s.coverKey)}`} alt="" className="absolute inset-0 size-full object-cover" />
           ) : (
@@ -71,7 +72,7 @@ function CurrentSession({ s, shop }: { s: LiveSession; shop: ShopDetail }) {
           <div className="flex flex-wrap items-center gap-1.5">
             <SessionStateBadge state={s.state} stuck={s.stuck} />
             {s.origin !== 'external' && <StreamStateBadge state={s.streamState} />}
-            <OriginBadge origin={s.origin} />
+            <OriginBadge origin={s.origin} size="md" />
           </div>
           <Link to={`/sessions/${s.id}`} className="mt-1.5 block text-base font-semibold leading-snug hover:text-brand-600">
             {s.title}
@@ -88,22 +89,23 @@ function CurrentSession({ s, shop }: { s: LiveSession; shop: ShopDetail }) {
             )}
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {/* Dải số liệu gọn: mỗi ô vừa nội dung, không kéo dài hết chiều ngang màn rộng */}
+          <dl className="mt-3 grid max-w-2xl grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-4">
             {[
               { icon: Timer, label: 'Thời lượng', value: dur !== null ? fmtClock(dur) : '—' },
               { icon: Eye, label: 'Đang xem', value: fmtNumber(m.viewers ?? 0) },
               { icon: Heart, label: 'Lượt thích', value: fmtNumber(m.likes ?? 0) },
               { icon: ShoppingBag, label: 'Đơn hàng', value: fmtNumber(m.orders ?? 0) },
             ].map((x) => (
-              <div key={x.label} className="rounded-lg bg-surface-2 px-2.5 py-1.5">
-                <p className="flex items-center gap-1 text-xs text-muted">
+              <div key={x.label} className="bg-surface px-3 py-2">
+                <dt className="flex items-center gap-1 text-xs text-muted">
                   <x.icon className="size-3.5" />
                   {x.label}
-                </p>
-                <p className="text-base font-semibold tabular">{x.value}</p>
+                </dt>
+                <dd className="mt-0.5 text-base font-semibold leading-tight tabular">{x.value}</dd>
               </div>
             ))}
-          </div>
+          </dl>
 
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted">
             {s.origin !== 'external' && (
@@ -123,7 +125,9 @@ function CurrentSession({ s, shop }: { s: LiveSession; shop: ShopDetail }) {
             </Callout>
           )}
           {s.lastError && (
-            <p className="mt-3 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">{s.lastError}</p>
+            <Callout tone={s.origin === 'legacy' ? 'neutral' : 'warning'} className="mt-3 max-w-2xl">
+              {s.lastError}
+            </Callout>
           )}
         </div>
       </div>

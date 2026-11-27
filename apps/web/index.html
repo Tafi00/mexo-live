@@ -14,7 +14,12 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Khung giao diện hiện ngay khi mở trang (trước khi JS tải xong); React thay thế bằng khung thật giống hệt (ShellSkeleton / AppShell) -->
+    <div id="root"><div class="flex min-h-screen"><aside class="fixed inset-y-0 left-0 z-40 hidden w-[232px] border-r border-line bg-bg lg:block"><div class="flex h-12 items-center px-4"><a href="/" class="flex items-center gap-2.5"><span class="grid size-8 place-items-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-600 shadow-sm shadow-brand-500/30"><svg viewBox="0 0 32 32" class="size-5"><path d="M8 22V10l4.5 6L17 10v12" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="23" cy="12" r="2.6" fill="#fff"></circle></svg></span><span class="leading-tight"><span class="block text-base font-bold tracking-tight">MEXO Live</span><span class="block text-2xs font-medium uppercase tracking-wider text-muted">Shopee Livestream</span></span></a></div></aside><div class="flex min-w-0 flex-1 flex-col lg:pl-[232px]"><header class="sticky top-0 z-30 h-12 border-b border-line bg-surface/85"></header></div></div></div>
+    <script>
+      // Trang đăng nhập / cấp quyền có bố cục riêng → không hiện khung ứng dụng
+      if (/^\/(login|connect\/)/.test(location.pathname)) document.getElementById('root').innerHTML = '';
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

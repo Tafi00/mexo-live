@@ -1,43 +1,114 @@
-import { lazy, Suspense, type ReactNode } from 'react';
+import { Suspense, type ReactNode } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
-import { AppShell } from '@/components/layout/AppShell';
+import { AppShell, ShellSkeleton } from '@/components/layout/AppShell';
 import { PageLoading } from '@/components/ui/misc';
+import { lazyPage } from '@/lib/lazyPage';
 
-const Login = lazy(() => import('@/pages/Login'));
-const ChangePassword = lazy(() => import('@/pages/ChangePassword'));
-const Profile = lazy(() => import('@/pages/Profile'));
-const ConnectCallback = lazy(() => import('@/pages/ConnectCallback'));
-const Dashboard = lazy(() => import('@/pages/Dashboard'));
-const ShopList = lazy(() => import('@/pages/shops/ShopList'));
-const ShopLayout = lazy(() => import('@/pages/shops/ShopLayout'));
-const ShopOverview = lazy(() => import('@/pages/shops/ShopOverview'));
-const ShopSessions = lazy(() => import('@/pages/shops/ShopSessions'));
-const ShopHistory = lazy(() => import('@/pages/shops/ShopHistory'));
-const ShopProducts = lazy(() => import('@/pages/shops/ShopProducts'));
-const ShopVideos = lazy(() => import('@/pages/shops/ShopVideos'));
-const ShopTemplates = lazy(() => import('@/pages/shops/ShopTemplates'));
-const TemplateEditor = lazy(() => import('@/pages/shops/TemplateEditor'));
-const ShopSchedules = lazy(() => import('@/pages/shops/ShopSchedules'));
-const ShopReplies = lazy(() => import('@/pages/shops/ShopReplies'));
-const ShopConnection = lazy(() => import('@/pages/shops/ShopConnection'));
-const ShopActivity = lazy(() => import('@/pages/shops/ShopActivity'));
-const SessionDetail = lazy(() => import('@/pages/sessions/SessionDetail'));
-const LiveRoom = lazy(() => import('@/pages/LiveRoom'));
-const SchedulesCalendar = lazy(() => import('@/pages/SchedulesCalendar'));
-const CommentsInbox = lazy(() => import('@/pages/CommentsInbox'));
-const Reports = lazy(() => import('@/pages/Reports'));
-const Alerts = lazy(() => import('@/pages/Alerts'));
-const Accounts = lazy(() => import('@/pages/Accounts'));
-const Servers = lazy(() => import('@/pages/Servers'));
-const Monitor = lazy(() => import('@/pages/Monitor'));
-const Audit = lazy(() => import('@/pages/Audit'));
-const SettingsPage = lazy(() => import('@/pages/Settings'));
+// Bảng loader: dùng chung cho lazy() và để tải sẵn code của trang đang mở song song với bước kiểm tra đăng nhập
+const load = {
+  Login: () => import('@/pages/Login'),
+  ChangePassword: () => import('@/pages/ChangePassword'),
+  Profile: () => import('@/pages/Profile'),
+  ConnectCallback: () => import('@/pages/ConnectCallback'),
+  Dashboard: () => import('@/pages/Dashboard'),
+  ShopList: () => import('@/pages/shops/ShopList'),
+  ShopLayout: () => import('@/pages/shops/ShopLayout'),
+  ShopOverview: () => import('@/pages/shops/ShopOverview'),
+  ShopSessions: () => import('@/pages/shops/ShopSessions'),
+  ShopHistory: () => import('@/pages/shops/ShopHistory'),
+  ShopProducts: () => import('@/pages/shops/ShopProducts'),
+  ShopVideos: () => import('@/pages/shops/ShopVideos'),
+  ShopTemplates: () => import('@/pages/shops/ShopTemplates'),
+  TemplateEditor: () => import('@/pages/shops/TemplateEditor'),
+  ShopSchedules: () => import('@/pages/shops/ShopSchedules'),
+  ShopReplies: () => import('@/pages/shops/ShopReplies'),
+  ShopConnection: () => import('@/pages/shops/ShopConnection'),
+  ShopActivity: () => import('@/pages/shops/ShopActivity'),
+  SessionDetail: () => import('@/pages/sessions/SessionDetail'),
+  LiveRoom: () => import('@/pages/LiveRoom'),
+  SchedulesCalendar: () => import('@/pages/SchedulesCalendar'),
+  CommentsInbox: () => import('@/pages/CommentsInbox'),
+  Reports: () => import('@/pages/Reports'),
+  Alerts: () => import('@/pages/Alerts'),
+  Accounts: () => import('@/pages/Accounts'),
+  Servers: () => import('@/pages/Servers'),
+  Monitor: () => import('@/pages/Monitor'),
+  Audit: () => import('@/pages/Audit'),
+  SettingsPage: () => import('@/pages/Settings'),
+};
+const Login = lazyPage(load.Login);
+const ChangePassword = lazyPage(load.ChangePassword);
+const Profile = lazyPage(load.Profile);
+const ConnectCallback = lazyPage(load.ConnectCallback);
+const Dashboard = lazyPage(load.Dashboard);
+const ShopList = lazyPage(load.ShopList);
+const ShopLayout = lazyPage(load.ShopLayout);
+const ShopOverview = lazyPage(load.ShopOverview);
+const ShopSessions = lazyPage(load.ShopSessions);
+const ShopHistory = lazyPage(load.ShopHistory);
+const ShopProducts = lazyPage(load.ShopProducts);
+const ShopVideos = lazyPage(load.ShopVideos);
+const ShopTemplates = lazyPage(load.ShopTemplates);
+const TemplateEditor = lazyPage(load.TemplateEditor);
+const ShopSchedules = lazyPage(load.ShopSchedules);
+const ShopReplies = lazyPage(load.ShopReplies);
+const ShopConnection = lazyPage(load.ShopConnection);
+const ShopActivity = lazyPage(load.ShopActivity);
+const SessionDetail = lazyPage(load.SessionDetail);
+const LiveRoom = lazyPage(load.LiveRoom);
+const SchedulesCalendar = lazyPage(load.SchedulesCalendar);
+const CommentsInbox = lazyPage(load.CommentsInbox);
+const Reports = lazyPage(load.Reports);
+const Alerts = lazyPage(load.Alerts);
+const Accounts = lazyPage(load.Accounts);
+const Servers = lazyPage(load.Servers);
+const Monitor = lazyPage(load.Monitor);
+const Audit = lazyPage(load.Audit);
+const SettingsPage = lazyPage(load.SettingsPage);
 
-function RequireAuth({ children }: { children: ReactNode }) {
+/** Đường dẫn → các chunk cần cho trang đó (shop: khung shop + tab) */
+const PRELOAD: [RegExp, (() => Promise<unknown>)[]][] = [
+  [/^\/login/, [Login.preload]],
+  [/^\/change-password/, [ChangePassword.preload]],
+  [/^\/connect\/callback/, [ConnectCallback.preload]],
+  [/^\/$/, [Dashboard.preload]],
+  [/^\/profile/, [Profile.preload]],
+  [/^\/shops\/?$/, [ShopList.preload]],
+  [/^\/shops\/[^/]+\/?$/, [ShopLayout.preload, ShopOverview.preload]],
+  [/^\/shops\/[^/]+\/sessions/, [ShopLayout.preload, ShopSessions.preload]],
+  [/^\/shops\/[^/]+\/history/, [ShopLayout.preload, ShopHistory.preload]],
+  [/^\/shops\/[^/]+\/products/, [ShopLayout.preload, ShopProducts.preload]],
+  [/^\/shops\/[^/]+\/videos/, [ShopLayout.preload, ShopVideos.preload]],
+  [/^\/shops\/[^/]+\/templates\/.+/, [ShopLayout.preload, TemplateEditor.preload]],
+  [/^\/shops\/[^/]+\/templates/, [ShopLayout.preload, ShopTemplates.preload]],
+  [/^\/shops\/[^/]+\/schedules/, [ShopLayout.preload, ShopSchedules.preload]],
+  [/^\/shops\/[^/]+\/replies/, [ShopLayout.preload, ShopReplies.preload]],
+  [/^\/shops\/[^/]+\/connection/, [ShopLayout.preload, ShopConnection.preload]],
+  [/^\/shops\/[^/]+\/activity/, [ShopLayout.preload, ShopActivity.preload]],
+  [/^\/sessions\//, [SessionDetail.preload]],
+  [/^\/live/, [LiveRoom.preload]],
+  [/^\/schedules/, [SchedulesCalendar.preload]],
+  [/^\/comments/, [CommentsInbox.preload]],
+  [/^\/reports/, [Reports.preload]],
+  [/^\/alerts/, [Alerts.preload]],
+  [/^\/accounts/, [Accounts.preload]],
+  [/^\/servers/, [Servers.preload]],
+  [/^\/monitor/, [Monitor.preload]],
+  [/^\/audit/, [Audit.preload]],
+  [/^\/settings/, [SettingsPage.preload]],
+];
+const hit = PRELOAD.find(([re]) => re.test(window.location.pathname));
+hit?.[1].forEach((fn) => void fn().catch(() => {}));
+// Sau khi trang đầu hiện xong: tải sẵn code các trang còn lại lúc rảnh → chuyển trang không phải chờ
+setTimeout(() => {
+  for (const P of [Dashboard, ShopList, ShopLayout, ShopOverview, LiveRoom, SchedulesCalendar, CommentsInbox, Reports, Alerts, Accounts, Servers, Monitor, Audit, SettingsPage, SessionDetail, ShopSessions, ShopHistory, ShopProducts, ShopVideos, ShopTemplates, TemplateEditor, ShopSchedules, ShopReplies, ShopConnection, ShopActivity, Profile]) void P.preload().catch(() => {});
+}, 2500);
+
+function RequireAuth({ children, shell }: { children: ReactNode; shell?: boolean }) {
   const { me, loading } = useAuth();
   const loc = useLocation();
-  if (loading) return <PageLoading />;
+  if (loading) return shell ? <ShellSkeleton /> : <PageLoading />;
   if (!me) return <Navigate to={`/login?next=${encodeURIComponent(loc.pathname + loc.search)}`} replace />;
   if (me.user.mustChangePassword && loc.pathname !== '/change-password') return <Navigate to="/change-password" replace />;
   return <>{children}</>;
@@ -59,7 +130,7 @@ export function App() {
         />
         <Route
           element={
-            <RequireAuth>
+            <RequireAuth shell>
               <AppShell />
             </RequireAuth>
           }

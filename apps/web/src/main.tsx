@@ -9,6 +9,25 @@ import { ConfirmProvider } from '@/components/ui/dialog';
 import { App } from './App';
 import './index.css';
 
+// Sau một bản deploy mới, chunk cũ không còn trên server → tải lại trang 1 lần để lấy bản mới (thay vì màn hình lỗi)
+window.addEventListener('vite:preloadError', (e) => {
+  try {
+    if (sessionStorage.getItem('mexo-chunk-reload') === '1') return;
+    sessionStorage.setItem('mexo-chunk-reload', '1');
+  } catch {
+    return;
+  }
+  e.preventDefault();
+  window.location.reload();
+});
+setTimeout(() => {
+  try {
+    sessionStorage.removeItem('mexo-chunk-reload');
+  } catch {
+    /* bỏ qua */
+  }
+}, 15_000);
+
 const qc = new QueryClient({
   defaultOptions: {
     queries: {

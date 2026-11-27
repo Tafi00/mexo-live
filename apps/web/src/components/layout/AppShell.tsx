@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -33,7 +33,7 @@ import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/cn';
 import { useClickOutside, useDebounced, useTheme } from '@/lib/hooks';
 import { useLiveEvents } from '@/lib/live';
-import { Avatar, Badge, Kbd, Menu } from '@/components/ui/misc';
+import { Avatar, Badge, Kbd, Menu, PageLoading } from '@/components/ui/misc';
 
 interface NavItem {
   to: string;
@@ -359,7 +359,32 @@ export function AppShell() {
         <Topbar onMenu={() => setMobileOpen(true)} />
         <FreezeBanner />
         <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-4 lg:px-5 lg:py-5">
-          <Outlet />
+          {/* Tải code trang: chỉ vùng nội dung chờ, sidebar và thanh trên giữ nguyên */}
+          <Suspense fallback={<PageLoading />}>
+            <Outlet />
+          </Suspense>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Khung giao diện khi đang kiểm tra đăng nhập — giống hệt khung boot trong index.html
+ * nên từ lúc mở trang tới khi có dữ liệu không bị chớp trắng / nhảy bố cục.
+ */
+export function ShellSkeleton() {
+  return (
+    <div className="flex min-h-screen">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[232px] border-r border-line bg-bg lg:block">
+        <div className="flex h-12 items-center px-4">
+          <Logo />
+        </div>
+      </aside>
+      <div className="flex min-w-0 flex-1 flex-col lg:pl-[232px]">
+        <header className="sticky top-0 z-30 h-12 border-b border-line bg-surface/85" />
+        <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-4 lg:px-5 lg:py-5">
+          <PageLoading />
         </main>
       </div>
     </div>

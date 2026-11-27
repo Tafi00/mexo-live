@@ -4,6 +4,8 @@ import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import fs from 'node:fs';
 import path from 'node:path';
+import { promisify } from 'node:util';
+import zlib from 'node:zlib';
 import { env } from './env.js';
 import { loadActor } from './auth/auth.js';
 import { refCode } from './lib/crypto.js';
@@ -30,6 +32,16 @@ declare module 'fastify' {
 }
 
 const hits = new Map<string, { n: number; reset: number }>();
+
+const brotli = promisify(zlib.brotliCompress);
+const gzip = promisify(zlib.gzip);
+
+/** Nén JSON của API (vd. Phòng điều khiển ~140KB, gọi lại mỗi 5 giây) — brotli mức nhanh, không thì gzip */
+async function compressJson(acceptEncoding: string, body: string): Promise<{ encoding: 'br' | 'gzip'; data: Buffer } | null> {
+  if (/\bbr\b/.test(acceptEncoding)) return { encoding: 'br', data: await brotli(body, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4, [zlib.constants.BROTLI_PARAM_SIZE_HINT]: Buffer.byteLength(body) } }) };
+  if (/\bgzip\b/.test(acceptEncoding)) return { encoding: 'gzip', data: await gzip(body, { level: 6 }) };
+  return null;
+}
 
 /** Request cùng địa chỉ với chính trang web (vd. truy cập qua domain gắn sau, khác PUBLIC_URL) là hợp lệ */
 function sameHost(origin: string, host: string): boolean {
@@ -69,6 +81,16 @@ export async function buildApp(): Promise<FastifyInstance> {
       if (!h || h.reset < now) hits.set(key, { n: 1, reset: now + 60000 });
       else if (++h.n > 20) return reply.code(429).send({ error: { code: 'too_many_requests', message: 'Thao tác quá nhanh, vui lòng thử lại sau 1 phút' } });
     }
+  });
+  app.addHook('onSend', async (req, reply, payload) => {
+    if (typeof payload !== 'string' || payload.length < 2048 || reply.hasHeader('content-encoding')) return payload;
+    if (!String(reply.getHeader('content-type') ?? '').includes('application/json')) return payload;
+    const c = await compressJson(String(req.headers['accept-encoding'] ?? ''), payload);
+    if (!c) return payload;
+    reply.header('content-encoding', c.encoding);
+    reply.header('vary', 'accept-encoding');
+    reply.removeHeader('content-length');
+    return c.data;
   });
   app.addHook('preHandler', async (req) => {
     if (req.url.startsWith('/api/') && !req.url.startsWith('/api/streamer/') && !req.url.startsWith('/api/mock-shopee/')) await loadActor(req);
@@ -124,9 +146,23 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // Phục vụ giao diện web đã build (production)
   if (env.serveWeb && fs.existsSync(path.join(env.webDist, 'index.html'))) {
-    await app.register(fastifyStatic, { root: env.webDist, wildcard: false });
+    await app.register(fastifyStatic, {
+      root: env.webDist,
+      wildcard: false,
+      // Dùng bản .br/.gz nén sẵn lúc build (apps/web/scripts/compress.mjs)
+      preCompressed: true,
+      cacheControl: false,
+      setHeaders: (res, filePath) => {
+        // File trong /assets có mã hash trong tên → cache vĩnh viễn; index.html luôn hỏi lại để nhận bản deploy mới
+        const rel = path.relative(env.webDist, filePath).split(path.sep).join('/');
+        res.setHeader('Cache-Control', rel.startsWith('assets/') ? 'public, max-age=31536000, immutable' : 'no-cache');
+      },
+    });
     app.setNotFoundHandler((req, reply) => {
       if (req.url.startsWith('/api/')) return reply.code(404).send({ error: { code: 'not_found', message: 'Không tìm thấy' } });
+      // File tĩnh không tồn tại (vd. chunk của bản deploy cũ) → 404 thật, không trả index.html giả làm JS
+      const pathname = req.url.split('?')[0];
+      if (pathname.startsWith('/assets/') || /\.[a-z0-9]{2,5}$/i.test(pathname)) return reply.code(404).type('text/plain').send('Not found');
       return reply.sendFile('index.html');
     });
   } else {
