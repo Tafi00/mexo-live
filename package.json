@@ -1,0 +1,20 @@
+{
+  "name": "mexo-live",
+  "private": true,
+  "version": "2.0.0",
+  "description": "MEXO Live 2 - Nền tảng quản lý và tự động hóa Shopee Livestream đa gian hàng",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @mexo/api --filter @mexo/web dev",
+    "dev:api": "pnpm --filter @mexo/api dev",
+    "dev:web": "pnpm --filter @mexo/web dev",
+    "dev:streamer": "pnpm --filter @mexo/streamer dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "db:generate": "pnpm --filter @mexo/api db:generate",
+    "migrate:legacy": "pnpm --filter @mexo/api migrate:legacy",
+    "seed:demo": "pnpm --filter @mexo/api seed:demo",
+    "create-admin": "pnpm --filter @mexo/api create-admin"
+  },
+  "engines": { "node": ">=20" },
+  "packageManager": "pnpm@10.26.0"
+}

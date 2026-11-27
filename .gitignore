@@ -1,0 +1,23 @@
+node_modules
+dist
+*.tsbuildinfo
+*.log
+.DS_Store
+
+# Biến môi trường / bí mật (mọi thư mục)
+.env
+.env.*
+!.env.example
+.claude/settings.local.json
+
+# Dữ liệu chạy local: database nhúng, file video/ảnh bìa, báo cáo migrate (có mật khẩu tạm)
+data/
+storage/
+data-*/
+storage-*/
+cache/
+
+# Backup dữ liệu khách hàng từ hệ thống cũ — KHÔNG đưa lên git (dữ liệu riêng tư, dung lượng lớn).
+# Giữ file ở máy và chạy `pnpm migrate:legacy <đường-dẫn>` khi cần.
+mexo-live-backup*.json
+MEXO-Live-Backup-*.rar

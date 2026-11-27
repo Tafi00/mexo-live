@@ -1,0 +1,67 @@
+# Triển khai mẫu: PostgreSQL + API/Web. Máy phát chạy trên máy riêng (xem apps/streamer/Dockerfile).
+#   cp .env.example .env   # điền APP_SECRET, SHOPEE_*, PUBLIC_URL...
+#   docker compose up -d --build
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mexo
+      POSTGRES_PASSWORD: mexo
+      POSTGRES_DB: mexo
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U mexo']
+      interval: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://mexo:mexo@db:5432/mexo
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '4000:4000'
+    volumes:
+      - appdata:/data
+      - storage:/storage
+
+  # Sao lưu database hằng ngày (giữ 14 bản gần nhất) vào volume "backups"
+  backup:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      PGPASSWORD: mexo
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - backups:/backups
+    entrypoint: >
+      sh -c 'while true; do
+        pg_dump -h db -U mexo -Fc mexo > /backups/mexo-$$(date +%Y%m%d-%H%M).dump &&
+        ls -1t /backups/*.dump | tail -n +15 | xargs -r rm -f;
+        sleep 86400; done'
+
+  # Ví dụ 1 máy phát chạy cùng máy (production nên đặt trên máy riêng, nhiều máy)
+  # streamer:
+  #   build: ./apps/streamer
+  #   restart: unless-stopped
+  #   environment:
+  #     MEXO_API_URL: http://app:4000
+  #     MEXO_SERVER_KEY: mxs_...   # lấy trong trang Máy chủ phát
+  #     MAX_STREAMS: 50
+  #   volumes:
+  #     - streamcache:/cache
+
+volumes:
+  pgdata:
+  backups:
+  appdata:
+  storage:
+  streamcache:

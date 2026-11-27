@@ -1,0 +1,8 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "api", "runtimeExecutable": "pnpm", "runtimeArgs": ["--filter", "@mexo/api", "dev"], "port": 4000 },
+    { "name": "web", "runtimeExecutable": "pnpm", "runtimeArgs": ["--filter", "@mexo/web", "dev"], "port": 5173 },
+    { "name": "streamer", "runtimeExecutable": "pnpm", "runtimeArgs": ["--filter", "@mexo/streamer", "dev"], "port": 4999 }
+  ]
+}
